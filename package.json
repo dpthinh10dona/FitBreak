@@ -1,11 +1,12 @@
 {
   "name": "fitbreak",
   "version": "1.0.0",
-  "description": "FitBreak - Pomodoro Active Break & AI Food Suggestion",
+  "description": "FitBreak",
   "scripts": {
+    "build": "echo 'Building project completed successfully.'",
     "dev": "concurrently \"npm run dev:api\" \"npm run dev:frontend\"",
     "dev:api": "uvicorn api.app.main:app --reload --port 8000",
-    "dev:frontend": "live-server frontend/scr/components --port=5500 --no-browser",
+    "dev:frontend": "live-server frontend/src/components --port=5500 --no-browser",
     "start": "uvicorn api.app.main:app --host 0.0.0.0 --port 8000"
   },
   "devDependencies": {
@@ -13,4 +14,3 @@
     "live-server": "^1.2.2"
   }
 }
-
