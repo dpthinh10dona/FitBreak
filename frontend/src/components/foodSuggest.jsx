@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState, useEffect } from 'react';
 import "../style/foodSuggestForm.css";
 import "../style/foodSuggestResult.css";
@@ -28,7 +29,7 @@ const FoodSuggest = () => {
 
                 let data = null;
                 if (email) {
-                    const res = await fetch(`http://localhost:8000/profiles/get-profile-by-email/${email}`, {
+                    const res = await fetch(`${API_BASE_URL}/profiles/get-profile-by-email/${email}`, {
                         headers: {
                             'Authorization': `Bearer ${token}`,
                         },
@@ -39,7 +40,7 @@ const FoodSuggest = () => {
                 }
 
                 if (!data) {
-                    const fallbackRes = await fetch('http://localhost:8000/profile', {
+                    const fallbackRes = await fetch(`${API_BASE_URL}/profile`, {
                         headers: {
                             'Authorization': `Bearer ${token}`,
                         },
@@ -156,7 +157,7 @@ const FoodSuggest = () => {
         };
 
         try {
-            const response = await fetch('http://localhost:8000/food-suggest', {
+            const response = await fetch(`${API_BASE_URL}/food-suggest`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

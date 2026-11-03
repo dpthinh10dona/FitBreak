@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState, useEffect } from 'react';
 import "../style/updateProfile.css";
 
@@ -81,7 +82,7 @@ const UpdateProfile = ({ user, onUpdateProfileSuccess }) => {
     };
 
     try {
-      const response = await fetch('http://localhost:8000/profiles/update-profile', { 
+      const response = await fetch(`${API_BASE_URL}/profiles/update-profile`, { 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -123,7 +124,7 @@ const UpdateProfile = ({ user, onUpdateProfileSuccess }) => {
     };
 
     try {
-      const response = await fetch('http://localhost:8000/profiles/medical-checkup', {
+      const response = await fetch(`${API_BASE_URL}/profiles/medical-checkup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

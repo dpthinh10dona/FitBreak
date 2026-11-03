@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState } from 'react';
 import "../style/signUp.css";
 
@@ -23,7 +24,7 @@ const SignUp = ({ onSignUpSuccess, onGoToLogIn }) => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/register', { 
+      const response = await fetch(`${API_BASE_URL}/register`, { 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

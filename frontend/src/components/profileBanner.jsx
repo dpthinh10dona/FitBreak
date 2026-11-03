@@ -1,8 +1,9 @@
+import { API_BASE_URL } from '../config';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import AvatarDisplay from './avatarDisplay';
 import '../style/profileBanner.css';
 
-const API_BASE_URL = 'http://localhost:8000';
+
 
 const ProfileBanner = ({ user, teamName, token: propToken, avatarVersion }) => {
   const name = user?.name || "Player 1";

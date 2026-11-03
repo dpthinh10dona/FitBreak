@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState, useEffect } from 'react';
 import "../style/joinTeam.css";
 
@@ -13,7 +14,7 @@ const JoinTeam = () => {
       setLoading(true);
       const token = localStorage.getItem('token');
 
-      const response = await fetch(`http://localhost:8000/get-team`, {
+      const response = await fetch(`${API_BASE_URL}/get-team`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -59,7 +60,7 @@ const JoinTeam = () => {
       setJoining(true);
       const token = localStorage.getItem('token');
 
-      const response = await fetch(`http://localhost:8000/join-team`, {
+      const response = await fetch(`${API_BASE_URL}/join-team`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
