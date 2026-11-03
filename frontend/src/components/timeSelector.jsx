@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState, useEffect, Fragment } from 'react';
 import "../style/timeSelector.css";
 
@@ -86,7 +87,7 @@ const TimeSelector = ({ scheduleData, onScheduleGenerated }) => {
         const email = userObj?.email;
         if (!email || !token) return;
 
-        const res = await fetch(`http://localhost:8000/profiles/get-profile-by-email/${email}`, {
+        const res = await fetch(`${API_BASE_URL}/profiles/get-profile-by-email/${email}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -155,7 +156,7 @@ const TimeSelector = ({ scheduleData, onScheduleGenerated }) => {
     });
 
     try {
-      const response = await fetch('http://localhost:8000/schedule-maker', {
+      const response = await fetch(`${API_BASE_URL}/schedule-maker`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

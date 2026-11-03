@@ -1,8 +1,9 @@
+import { API_BASE_URL } from '../config';
 import { useState, useEffect, useCallback } from 'react';
 import AvatarDisplay from './avatarDisplay';
 import '../style/shop.css';
 
-const API_BASE_URL = 'http://localhost:8000';
+
 
 const CATEGORIES = [
   { id: 'all', label: 'Tất cả' },

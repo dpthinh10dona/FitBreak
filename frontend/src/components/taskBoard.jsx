@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState, useEffect } from 'react';
 import '../style/taskBoard.css';
 
@@ -151,7 +152,7 @@ const TaskBoard = ({ scheduleData, onUpdateCoins, onUpdateSchedule }) => {
     setIsCompletingMini(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/exercises-log', {
+      const response = await fetch(`${API_BASE_URL}/exercises-log`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -193,7 +194,7 @@ const TaskBoard = ({ scheduleData, onUpdateCoins, onUpdateSchedule }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/exercises-log', {
+      const response = await fetch(`${API_BASE_URL}/exercises-log`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

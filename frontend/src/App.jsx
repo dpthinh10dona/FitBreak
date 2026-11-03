@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './config';
 ﻿import { useState, useEffect } from 'react';
 import Header from './components/header';
 import ProfileBanner from './components/profileBanner';
@@ -40,7 +41,7 @@ function App() {
   const fetchUserProfileByEmail = async (email, token) => {
     if (!email || !token) return null;
     try {
-      const response = await fetch(`http://localhost:8000/profiles/get-profile-by-email/${email}`, {
+      const response = await fetch(`${API_BASE_URL}/profiles/get-profile-by-email/${email}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -67,7 +68,7 @@ function App() {
   const fetchUserStats = async (token) => {
     if (!token) return null;
     try {
-      const response = await fetch(`http://localhost:8000/get-stats`, {
+      const response = await fetch(`${API_BASE_URL}/get-stats`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
