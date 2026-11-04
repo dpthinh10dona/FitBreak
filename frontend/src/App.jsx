@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { API_BASE_URL } from './config';
+﻿import { useState, useEffect } from 'react';
 import Header from './components/header';
 import ProfileBanner from './components/profileBanner';
 import LogIn from "./components/logIn";
@@ -32,7 +33,7 @@ function App() {
       const saved = localStorage.getItem(key);
       return saved ? JSON.parse(saved) : null;
     } catch (e) {
-      console.error("Lỗi parse lịch tập:", e);
+      console.error("Lá»—i parse lá»‹ch táº­p:", e);
       return null;
     }
   };
@@ -40,7 +41,7 @@ function App() {
   const fetchUserProfileByEmail = async (email, token) => {
     if (!email || !token) return null;
     try {
-      const response = await fetch(`http://localhost:8000/profiles/get-profile-by-email/${email}`, {
+      const response = await fetch(`${API_BASE_URL}/profiles/get-profile-by-email/${email}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -59,7 +60,7 @@ function App() {
       }
       return null;
     } catch (error) {
-      console.error("Lỗi khi lấy thông tin profile:", error);
+      console.error("Lá»—i khi láº¥y thÃ´ng tin profile:", error);
       return null;
     }
   };
@@ -67,7 +68,7 @@ function App() {
   const fetchUserStats = async (token) => {
     if (!token) return null;
     try {
-      const response = await fetch(`http://localhost:8000/get-stats`, {
+      const response = await fetch(`${API_BASE_URL}/get-stats`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -80,7 +81,7 @@ function App() {
       }
       return null;
     } catch (error) {
-      console.error("Lỗi khi lấy thông tin stats:", error);
+      console.error("Lá»—i khi láº¥y thÃ´ng tin stats:", error);
       return null;
     }
   };
@@ -199,7 +200,7 @@ function App() {
     setWorkoutSchedule(newSchedule);
     const key = getScheduleKey(user);
     if (key) localStorage.setItem(key, JSON.stringify(newSchedule));
-    setActiveTab('tasks');
+    setActiveTab('schedule');
   };
 
   const handleLogout = () => {

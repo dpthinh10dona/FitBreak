@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState } from 'react';
 import "../style/logOut.css";
 
@@ -8,7 +9,7 @@ const LogOut = ({ onLogoutSuccess }) => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/logout', { 
+      const response = await fetch(`${API_BASE_URL}/logout`, { 
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState } from 'react';
 import '../style/createProfile.css';
 
@@ -38,7 +39,7 @@ const CreateProfile = ({ user, onCreateProfileSuccess }) => {
     };
 
     try {
-      const response = await fetch('http://localhost:8000/profiles/create-profile', {
+      const response = await fetch(`${API_BASE_URL}/profiles/create-profile`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

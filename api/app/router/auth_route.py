@@ -66,13 +66,14 @@ async def logIn(response: Response, data: logIn):
                 detail="Email hoặc mật khẩu không chính xác",
             )
         access_token = auth_response.session.access_token
+        # Hỗ trợ cả dev localhost lẫn production cross-domain (Vercel -> Render)
         response.set_cookie(
             key="access_token",
             value=f"Bearer {access_token}",
             httponly=True,
             path="/",
-            samesite="lax",
-            secure=False,
+            samesite="none",
+            secure=True,
         )
         return authResponse(
             success=True,
