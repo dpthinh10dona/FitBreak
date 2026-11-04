@@ -40,7 +40,7 @@ const LogOut = ({ onLogoutSuccess }) => {
       disabled={loading}
       title="Log out of your session"
     >
-      <span className="log-out-icon">⏻</span>
+      <span className="log-out-icon">🚪</span>
       <span>{loading ? '...' : 'Log Out'}</span>
     </button>
   );
