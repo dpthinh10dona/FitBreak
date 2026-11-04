@@ -378,7 +378,7 @@ const UpdateProfile = ({ user, onUpdateProfileSuccess }) => {
           {/* Row 3: Máy đo nồng độ oxy trong máu */}
           <div className="medical-device-row">
             <div className="medical-device-header">
-              <div className="device-icon-box">🫁</div>
+              <div className="device-icon-box">💨</div>
               <div>
                 <h4>Máy đo nồng độ oxy (SpO2)</h4>
                 <p className="device-subtitle">Đo độ bão hòa oxy trong máu (%) kẹp đầu ngón tay</p>
