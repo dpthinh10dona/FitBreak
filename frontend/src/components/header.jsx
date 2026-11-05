@@ -1,4 +1,5 @@
 import LogOut from "./logOut";
+import CoinIcon from "./CoinIcon";
 
 const Header = ({ user, onLogout, activeTab, onSelectTab }) => {
   const coins = user?.coins || 0;
@@ -38,7 +39,7 @@ const Header = ({ user, onLogout, activeTab, onSelectTab }) => {
 
       <div className="header-stats">
         <div className="header-coin-badge" title="Your current coins">
-          <span>🪙</span>
+          <CoinIcon size={18} />
           <span>{coins.toLocaleString()}</span>
         </div>
         <LogOut onLogoutSuccess={onLogout} />
