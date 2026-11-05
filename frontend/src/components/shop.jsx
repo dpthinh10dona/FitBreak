@@ -1,6 +1,7 @@
 import { API_BASE_URL } from '../config';
 import { useState, useEffect, useCallback } from 'react';
 import AvatarDisplay from './avatarDisplay';
+import CoinIcon from './CoinIcon';
 import '../style/shop.css';
 
 
@@ -173,7 +174,7 @@ const Shop = ({ user, onUpdateCoins, onAvatarUpdated, onStatsUpdated }) => {
         <div className="shop-preview-stats">
           <div className="preview-stat-item">
             <span>Ví vàng:</span>
-            <span className="preview-stat-gold">🪙 {(user?.coins || 0).toLocaleString()}</span>
+            <span className="preview-stat-gold"><CoinIcon size={16} /> {(user?.coins || 0).toLocaleString()}</span>
           </div>
           <div className="preview-stat-item">
             <span>Sức mạnh:</span>
@@ -240,7 +241,7 @@ const Shop = ({ user, onUpdateCoins, onAvatarUpdated, onStatsUpdated }) => {
                   <h4>{item.name}</h4>
                   <div className="item-stats-row">
                     <span className="item-stat">+{item.strength} DMG</span>
-                    <span className="item-price">🪙 {item.price}</span>
+                    <span className="item-price"><CoinIcon size={14} /> {item.price}</span>
                   </div>
                 </div>
 

@@ -1,6 +1,7 @@
 import { API_BASE_URL } from '../config';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import AvatarDisplay from './avatarDisplay';
+import CoinIcon from './CoinIcon';
 import '../style/profileBanner.css';
 
 
@@ -145,7 +146,7 @@ const ProfileBanner = ({ user, teamName, token: propToken, avatarVersion }) => {
                 <span className="stat-label">DMG</span>
               </div>
               <div className="stat-pill stat-coins">
-                <span className="stat-icon">🪙</span>
+                <span className="stat-icon"><CoinIcon size={16} /></span>
                 <span className="stat-num">{coins.toLocaleString()}</span>
                 <span className="stat-label">Coins</span>
               </div>
@@ -162,7 +163,7 @@ const ProfileBanner = ({ user, teamName, token: propToken, avatarVersion }) => {
           <div className="boss-details">
             <div className="boss-header">
               <span className="boss-title">{boss.boss_name}</span>
-              <span className="boss-reward">🪙 +{boss.reward_coins} Coins</span>
+              <span className="boss-reward"><CoinIcon size={14} /> +{boss.reward_coins} Coins</span>
             </div>
 
             <div className="boss-hp-container">
