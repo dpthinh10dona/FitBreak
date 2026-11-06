@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.exceptions import AIModelOfflineException
 from app.core.ollama_client import chat as check_ollama
 from app.core.rate_limiter import RateLimitMiddleware
-from app.router import auth_route, exercise, profile, foodSuggest, team, raid, schedule, stats, shop
+from app.router import auth_route, exercise, profile, foodSuggest, team, raid, schedule, stats, shop, chatbot
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -37,6 +37,7 @@ app.include_router(raid.router, tags=["Raid"])
 app.include_router(schedule.router, tags=["Schedule"])
 app.include_router(stats.router, tags=["Stats"])
 app.include_router(shop.router, tags=["Shop"])
+app.include_router(chatbot.router, tags=["AI Health ChatBot"])
 
 @app.get("/api/health")
 async def health_check():

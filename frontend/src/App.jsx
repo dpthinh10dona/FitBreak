@@ -11,6 +11,7 @@ import TimeSelector from "./components/timeSelector";
 import JoinTeam from "./components/joinTeam";
 import TaskBoard from "./components/taskBoard";
 import Shop from './components/shop';
+import HealthChatbot from './components/healthChatbot';
 import './App.css';
 
 function App() {
@@ -263,6 +264,21 @@ function App() {
             onCreateProfileSuccess={handleCreateProfileSuccess}
           />
         )}
+
+        <HealthChatbot 
+          user={user} 
+          onProfileUpdated={async () => {
+            const token = localStorage.getItem('token');
+            if (user?.email && token) {
+              const updatedProfile = await fetchUserProfileByEmail(user.email, token);
+              if (updatedProfile) {
+                const newFull = { ...user, ...updatedProfile };
+                setUser(newFull);
+                localStorage.setItem('user', JSON.stringify(newFull));
+              }
+            }
+          }} 
+        />
       </div>
     );
   }
