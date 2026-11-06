@@ -2,7 +2,7 @@ from datetime import date
 from collections import defaultdict
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.core.database import supabase
-from app.core.token_authorization import token_authorization
+from app.core.token_authorization import token_authorization, tokenAuthorization
 from app.schemas.chatbot import ChatBotRequest, ChatBotResponse, ProfileUpdateProposal, ConfirmProposalRequest
 from app.services.chatbot_agent import analyze_and_chat
 
@@ -24,9 +24,9 @@ def _increment_daily_count(user_id: str):
 @router.post("/ask", response_model=ChatBotResponse)
 async def ask_health_chatbot(
     payload: ChatBotRequest,
-    current_user: dict = Depends(token_authorization)
+    auth_data: tokenAuthorization = Depends(token_authorization)
 ):
-    user_id = current_user.get("sub") or current_user.get("id")
+    user_id = auth_data.user_id
     if not user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User unauthorized")
 
@@ -83,12 +83,12 @@ async def ask_health_chatbot(
 @router.post("/confirm-update")
 async def confirm_profile_update(
     payload: ConfirmProposalRequest,
-    current_user: dict = Depends(token_authorization)
+    auth_data: tokenAuthorization = Depends(token_authorization)
 ):
     """
     Chỉ khi người dùng bấm xác nhận 'Đúng / Đồng ý' thì thông tin mới được ghi vào Supabase.
     """
-    user_id = current_user.get("sub") or current_user.get("id")
+    user_id = auth_data.user_id
     if not user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User unauthorized")
 
