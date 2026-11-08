@@ -1,0 +1,365 @@
+/* ==========================================================================
+   CLINICAL REHABILITATION & PHYSICAL ACTIVITY SCHEDULE STYLES
+   Sterile White, Deep Navy, Medical Blue Timetable
+   ========================================================================== */
+
+.clinical-schedule-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 24px auto;
+  padding: 0 20px 40px 20px;
+  font-family: var(--med-font-sans);
+}
+
+/* Master Header Card */
+.clinical-schedule-header-card {
+  background-color: var(--med-bg-surface);
+  border: 1px solid var(--med-border-light);
+  border-radius: var(--med-radius-lg);
+  padding: 24px 32px;
+  margin-bottom: 24px;
+  box-shadow: var(--med-shadow-xs);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.clinical-schedule-title-area {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.clinical-schedule-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--med-radius-md);
+  background-color: var(--med-primary-light);
+  color: var(--med-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+
+.clinical-schedule-titles h2 {
+  margin: 0 0 4px 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--med-navy);
+}
+
+.clinical-schedule-titles p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--med-muted);
+}
+
+.clinical-schedule-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Medical Prescription Note Card */
+.clinical-prescription-card {
+  background-color: var(--med-bg-surface);
+  border: 1px solid var(--med-border-light);
+  border-left: 5px solid var(--med-primary);
+  border-radius: var(--med-radius-lg);
+  padding: 20px 28px;
+  margin-bottom: 24px;
+  box-shadow: var(--med-shadow-xs);
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.prescription-icon {
+  font-size: 1.8rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.prescription-content {
+  flex: 1;
+}
+
+.prescription-header-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.prescription-content h4 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--med-navy);
+}
+
+.prescription-level-pill {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--med-radius-full);
+  text-transform: uppercase;
+}
+
+.level-pill-heavy {
+  background-color: var(--med-primary-light);
+  color: var(--med-primary-dark);
+}
+
+.level-pill-medium {
+  background-color: var(--med-success-bg);
+  color: var(--med-success);
+}
+
+.level-pill-light {
+  background-color: var(--med-warning-bg);
+  color: #b45309;
+}
+
+.prescription-content p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--med-slate);
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   VIEW 1: CLINICAL TIMETABLE BOARD (7 DAYS)
+   ========================================================================== */
+
+.clinical-board-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+}
+
+.clinical-day-column {
+  background-color: var(--med-bg-surface);
+  border: 1px solid var(--med-border-light);
+  border-radius: var(--med-radius-md);
+  box-shadow: var(--med-shadow-xs);
+  display: flex;
+  flex-direction: column;
+  min-width: 170px;
+  min-height: 480px;
+  transition: var(--med-transition);
+}
+
+.clinical-day-column:hover {
+  box-shadow: var(--med-shadow-sm);
+  border-color: var(--med-border-strong);
+}
+
+.clinical-day-column.is-rest {
+  background-color: var(--med-bg-canvas);
+  border-style: dashed;
+}
+
+.clinical-day-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--med-border-light);
+  background-color: #ffffff;
+  border-top-left-radius: var(--med-radius-md);
+  border-top-right-radius: var(--med-radius-md);
+}
+
+.clinical-day-column.is-rest .clinical-day-header {
+  background-color: transparent;
+}
+
+.clinical-day-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--med-navy);
+  margin-bottom: 4px;
+}
+
+.clinical-day-time-tag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--med-primary);
+  background-color: var(--med-primary-light);
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 6px;
+}
+
+.clinical-category-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--med-radius-full);
+  display: inline-block;
+}
+
+.badge-clinical-resistance {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.badge-clinical-cardio {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.badge-clinical-hiit {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.badge-clinical-rest {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+/* Exercises Stack */
+.clinical-exercises-stack {
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.clinical-task-card {
+  background-color: var(--med-bg-canvas);
+  border: 1px solid var(--med-border-light);
+  border-radius: var(--med-radius-sm);
+  padding: 12px;
+  transition: var(--med-transition);
+}
+
+.clinical-task-card:hover {
+  background-color: #ffffff;
+  border-color: var(--med-primary-light);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+}
+
+.task-name-clinical {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--med-navy);
+  margin-bottom: 6px;
+  line-height: 1.35;
+}
+
+.task-meta-clinical {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--med-muted);
+}
+
+.task-sets-clinical {
+  font-weight: 700;
+  color: var(--med-primary-dark);
+}
+
+.rest-day-clinical-card {
+  margin: auto;
+  text-align: center;
+  color: var(--med-muted);
+  padding: 20px;
+}
+
+.rest-icon-large {
+  font-size: 2rem;
+  margin-bottom: 6px;
+}
+
+/* ==========================================================================
+   VIEW 2: TIME GRID SELECTOR (CHỌN GIỜ RẢNH)
+   ========================================================================== */
+
+.clinical-time-grid-wrapper {
+  background-color: var(--med-bg-surface);
+  border: 1px solid var(--med-border-light);
+  border-radius: var(--med-radius-lg);
+  padding: 24px;
+  box-shadow: var(--med-shadow-sm);
+  overflow-x: auto;
+}
+
+.btn-clinical-reschedule {
+  background-color: var(--med-bg-surface);
+  border: 1px solid var(--med-border-strong);
+  color: var(--med-slate);
+  padding: 10px 18px;
+  border-radius: var(--med-radius-md);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--med-transition);
+}
+
+.btn-clinical-reschedule:hover {
+  border-color: var(--med-primary);
+  color: var(--med-primary);
+}
+
+.btn-clinical-save-schedule {
+  background: linear-gradient(135deg, var(--med-primary) 0%, var(--med-primary-dark) 100%);
+  color: #ffffff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--med-radius-md);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+  transition: var(--med-transition);
+}
+
+.btn-clinical-save-schedule:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35);
+}
+
+.btn-clinical-save-schedule:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Slot interaction */
+.clinical-grid-table {
+  display: grid;
+  grid-template-columns: 70px repeat(7, minmax(110px, 1fr));
+  gap: 2px;
+  background-color: var(--med-border-light);
+  border: 1px solid var(--med-border-light);
+  border-radius: var(--med-radius-sm);
+  overflow: hidden;
+}
+
+.time-slot-cell {
+  background-color: #ffffff;
+  height: 28px;
+  cursor: pointer;
+  transition: background-color 0.1s;
+}
+
+.time-slot-cell:hover {
+  background-color: var(--med-primary-light);
+}
+
+.time-slot-cell.selected {
+  background-color: var(--med-primary);
+}

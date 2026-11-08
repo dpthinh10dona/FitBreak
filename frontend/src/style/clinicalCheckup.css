@@ -1,0 +1,380 @@
+/* ==========================================================================
+   CLINICAL VITAL SIGNS & MEDICAL CHECKUP FORM (MEDTECH DESIGN SYSTEM)
+   Target Standards: WCAG 2.1 AA/AAA, Clinical Clarity, Sterile White Aesthetics
+   ========================================================================== */
+
+.clinical-checkup-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 24px auto;
+  padding: 0 20px;
+  font-family: var(--med-font-sans);
+}
+
+/* Master Header Card */
+.clinical-checkup-card {
+  background-color: var(--med-bg-surface);
+  border: 1px solid var(--med-border-light);
+  border-radius: var(--med-radius-lg);
+  box-shadow: var(--med-shadow-sm);
+  padding: 32px;
+  margin-bottom: 24px;
+}
+
+.clinical-card-header {
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--med-border-light);
+  padding-bottom: 18px;
+}
+
+.clinical-card-header h3 {
+  margin: 0 0 6px 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--med-navy);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.clinical-card-header p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--med-muted);
+}
+
+/* Device Measurement Rows */
+.clinical-devices-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.clinical-device-block {
+  background-color: var(--med-bg-canvas);
+  border: 1px solid var(--med-border-light);
+  border-radius: var(--med-radius-md);
+  padding: 22px;
+  transition: var(--med-transition);
+}
+
+.clinical-device-block:hover {
+  background-color: var(--med-bg-surface);
+  border-color: var(--med-primary-light);
+  box-shadow: var(--med-shadow-xs);
+}
+
+.device-intro {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.device-icon-clinical {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--med-radius-sm);
+  background-color: var(--med-primary-light);
+  color: var(--med-primary-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.device-text-meta h4 {
+  margin: 0 0 4px 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--med-navy);
+}
+
+.device-text-meta span {
+  font-size: 0.82rem;
+  color: var(--med-muted);
+}
+
+/* Input Fields & Labels */
+.clinical-grid-inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.clinical-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.clinical-field-group label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--med-slate);
+}
+
+.clinical-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.clinical-input {
+  width: 100%;
+  padding: 10px 42px 10px 14px;
+  background-color: var(--med-bg-surface);
+  border: 1px solid var(--med-border-strong);
+  border-radius: var(--med-radius-sm);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--med-navy);
+  outline: none;
+  transition: var(--med-transition);
+}
+
+.clinical-input:focus {
+  border-color: var(--med-primary);
+  box-shadow: 0 0 0 3px var(--med-primary-light);
+}
+
+.input-suffix {
+  position: absolute;
+  right: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--med-muted);
+  pointer-events: none;
+}
+
+/* Timing Chips for Glucose measurement */
+.timing-chips-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.timing-chip {
+  padding: 8px 14px;
+  background-color: var(--med-bg-surface);
+  border: 1px solid var(--med-border-light);
+  border-radius: var(--med-radius-sm);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--med-slate);
+  cursor: pointer;
+  transition: var(--med-transition);
+}
+
+.timing-chip:hover {
+  border-color: var(--med-primary);
+  color: var(--med-primary);
+}
+
+.timing-chip.active {
+  background-color: var(--med-primary);
+  border-color: var(--med-primary);
+  color: #ffffff;
+}
+
+/* Action button bar */
+.clinical-action-bar {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-clinical-analyze {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, var(--med-primary) 0%, var(--med-primary-dark) 100%);
+  color: #ffffff;
+  border: none;
+  padding: 13px 26px;
+  border-radius: var(--med-radius-md);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+  transition: var(--med-transition);
+}
+
+.btn-clinical-analyze:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35);
+}
+
+.btn-clinical-analyze:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   CLINICAL ANALYSIS RESULTS DISPLAY
+   ========================================================================== */
+
+.clinical-results-panel {
+  background-color: var(--med-bg-surface);
+  border: 1px solid var(--med-border-light);
+  border-radius: var(--med-radius-lg);
+  padding: 28px;
+  box-shadow: var(--med-shadow-md);
+  margin-top: 24px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.results-header-clinical {
+  border-bottom: 1px solid var(--med-border-light);
+  padding-bottom: 14px;
+  margin-bottom: 20px;
+}
+
+.results-header-clinical h4 {
+  margin: 0 0 4px 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--med-navy);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.results-header-clinical p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--med-muted);
+}
+
+/* Metric Status Cards Grid */
+.clinical-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.metric-status-box {
+  background-color: var(--med-bg-canvas);
+  border: 1px solid var(--med-border-light);
+  border-radius: var(--med-radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.metric-status-box.level-normal {
+  border-left: 4px solid var(--med-success);
+}
+
+.metric-status-box.level-warning {
+  border-left: 4px solid var(--med-warning);
+}
+
+.metric-status-box.level-danger {
+  border-left: 4px solid var(--med-danger);
+}
+
+.metric-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.metric-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--med-navy);
+}
+
+.metric-badge-clinical {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--med-radius-full);
+}
+
+.metric-badge-clinical.badge-normal {
+  background-color: var(--med-success-bg);
+  color: var(--med-success);
+  border: 1px solid var(--med-success-border);
+}
+
+.metric-badge-clinical.badge-warning {
+  background-color: var(--med-warning-bg);
+  color: #b45309;
+  border: 1px solid var(--med-warning-border);
+}
+
+.metric-badge-clinical.badge-danger {
+  background-color: var(--med-danger-bg);
+  color: var(--med-danger);
+  border: 1px solid var(--med-danger-border);
+}
+
+.metric-value-huge {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--med-navy);
+  margin-bottom: 6px;
+}
+
+.metric-risk-comment {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--med-muted);
+  line-height: 1.4;
+}
+
+/* Advice Banners Grid */
+.clinical-advice-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.clinical-advice-card {
+  padding: 18px;
+  border-radius: var(--med-radius-md);
+  border: 1px solid var(--med-border-light);
+}
+
+.clinical-advice-card.workout {
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.clinical-advice-card.diet {
+  background-color: #f0f9ff;
+  border-color: #bae6fd;
+}
+
+.clinical-advice-card h5 {
+  margin: 0 0 10px 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--med-navy);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clinical-advice-card ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.clinical-advice-card li {
+  font-size: 0.85rem;
+  color: var(--med-slate);
+  margin-bottom: 6px;
+  line-height: 1.45;
+}

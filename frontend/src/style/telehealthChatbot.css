@@ -1,0 +1,338 @@
+/* ==========================================================================
+   TELEHEALTH AI DOCTOR CHATBOT (MEDTECH CLINICAL UI)
+   Target Standards: WCAG 2.1 AA, Sterile White & Deep Blue, Low Cognitive Load
+   ========================================================================== */
+
+.telehealth-widget {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  font-family: var(--med-font-sans);
+}
+
+/* Floating Launch Button */
+.telehealth-launcher-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, var(--med-primary) 0%, var(--med-primary-dark) 100%);
+  color: #ffffff;
+  border: none;
+  padding: 12px 22px;
+  border-radius: var(--med-radius-full);
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.telehealth-launcher-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(2, 132, 199, 0.45);
+}
+
+.telehealth-badge-counter {
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: var(--med-radius-full);
+  font-size: 0.78rem;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* Telehealth Chat Window */
+.telehealth-window {
+  position: fixed;
+  bottom: 84px;
+  right: 24px;
+  width: 400px;
+  max-width: calc(100vw - 32px);
+  height: 560px;
+  max-height: calc(100vh - 120px);
+  background-color: var(--med-bg-surface);
+  border: 1px solid var(--med-border-light);
+  border-radius: var(--med-radius-lg);
+  box-shadow: 0 20px 48px -10px rgba(15, 23, 42, 0.18), 0 10px 20px -5px rgba(15, 23, 42, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: telehealthPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes telehealthPop {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Header */
+.telehealth-header {
+  padding: 16px 20px;
+  background-color: var(--med-bg-canvas);
+  border-bottom: 1px solid var(--med-border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.doctor-identity-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.doctor-avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--med-radius-full);
+  background: linear-gradient(135deg, var(--med-primary-light) 0%, #bae6fd 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.doctor-text-info h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--med-navy);
+}
+
+.doctor-availability {
+  font-size: 0.72rem;
+  color: var(--med-success);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.doctor-availability::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--med-success);
+}
+
+.telehealth-close-btn {
+  background: none;
+  border: none;
+  color: var(--med-muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--med-radius-sm);
+  transition: var(--med-transition);
+}
+
+.telehealth-close-btn:hover {
+  background-color: var(--med-border-light);
+  color: var(--med-navy);
+}
+
+/* Chat Message Thread */
+.telehealth-thread {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background-color: #fafbfc;
+}
+
+.chat-bubble-clinical {
+  max-width: 86%;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 0.88rem;
+  line-height: 1.48;
+  word-break: break-word;
+}
+
+.chat-bubble-clinical.user {
+  align-self: flex-end;
+  background-color: var(--med-primary);
+  color: #ffffff;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
+}
+
+.chat-bubble-clinical.assistant {
+  align-self: flex-start;
+  background-color: #ffffff;
+  color: var(--med-slate);
+  border: 1px solid var(--med-border-light);
+  border-bottom-left-radius: 4px;
+  box-shadow: var(--med-shadow-xs);
+}
+
+/* Diagnostic Proposal Verification Card */
+.clinical-proposal-card {
+  margin-top: 12px;
+  padding: 14px;
+  background-color: #ffffff;
+  border: 1px solid var(--med-border-strong);
+  border-left: 4px solid var(--med-primary);
+  border-radius: var(--med-radius-sm);
+  box-shadow: var(--med-shadow-xs);
+}
+
+.clinical-proposal-card.has-conflict {
+  border-left-color: var(--med-danger);
+  background-color: var(--med-danger-bg);
+}
+
+.proposal-heading {
+  font-weight: 800;
+  font-size: 0.84rem;
+  color: var(--med-navy);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.clinical-proposal-card.has-conflict .proposal-heading {
+  color: var(--med-danger);
+}
+
+.proposal-item {
+  font-size: 0.8rem;
+  color: var(--med-slate);
+  margin: 4px 0;
+  line-height: 1.4;
+}
+
+.proposal-verification-question {
+  margin-top: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--med-primary-dark);
+}
+
+.proposal-action-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.btn-accept-proposal {
+  flex: 1;
+  background-color: var(--med-success);
+  color: #ffffff;
+  border: none;
+  padding: 7px 12px;
+  border-radius: var(--med-radius-sm);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--med-transition);
+}
+
+.btn-accept-proposal:hover {
+  background-color: #059669;
+}
+
+.btn-decline-proposal {
+  flex: 1;
+  background-color: var(--med-bg-canvas);
+  border: 1px solid var(--med-border-strong);
+  color: var(--med-slate);
+  padding: 7px 12px;
+  border-radius: var(--med-radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--med-transition);
+}
+
+.btn-decline-proposal:hover {
+  background-color: var(--med-border-light);
+  color: var(--med-navy);
+}
+
+.doctor-thinking-indicator {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--med-muted);
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Footer & Input Controls */
+.telehealth-footer {
+  padding: 12px 16px;
+  background-color: #ffffff;
+  border-top: 1px solid var(--med-border-light);
+}
+
+.telehealth-quota-bar {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--med-muted);
+  margin-bottom: 8px;
+}
+
+.telehealth-quota-bar .limit-warning {
+  color: var(--med-danger);
+  font-weight: 700;
+}
+
+.telehealth-input-group {
+  display: flex;
+  gap: 8px;
+}
+
+.telehealth-input-field {
+  flex: 1;
+  background-color: var(--med-bg-canvas);
+  border: 1px solid var(--med-border-strong);
+  border-radius: var(--med-radius-md);
+  padding: 10px 14px;
+  color: var(--med-navy);
+  font-size: 0.88rem;
+  outline: none;
+  transition: var(--med-transition);
+}
+
+.telehealth-input-field:focus {
+  border-color: var(--med-primary);
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px var(--med-primary-light);
+}
+
+.telehealth-send-btn {
+  background-color: var(--med-primary);
+  border: none;
+  color: #ffffff;
+  padding: 0 16px;
+  border-radius: var(--med-radius-md);
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: var(--med-transition);
+}
+
+.telehealth-send-btn:hover:not(:disabled) {
+  background-color: var(--med-primary-dark);
+}
+
+.telehealth-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
