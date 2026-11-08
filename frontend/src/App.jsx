@@ -1,17 +1,20 @@
 import { API_BASE_URL } from './config';
 ﻿import { useState, useEffect } from 'react';
 import Header from './components/header';
+import PatientHeader from './components/patientHeader';
 import ProfileBanner from './components/profileBanner';
 import LogIn from "./components/logIn";
 import SignUp from "./components/signUp";
 import UpdateProfile from './components/updateProfile';
 import CreateProfile from "./components/createProfile";
 import FoodSuggest from "./components/foodSuggest";
+import ClinicalNutritionModule from "./components/clinicalNutritionModule";
 import TimeSelector from "./components/timeSelector";
+import ClinicalRehabSchedule from "./components/clinicalRehabSchedule";
 import JoinTeam from "./components/joinTeam";
 import TaskBoard from "./components/taskBoard";
 import Shop from './components/shop';
-import HealthChatbot from './components/healthChatbot';
+import TelehealthDoctorChatbot from './components/telehealthDoctorChatbot';
 import './App.css';
 
 function App() {
@@ -215,17 +218,11 @@ function App() {
   if (currentScreen === 'main') {
     return (
       <div className="app-container">
-        <Header 
+        <PatientHeader 
           user={user} 
           onLogout={handleLogout} 
           activeTab={activeTab} 
           onSelectTab={setActiveTab} 
-        />
-        <ProfileBanner 
-          user={user} 
-          teamName={user?.team || 1}
-          token={localStorage.getItem('token')}
-          avatarVersion={avatarVersion}
         />
         
         <div className="main-content">
@@ -240,10 +237,10 @@ function App() {
           {activeTab === 'profile' && (
             <UpdateProfile user={user} onUpdateProfileSuccess={handleUpdateProfileSuccess} />
           )}
-          {activeTab === 'food' && <FoodSuggest />}
+          {activeTab === 'food' && <ClinicalNutritionModule />}
           {activeTab === 'schedule' && (
-            <TimeSelector 
-              scheduleData={workoutSchedule}
+            <ClinicalRehabSchedule 
+              scheduleData={workoutSchedule} 
               onScheduleGenerated={handleScheduleGenerated} 
             />
           )}
@@ -265,7 +262,7 @@ function App() {
           />
         )}
 
-        <HealthChatbot 
+        <TelehealthDoctorChatbot 
           user={user} 
           onProfileUpdated={async () => {
             const token = localStorage.getItem('token');
