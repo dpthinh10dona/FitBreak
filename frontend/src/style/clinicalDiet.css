@@ -80,12 +80,12 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background-color: #ffffff;
+  background-color: rgba(245, 158, 11, 0.15);
   border: 1px solid var(--med-warning-border);
   padding: 6px 14px;
   border-radius: var(--med-radius-full);
   font-size: 0.82rem;
-  color: #92400e;
+  color: #fbbf24;
 }
 
 /* Form Questionnaire Card */
@@ -141,7 +141,7 @@
 
 .clinical-budget-input-box input:focus {
   border-color: var(--med-primary);
-  background-color: #ffffff;
+  background-color: var(--med-bg-elevated);
   box-shadow: 0 0 0 3px var(--med-primary-light);
 }
 
@@ -205,7 +205,7 @@
 }
 
 .clinical-radio-card:hover {
-  background-color: #ffffff;
+  background-color: var(--med-bg-elevated);
   border-color: var(--med-border-strong);
   box-shadow: var(--med-shadow-xs);
 }

@@ -1,3 +1,7 @@
+/* ==========================================================================
+   FITBREAK MEDTECH AUTHENTICATION - SIGNUP VIEW (CLEAN MEDICAL BLUE & CRISP WHITE)
+   ========================================================================== */
+
 .signup-fitbreak-signup-page {
   min-height: 100vh;
   width: 100%;
@@ -5,6 +9,12 @@
   align-items: center;
   justify-content: center;
   padding: 40px 24px;
+  background-color: #f8fafc;
+  background-image: 
+    radial-gradient(ellipse 70% 50% at 20% 0%, rgba(2, 132, 199, 0.08), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 90% 100%, rgba(56, 189, 248, 0.06), transparent 70%);
+  color: #0f172a;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .signup-fitbreak-content-wrapper {
@@ -16,160 +26,200 @@
   gap: 60px;
 }
 
+/* Left Hero Branding Section */
 .signup-fitbreak-logo-section {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
 .signup-badge-hero {
   align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
-  color: var(--accent-cyan);
-  background: rgba(56, 189, 248, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  padding: 4px 12px;
-  border-radius: var(--radius-full);
+  letter-spacing: 0.08em;
+  color: #0284c7;
+  background: #e0f2fe;
+  border: 1px solid #bae6fd;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  text-transform: uppercase;
 }
 
 .signup-fitbreak-logo {
-  font-size: 3.8rem;
+  font-size: 3.6rem;
   font-weight: 900;
   letter-spacing: -0.04em;
-  background: linear-gradient(135deg, #ffffff 40%, var(--accent-cyan) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #0f172a;
   line-height: 1.1;
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.signup-logo-accent {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .signup-hero-tagline {
   font-size: 1.05rem;
-  color: var(--text-secondary);
+  color: #475569;
   line-height: 1.6;
   margin: 0;
+  max-width: 500px;
 }
 
 .signup-features-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-top: 12px;
+  margin-top: 8px;
 }
 
 .signup-feature-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   font-size: 0.95rem;
-  color: var(--text-primary);
-  background: rgba(22, 28, 51, 0.5);
-  border: 1px solid var(--border-subtle);
-  padding: 10px 16px;
-  border-radius: var(--radius-lg);
+  font-weight: 600;
+  color: #1e293b;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 12px 18px;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.signup-feature-item:hover {
+  border-color: #bae6fd;
+  background: #f0f9ff;
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.08);
 }
 
 .signup-feature-icon {
-  font-size: 1.2rem;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+/* Right Side - Medical Form Container */
 .signup-form-container {
   width: 440px;
   flex-shrink: 0;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-xl);
-  padding: 36px 32px;
-  box-shadow: var(--shadow-lg), 0 0 30px rgba(56, 189, 248, 0.1);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 40px 36px;
+  box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.02);
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
 
 .signup-form-header h2 {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   font-weight: 800;
-  letter-spacing: -0.02em;
-  color: #ffffff;
-  margin-bottom: 4px;
+  letter-spacing: -0.025em;
+  color: #0f172a;
+  margin: 0 0 6px 0;
 }
 
 .signup-form-header p {
-  font-size: 0.88rem;
-  color: var(--text-secondary);
+  font-size: 0.9rem;
+  color: #64748b;
   margin: 0;
+  line-height: 1.45;
 }
 
 .signup-error-alert {
-  background: rgba(244, 63, 94, 0.12);
-  border: 1px solid rgba(244, 63, 94, 0.3);
-  color: #fda4af;
-  padding: 10px 14px;
-  border-radius: var(--radius-md);
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 11px 16px;
+  border-radius: 10px;
   font-size: 0.88rem;
-  margin-bottom: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .signup-form-group {
   margin-bottom: 18px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .signup-form-label {
   font-size: 0.88rem;
-  color: var(--text-secondary);
-  font-weight: 600;
+  color: #334155;
+  font-weight: 700;
 }
 
 .signup-form-input {
-  background: rgba(8, 10, 18, 0.6);
-  border: 1px solid var(--border-subtle);
-  padding: 12px 14px;
-  border-radius: var(--radius-md);
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  padding: 12px 16px;
+  border-radius: 12px;
   font-size: 0.95rem;
-  color: #ffffff;
+  color: #0f172a;
   width: 100%;
   box-sizing: border-box;
   outline: none;
-  transition: var(--transition-fast);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.signup-form-input::placeholder {
+  color: #94a3b8;
 }
 
 .signup-form-input:focus {
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 16px var(--accent-cyan-glow);
-  background: rgba(8, 10, 18, 0.9);
+  border-color: #0284c7;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.12);
 }
 
 .signup-form-actions {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 .signup-submit-btn {
-  background: linear-gradient(135deg, var(--accent-cyan) 0%, #0284c7 100%);
-  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  border-radius: 12px;
   border: none;
   color: #ffffff;
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  padding: 12px 0;
+  padding: 13px 0;
   text-align: center;
   width: 100%;
-  box-shadow: 0 4px 18px var(--accent-cyan-glow);
-  transition: var(--transition-fast);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .signup-submit-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(56, 189, 248, 0.45);
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.35);
+}
+
+.signup-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .signup-submit-btn:disabled {
@@ -184,22 +234,23 @@
 }
 
 .signup-switch-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  color: var(--text-primary);
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  color: #0284c7;
   font-size: 0.92rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  padding: 11px 0;
+  padding: 12px 0;
   text-align: center;
   width: 100%;
-  transition: var(--transition-fast);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .signup-switch-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: #f0f9ff;
+  border-color: #0284c7;
+  color: #0369a1;
   transform: translateY(-1px);
 }
 
@@ -218,5 +269,6 @@
   .signup-form-container {
     width: 100%;
     max-width: 440px;
+    padding: 30px 24px;
   }
 }

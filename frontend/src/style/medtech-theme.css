@@ -1,59 +1,61 @@
 /* ==========================================================================
    MEDTECH CLINICAL DESIGN SYSTEM TOKENS & FOUNDATIONS
-   Target Standards: WCAG 2.1 AA/AAA Accessibility, Low Cognitive Load
+   Harmonized with Deep Slate / Dark Glass Base & Crisp Medical Accents
    ========================================================================== */
 
 :root {
   /* --- Primary Medical Brand Palette --- */
   --med-primary: #0284c7;           /* Sky 600 - Main Brand / Action / Trust */
   --med-primary-dark: #0369a1;      /* Sky 700 - Hover / Active */
-  --med-primary-light: #e0f2fe;     /* Sky 100 - Soft Highlights */
-  --med-primary-subtle: #f0f9ff;    /* Sky 50 - Card Tints / Selected Background */
+  --med-primary-light: rgba(2, 132, 199, 0.15); /* Sky 100 Equivalent in Dark Mode */
+  --med-primary-subtle: rgba(2, 132, 199, 0.08); /* Sky Tint */
   
   /* --- Secondary & Professional Surfaces --- */
-  --med-navy: #0f172a;              /* Slate 900 - Headings & High Contrast Text */
-  --med-slate: #334155;             /* Slate 700 - Body Text */
-  --med-muted: #64748b;             /* Slate 500 - Secondary Labels / Captions */
-  --med-subtle-text: #94a3b8;       /* Slate 400 - Placeholders / Disabled */
+  --med-navy: #f8fafc;              /* Crisp White text for headings */
+  --med-slate: #cbd5e1;             /* Slate 300 - Body Text */
+  --med-muted: #94a3b8;             /* Slate 400 - Secondary Labels / Captions */
+  --med-subtle-text: #64748b;       /* Slate 500 - Placeholders / Disabled */
 
-  /* --- Backgrounds & Borders --- */
-  --med-bg-canvas: #f8fafc;         /* Slate 50 - Calm, Sterile Page Background */
-  --med-bg-surface: #ffffff;        /* Pure White - Clinical Cards */
-  --med-bg-elevated: #ffffff;       /* Modals & Dropdowns */
-  --med-border-light: #e2e8f0;      /* Slate 200 - Clean Borders */
-  --med-border-strong: #cbd5e1;     /* Slate 300 - Interactive Borders */
+  /* --- Backgrounds & Borders (Harmonized Clinical Dark Slate) --- */
+  --med-bg-canvas: #080a12;         /* App Base Background */
+  --med-bg-surface: #101424;        /* Primary Slate Card Surface */
+  --med-bg-elevated: #161c33;       /* Elevated Modals & Sub-cards */
+  --med-border-light: rgba(255, 255, 255, 0.08);      /* Subtle border */
+  --med-border-strong: rgba(56, 189, 248, 0.25);     /* Medical Sky border */
 
   /* --- Semantic Medical Health Indicators --- */
   --med-success: #10b981;           /* Emerald 500 - Normal / Safe Vitals */
-  --med-success-bg: #ecfdf5;        /* Emerald 50 - Safe Vitals Pill */
-  --med-success-border: #a7f3d0;    /* Emerald 200 */
+  --med-success-bg: rgba(16, 185, 129, 0.12);        /* Emerald 50 tint */
+  --med-success-border: rgba(16, 185, 129, 0.3);    /* Emerald border */
 
   --med-warning: #f59e0b;           /* Amber 500 - Attention / Mild Risk */
-  --med-warning-bg: #fffbeb;        /* Amber 50 */
-  --med-warning-border: #fde68a;    /* Amber 200 */
+  --med-warning-bg: rgba(245, 158, 11, 0.12);        /* Amber tint */
+  --med-warning-border: rgba(245, 158, 11, 0.3);    /* Amber border */
 
   --med-danger: #ef4444;            /* Rose 500 - High Risk / Immediate Alert */
-  --med-danger-bg: #fef2f2;         /* Rose 50 */
-  --med-danger-border: #fecaca;     /* Rose 200 */
+  --med-danger-bg: rgba(239, 68, 68, 0.12);         /* Rose tint */
+  --med-danger-border: rgba(239, 68, 68, 0.3);     /* Rose border */
 
-  --med-info: #0284c7;              /* Blue 600 - Clinical Advice */
-  --med-info-bg: #f0f9ff;           /* Blue 50 */
-  --med-info-border: #bae6fd;       /* Blue 200 */
+  --med-info: #38bdf8;              /* Blue 400 - Clinical Advice */
+  --med-info-bg: rgba(2, 132, 199, 0.12);           /* Blue tint */
+  --med-info-border: rgba(56, 189, 248, 0.3);      /* Blue border */
 
   /* --- Typography --- */
-  --med-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --med-font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --med-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   /* --- Elevation & Shadows (Gentle, Medical Clarity) --- */
-  --med-shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
-  --med-shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.08), 0 1px 2px -1px rgba(15, 23, 42, 0.08);
-  --med-shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
-  --med-shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+  --med-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --med-shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.35);
+  --med-shadow-md: 0 8px 24px -4px rgba(0, 0, 0, 0.5);
+  --med-shadow-lg: 0 16px 36px -6px rgba(0, 0, 0, 0.7);
 
-  /* --- Radii & Transitions --- */
-  --med-radius-sm: 8px;
-  --med-radius-md: 12px;
+  /* --- Radii --- */
+  --med-radius-sm: 6px;
+  --med-radius-md: 10px;
   --med-radius-lg: 16px;
   --med-radius-full: 9999px;
-  --med-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* --- Transitions --- */
+  --med-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
