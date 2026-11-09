@@ -27,6 +27,23 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
     return str.trim() ? str.trim().split(/\s+/).length : 0;
   };
 
+  const getAuthToken = () => {
+    let t = localStorage.getItem('token') || localStorage.getItem('access_token');
+    if (!t && user) {
+      t = user.token || user.access_token;
+    }
+    if (!t) {
+      try {
+        const u = JSON.parse(localStorage.getItem('user') || '{}');
+        t = u?.token || u?.access_token;
+      } catch (e) {}
+    }
+    if (t && !localStorage.getItem('token')) {
+      localStorage.setItem('token', t);
+    }
+    return t;
+  };
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     const trimmed = inputMessage.trim();
@@ -43,8 +60,8 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
       return;
     }
 
-    const token = localStorage.getItem('token');
-    if (!token) {
+    const token = getAuthToken();
+    if (!token && !user?.email) {
       alert('Vui lòng đăng nhập để kết nối với Bác sĩ Trợ lý.');
       return;
     }
@@ -55,12 +72,17 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
     setLoading(true);
 
     try {
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${API_BASE_URL}/chatbot/ask`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers,
+        credentials: 'include',
         body: JSON.stringify({
           message: trimmed,
           history: newMessages.slice(-5)
@@ -69,6 +91,9 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
 
       const data = await response.json();
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục tư vấn với Bác sĩ.');
+        }
         throw new Error(data.detail || 'Không thể kết nối đến hệ thống Bác sĩ AI.');
       }
 
@@ -98,16 +123,19 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
   };
 
   const handleConfirmProposal = async (proposal) => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
+    const token = getAuthToken();
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
 
     try {
       const res = await fetch(`${API_BASE_URL}/chatbot/confirm-update`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers,
+        credentials: 'include',
         body: JSON.stringify({
           food_recommendation: proposal.food_recommendation,
           level_of_physical_activity: proposal.level_of_physical_activity
