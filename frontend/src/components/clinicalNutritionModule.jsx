@@ -13,9 +13,9 @@ const ClinicalNutritionModule = () => {
   const [formData, setFormData] = useState({
     calories_need: '',
     protein_need: '',
-    daily_budget: '80000',
-    aim: 'Cân bằng',
-    diet_type: 'Cơm nhà nấu',
+    daily_budget: '120000',
+    aim: 'Duy trì',
+    diet_type: 'Không kiêng',
     allergen: ''
   });
 
@@ -43,11 +43,12 @@ const ClinicalNutritionModule = () => {
 
         if (data) {
           setProfile(data);
-          let mappedGoal = 'Cân bằng';
+          let mappedGoal = 'Duy trì';
           if (data.goal) {
             const goalLower = data.goal.toLowerCase();
             if (goalLower.includes('tăng cơ')) mappedGoal = 'Tăng cơ';
             else if (goalLower.includes('giảm cân')) mappedGoal = 'Giảm cân';
+            else if (goalLower.includes('duy trì') || goalLower.includes('cân bằng')) mappedGoal = 'Duy trì';
           }
 
           setFormData((prev) => ({
@@ -66,11 +67,9 @@ const ClinicalNutritionModule = () => {
   }, []);
 
   const allergenOptions = [
-    { id: 'seafood', label: 'Hải sản / Tôm cua', icon: '🦐' },
-    { id: 'peanut', label: 'Đậu phộng', icon: '🥜' },
-    { id: 'dairy', label: 'Sữa & Lactose', icon: '🥛' },
-    { id: 'gluten', label: 'Gluten / Bột mì', icon: '🌾' },
-    { id: 'egg', label: 'Trứng gà', icon: '🥚' },
+    { id: 'đậu', label: 'Đậu (Đậu nành, Đậu phộng)', icon: '🥜' },
+    { id: 'hải sản', label: 'Hải sản (Tôm, Cua, Cá)', icon: '🦐' },
+    { id: 'lactose', label: 'Lactose (Sữa bò, Phô mai)', icon: '🥛' },
   ];
 
   const handleAllergenToggle = (id) => {
@@ -106,8 +105,8 @@ const ClinicalNutritionModule = () => {
         calories_need: Number(formData.calories_need || profile?.tdee || 2000),
         protein_need: Number(formData.protein_need || profile?.protein || 75),
         daily_budget: budgetNum,
-        aim: formData.aim || 'Cân bằng',
-        diet_type: formData.diet_type || 'Cơm nhà nấu',
+        aim: formData.aim || 'Duy trì',
+        diet_type: formData.diet_type || 'Không kiêng',
         allergen: formData.allergen || null,
         food_recommendation: profile?.food_recommendation || null,
       };
@@ -231,9 +230,9 @@ const ClinicalNutritionModule = () => {
             </div>
             <div className="clinical-cards-selector">
               {[
-                { id: 'Cân bằng', label: 'Duy trì & Cân bằng thể trạng', icon: '⚖️' },
-                { id: 'Tăng cơ', label: 'Tăng cơ bắp & Thể lực', icon: '💪' },
-                { id: 'Giảm cân', label: 'Kiểm soát cân nặng / Giảm mỡ', icon: '🏃' },
+                { id: 'Giảm cân', title: 'Giảm cân', subtitle: 'Giảm tinh bột', icon: '🏃' },
+                { id: 'Tăng cơ', title: 'Tăng cơ', subtitle: 'Tăng Protein', icon: '💪' },
+                { id: 'Duy trì', title: 'Duy trì', subtitle: 'Cân bằng', icon: '⚖️' },
               ].map((aimItem) => (
                 <div
                   key={aimItem.id}
@@ -241,22 +240,25 @@ const ClinicalNutritionModule = () => {
                   onClick={() => setFormData({ ...formData, aim: aimItem.id })}
                 >
                   <span className="clinical-radio-icon">{aimItem.icon}</span>
-                  <span className="clinical-radio-label">{aimItem.label}</span>
+                  <div className="clinical-radio-content">
+                    <span className="clinical-radio-title">{aimItem.title}</span>
+                    <span className="clinical-radio-sub">{aimItem.subtitle}</span>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Hình thức bữa ăn */}
+          {/* Hình thức bữa ăn (Chế độ ăn) */}
           <div>
             <div className="clinical-form-section-title">
-              <span>🍳</span> 3. Hình thức bữa ăn
+              <span>🍳</span> 3. Chế độ ăn uống
             </div>
             <div className="clinical-cards-selector">
               {[
-                { id: 'Cơm nhà nấu', label: 'Cơm tự nấu tại nhà', icon: '🏠' },
-                { id: 'Ăn ngoài tiệm', label: 'Ăn quán / Mua ngoài', icon: '🍜' },
-                { id: 'Ăn chay / Thuần thực vật', label: 'Ăn chay lành mạnh', icon: '🌱' },
+                { id: 'Ăn chay', title: 'Ăn chay', subtitle: 'Thuần thực vật', icon: '🌱' },
+                { id: 'Không kiêng', title: 'Không kiêng', subtitle: 'Đa dạng thực phẩm', icon: '🍽️' },
+                { id: 'Eat clean', title: 'Eat clean', subtitle: 'Tự nhiên & Tươi sạch', icon: '🥦' },
               ].map((dietItem) => (
                 <div
                   key={dietItem.id}
@@ -264,7 +266,10 @@ const ClinicalNutritionModule = () => {
                   onClick={() => setFormData({ ...formData, diet_type: dietItem.id })}
                 >
                   <span className="clinical-radio-icon">{dietItem.icon}</span>
-                  <span className="clinical-radio-label">{dietItem.label}</span>
+                  <div className="clinical-radio-content">
+                    <span className="clinical-radio-title">{dietItem.title}</span>
+                    <span className="clinical-radio-sub">{dietItem.subtitle}</span>
+                  </div>
                 </div>
               ))}
             </div>

@@ -16,7 +16,7 @@
   font-size: 1.8rem;
   font-weight: 800;
   letter-spacing: -0.03em;
-  color: #ffffff;
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 

@@ -80,12 +80,12 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background-color: rgba(245, 158, 11, 0.15);
+  background-color: #ffffff;
   border: 1px solid var(--med-warning-border);
   padding: 6px 14px;
   border-radius: var(--med-radius-full);
   font-size: 0.82rem;
-  color: #fbbf24;
+  color: #92400e;
 }
 
 /* Form Questionnaire Card */
@@ -141,7 +141,7 @@
 
 .clinical-budget-input-box input:focus {
   border-color: var(--med-primary);
-  background-color: var(--med-bg-elevated);
+  background-color: #ffffff;
   box-shadow: 0 0 0 3px var(--med-primary-light);
 }
 
@@ -205,7 +205,7 @@
 }
 
 .clinical-radio-card:hover {
-  background-color: var(--med-bg-elevated);
+  background-color: #ffffff;
   border-color: var(--med-border-strong);
   box-shadow: var(--med-shadow-xs);
 }
@@ -224,6 +224,24 @@
   font-size: 0.92rem;
   font-weight: 700;
   color: var(--med-navy);
+}
+
+.clinical-radio-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.clinical-radio-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--med-navy);
+}
+
+.clinical-radio-sub {
+  font-size: 0.78rem;
+  color: var(--med-muted);
+  font-weight: 500;
 }
 
 /* Allergens Chips */
