@@ -172,7 +172,7 @@
 
 .chat-bubble-clinical.assistant {
   align-self: flex-start;
-  background-color: #ffffff;
+  background-color: var(--med-bg-surface);
   color: var(--med-slate);
   border: 1px solid var(--med-border-light);
   border-bottom-left-radius: 4px;
@@ -183,7 +183,7 @@
 .clinical-proposal-card {
   margin-top: 12px;
   padding: 14px;
-  background-color: #ffffff;
+  background-color: var(--med-bg-elevated);
   border: 1px solid var(--med-border-strong);
   border-left: 4px solid var(--med-primary);
   border-radius: var(--med-radius-sm);
@@ -275,7 +275,7 @@
 /* Footer & Input Controls */
 .telehealth-footer {
   padding: 12px 16px;
-  background-color: #ffffff;
+  background-color: var(--med-bg-surface);
   border-top: 1px solid var(--med-border-light);
 }
 
@@ -312,7 +312,7 @@
 
 .telehealth-input-field:focus {
   border-color: var(--med-primary);
-  background-color: #ffffff;
+  background-color: var(--med-bg-elevated);
   box-shadow: 0 0 0 3px var(--med-primary-light);
 }
 

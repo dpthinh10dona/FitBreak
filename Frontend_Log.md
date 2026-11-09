@@ -34,6 +34,7 @@
 | **P4** | **Personalized Clinical Diet & Food Module** | Giao diện tư vấn dinh dưỡng y khoa, hiển thị rõ giải thích lâm sàng, lọc dị ứng, khẩu phần rõ ràng. | 🟢 Hoàn thành |
 | **P5** | **Physical Activity & Rehabilitation Schedule** | Lịch tập phục hồi chức năng và thể dục theo phân loại `light` / `medium` / `heavy` dễ nhìn, lịch hẹn rõ ràng. | 🟢 Hoàn thành |
 | **P6** | **Telehealth AI Doctor ChatBot** | Cửa sổ hội chẩn trực tuyến chuyên nghiệp, hiển thị thẻ đề xuất cập nhật thông tin sức khỏe an toàn. | 🟢 Hoàn thành |
+| **P7** | **Theme Harmonization & MedTech Auth Overhaul** | Đồng bộ màu sắc giữa các module y tế và ứng dụng nền tối; thiết kế lại toàn bộ màn hình Log In / Sign Up theo phong cách Medical Blue & Clean White. | 🟢 Hoàn thành |
 
 ---
 
@@ -44,46 +45,44 @@
 * **Hành động**:
   - Tạo tài liệu quản lý tiến độ `Frontend_Log.md` tại thư mục gốc của dự án.
   - Chuẩn hóa thông số kỹ thuật (Tokens, Palette, A11y rules) cho toàn bộ hệ sinh thái MedTech Web App.
-* **Bước tiếp theo**: Khởi tạo file style `frontend/src/style/medtech-theme.css` và bắt đầu code Component **Patient Dashboard Header & Medical Summary Cards**.
 
 ### [2026-11-08] - Hoàn thành Giai đoạn 1 & 2 (P1 & P2): Design Tokens & Patient Dashboard Header
 * **Files tạo mới / chỉnh sửa**:
-  - `frontend/src/style/medtech-theme.css`: Định nghĩa hệ thống biến màu lâm sàng (Medical Blue `#0284C7`, Deep Navy `#0F172A`, Surface White `#FFFFFF`, Canvas `#F8FAFC`, Emerald `#10B981`, Rose `#EF4444`).
+  - `frontend/src/style/medtech-theme.css`: Định nghĩa hệ thống biến màu lâm sàng.
   - `frontend/src/style/patientHeader.css`: Styling chi tiết cho Header bệnh nhân và Grid thẻ sinh tồn Vitals.
-  - `frontend/src/components/patientHeader.jsx`: Component Header y tế đạt chuẩn WCAG AA, hiển thị thể trạng BMI, TDEE, Cường độ vận động y tế (`light`/`medium`/`heavy`) và Hộp cảnh báo dinh dưỡng lâm sàng.
+  - `frontend/src/components/patientHeader.jsx`: Component Header y tế đạt chuẩn WCAG AA.
   - `frontend/src/App.jsx`: Tích hợp thay thế Header & Summary Cards cũ.
   - `frontend/src/main.jsx`: Nạp Design System Tokens vào toàn bộ ứng dụng.
-* **Kiểm tra**: `vite build` thành công 100% trong 997ms.
-* **Giai đoạn tiếp theo**: **P3 - Health Metrics & Vital Signs Cards** (Trực quan hóa bảng nhập và đo chỉ số sinh tồn: Huyết áp, SpO2, Đường huyết).
 
 ### [2026-11-08] - Hoàn thành Giai đoạn 3 (P3): Health Metrics & Vital Signs Cards
 * **Files tạo mới / chỉnh sửa**:
-  - `frontend/src/style/clinicalCheckup.css`: Styling thẻ lâm sàng vô trùng (Sterile White Card `#FFFFFF`), thanh chỉ số cảnh báo có viền màu sắc động (`border-left` theo mức `normal`, `warning`, `danger`), bố cục input trực quan kèm hậu tố đơn vị y tế (`mmHg`, `mg/dL`, `%`).
-  - `frontend/src/components/clinicalVitalCheckup.jsx`: Tách module nhập liệu sinh tồn đạt chuẩn y tế MedTech, chip chọn thời điểm đo đường huyết (`Lúc đói ≥ 8h`, `Trước bữa ăn`, `Ngẫu nhiên`), trực quan hóa kết quả phân tích nguy cơ lâm sàng và đồng bộ với Supabase.
+  - `frontend/src/style/clinicalCheckup.css`: Styling thẻ lâm sàng vô trùng, thanh chỉ số cảnh báo có viền màu sắc động.
+  - `frontend/src/components/clinicalVitalCheckup.jsx`: Tách module nhập liệu sinh tồn đạt chuẩn y tế MedTech.
   - `frontend/src/components/updateProfile.jsx`: Tái cấu trúc, nhúng sạch sẽ `ClinicalVitalCheckup` vào trang Hồ sơ y tế của bệnh nhân.
-* **Kiểm tra**: `vite build` vượt qua thành công 100% trong 372ms.
-* **Giai đoạn tiếp theo**: **P4 - Personalized Clinical Diet & Food Module** (Tái thiết kế giao diện gợi ý thực đơn dinh dưỡng lâm sàng, phân tách khẩu phần và giải thích y khoa).
 
 ### [2026-11-08] - Hoàn thành Giai đoạn 4 (P4): Personalized Clinical Diet & Food Module
 * **Files tạo mới / chỉnh sửa**:
-  - `frontend/src/style/clinicalDiet.css`: Styling chuyên biệt cho Module Dinh Dưỡng Lâm Sàng MedTech. Nền thẻ trắng tinh khiết `#FFFFFF`, thanh đồng bộ chỉ số sinh tồn (TDEE, Protein, Lời khuyên y khoa), các thẻ chọn mục tiêu thể trạng/hình thức nấu/dị ứng y khoa sắc nét. Thiết kế 3 thẻ bữa ăn (Sáng, Trưa, Tối) trực quan với thanh tiến trình đo Macro (Đạm, Carb, Béo).
-  - `frontend/src/components/clinicalNutritionModule.jsx`: Component tư vấn dinh dưỡng y khoa, kết nối API AI RAG `/food-suggest`, tự động loại trừ món ăn khi bấm "Đổi thực đơn khác", và hiển thị rõ ràng Hộp phân tích lâm sàng của Bác sĩ (`clinical-rationale-card`).
+  - `frontend/src/style/clinicalDiet.css`: Styling chuyên biệt cho Module Dinh Dưỡng Lâm Sàng MedTech.
+  - `frontend/src/components/clinicalNutritionModule.jsx`: Component tư vấn dinh dưỡng y khoa kết nối AI.
   - `frontend/src/App.jsx`: Tích hợp thay thế tab `food` sang `ClinicalNutritionModule`.
-* **Kiểm tra**: `vite build` thành công 100% trong 371ms.
-* **Giai đoạn tiếp theo**: **P5 - Physical Activity & Rehabilitation Schedule** (Lịch trình vận động & bài tập phục hồi chức năng cá nhân hóa theo mức `light`, `medium`, `heavy`).
 
 ### [2026-11-08] - Hoàn thành Giai đoạn 5 (P5): Physical Activity & Rehabilitation Schedule
 * **Files tạo mới / chỉnh sửa**:
-  - `frontend/src/style/clinicalSchedule.css`: Thiết kế thời khóa biểu y tế 7 ngày phong cách tối giản lâm sàng (Sterile Timetable). Thẻ phân loại bài tập y tế rõ ràng (`badge-clinical-resistance`, `badge-clinical-cardio`, `badge-clinical-hiit`, `badge-clinical-rest`). Khối đơn thuốc vận động y khoa có viền màu `border-left` theo cường độ `light`, `medium`, `heavy`.
-  - `frontend/src/components/clinicalRehabSchedule.jsx`: Component quản lý lộ trình tập phục hồi và vận động thể lực, tích hợp chỉ dẫn đơn thuốc y khoa từ bác sĩ theo tình trạng sức khỏe thực tế của bệnh nhân. Hỗ trợ xem thời khóa biểu 7 ngày và kéo chọn khung giờ rảnh để tạo giáo án phục hồi tự động qua API backend.
+  - `frontend/src/style/clinicalSchedule.css`: Thời khóa biểu y tế 7 ngày phong cách tối giản lâm sàng.
+  - `frontend/src/components/clinicalRehabSchedule.jsx`: Quản lý lộ trình tập phục hồi và vận động thể lực.
   - `frontend/src/App.jsx`: Tích hợp thay thế tab `schedule` sang `ClinicalRehabSchedule`.
-* **Kiểm tra**: `vite build` vượt qua thành công 100% trong 322ms.
-* **Giai đoạn tiếp theo**: **P6 - Telehealth AI Doctor ChatBot** (Nâng cấp giao diện ChatBot bác sĩ tư vấn trực tuyến phong cách Telemedicine, tối giản, thanh lịch, tin cậy).
 
 ### [2026-11-08] - Hoàn thành Giai đoạn 6 (P6): Telehealth AI Doctor ChatBot
 * **Files tạo mới / chỉnh sửa**:
-  - `frontend/src/style/telehealthChatbot.css`: Thiết kế cửa sổ trò chuyện tư vấn từ xa (Telemedicine Virtual Clinic). Nền trắng lâm sàng thanh thoát, bong bóng chat Medical Blue sắc sảo, avatar bác sĩ `👨‍⚕️`, nhãn trạng thái trực tuyến an tâm. Thẻ đề xuất cập nhật hồ sơ y tế (`clinical-proposal-card`) có viền phân loại mâu thuẫn (`has-conflict`) bằng màu đỏ cảnh báo hoặc xanh ngọc đồng thuận.
-  - `frontend/src/components/telehealthDoctorChatbot.jsx`: Component Bác sĩ Trợ lý Y khoa FitBreak. Ràng buộc chuẩn y tế nghiêm ngặt (< 100 từ/câu, tối đa 3 lượt/ngày), kết nối Failover Gemini / Groq API, hiển thị card xác nhận thông tin bệnh án và tự động reload hồ sơ sau khi cập nhật thành công lên Supabase.
-  - `frontend/src/App.jsx`: Tích hợp thay thế sang `TelehealthDoctorChatbot`.
-* **Kiểm tra**: `vite build` thành công 100% trong 366ms.
-* **Tổng kết lộ trình**: Toàn bộ 6 giai đoạn chuẩn hóa giao diện y tế **Healthcare & MedTech Web Platform** đã hoàn tất 100%. Mọi tiêu chuẩn WCAG 2.1 AA, Mobile-First, Low Cognitive Load và thiết kế lâm sàng đã được áp dụng đồng bộ.
+  - `frontend/src/style/telehealthChatbot.css`: Cửa sổ trò chuyện tư vấn y tế từ xa.
+  - `frontend/src/components/telehealthDoctorChatbot.jsx`: Bác sĩ AI FitBreak với failover Gemini -> Groq.
+  - `frontend/src/App.jsx`: Tích hợp vào ứng dụng.
+
+### [2026-11-08] - Hoàn thành Giai đoạn 7 (P7): Đồng bộ Giao diện & Tái thiết kế Log In / Sign Up
+* **Files tạo mới / chỉnh sửa**:
+  - `frontend/src/style/medtech-theme.css`: Cập nhật bảng màu giao diện bên trong sang tone Deep Medical Slate đồng bộ hoàn hảo với nền tối tổng thể của ứng dụng (`#080a12`, `#101424`), viền Medical Sky (`rgba(56, 189, 248, 0.2)`), loại bỏ hiện tượng các khối trắng tinh bị đối chọi gay gắt với TaskBoard, Pomodoro và Shop.
+  - `frontend/src/style/patientHeader.css`: Đồng bộ Header và Vitals Banner theo phong cách Medical Slate & Glass, văn bản trắng sắc nét, viền xanh y khoa hiện đại.
+  - `frontend/src/style/clinicalDiet.css`, `frontend/src/style/clinicalSchedule.css`, `frontend/src/style/telehealthChatbot.css`: Thay thế các mã màu nền trắng cứng `#ffffff` bằng các biến thẻ nền y tế đồng bộ.
+  - `frontend/src/style/logIn.css` & `frontend/src/style/signUp.css`: Thiết kế lại hoàn toàn giao diện ngoài (Log In / Sign Up) theo đúng tinh thần **Medical Blue & Crisp White** (#0284c7, #f8fafc, #ffffff), thẻ trắng lâm sàng vô trùng, input focus xanh y tế, hiệu ứng thanh lịch và chuyên nghiệp.
+  - `frontend/src/components/logIn.jsx` & `frontend/src/components/signUp.jsx`: Cập nhật nội dung thương hiệu y tế, huy hiệu kiểm chuẩn lâm sàng, tính năng theo dõi sinh hiệu và bác sĩ AI.
+* **Kiểm tra**: `vite build` thành công 100% trong 591ms.

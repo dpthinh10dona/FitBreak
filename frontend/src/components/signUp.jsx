@@ -53,38 +53,43 @@ const SignUp = ({ onSignUpSuccess, onGoToLogIn }) => {
     <div className="signup-fitbreak-signup-page">
       <div className="signup-fitbreak-content-wrapper">
         <div className="signup-fitbreak-logo-section">
-          <div className="signup-badge-hero">NEW WARRIOR ENLISTMENT</div>
-          <h1 className="signup-fitbreak-logo">FitBreak</h1>
+          <div className="signup-badge-hero">
+            <span>🩺</span>
+            <span>KHỞI TẠO HỒ SƠ Y TẾ FITBREAK</span>
+          </div>
+          <h1 className="signup-fitbreak-logo">
+            FitBreak <span className="signup-logo-accent">MedTech</span>
+          </h1>
           <p className="signup-hero-tagline">
-            Khởi đầu hành trình gamification thể chất của bạn. Rèn luyện mỗi ngày, nâng cấp nhân vật, và nhận phần thưởng thực tế.
+            Đăng ký để xây dựng lộ trình phục hồi thể chất, giám sát chỉ số sinh hiệu và nhận chế độ dinh dưỡng tối ưu từ chuyên gia y tế.
           </p>
           <div className="signup-features-list">
             <div className="signup-feature-item">
-              <span className="signup-feature-icon">🛡️</span>
-              <span>Tạo nhân vật Avatar pixel art độc bản</span>
-            </div>
-            <div className="signup-feature-item">
               <span className="signup-feature-icon">📊</span>
-              <span>Tự động tính BMI, TDEE và chỉ số dinh dưỡng</span>
+              <span>Đo lường tự động chỉ số BMI & TDEE khoa học</span>
             </div>
             <div className="signup-feature-item">
-              <span className="signup-feature-icon">🏆</span>
-              <span>Tích lũy tiền vàng sắm vũ khí và giáp trụ</span>
+              <span className="signup-feature-icon">📅</span>
+              <span>Lịch trình vận động phục hồi 7 ngày thông minh</span>
+            </div>
+            <div className="signup-feature-item">
+              <span className="signup-feature-icon">🔒</span>
+              <span>Bảo mật dữ liệu sức khỏe chuẩn tiêu chuẩn lâm sàng</span>
             </div>
           </div>
         </div>
 
         <div className="signup-form-container">
           <div className="signup-form-header">
-            <h2>Gia Nhập FitBreak</h2>
-            <p>Đăng ký tài khoản miễn phí để khởi tạo chiến binh của bạn</p>
+            <h2>Tạo Tài Khoản Mới</h2>
+            <p>Bắt đầu hành trình nâng cao và bảo vệ sức khỏe toàn diện ngay hôm nay</p>
           </div>
 
           <form className="signup-form" onSubmit={handleSubmit}>
             {error && <div className="signup-error-alert">⚠️ {error}</div>}
             
             <div className="signup-form-group">
-              <label htmlFor="email" className="signup-form-label">Email</label>
+              <label htmlFor="email" className="signup-form-label">Email đăng ký</label>
               <input 
                 type="email" 
                 id="email" 
@@ -97,12 +102,12 @@ const SignUp = ({ onSignUpSuccess, onGoToLogIn }) => {
             </div>
 
             <div className="signup-form-group">
-              <label htmlFor="password" className="signup-form-label">Mật khẩu (Password)</label>
+              <label htmlFor="password" className="signup-form-label">Mật khẩu (Tối thiểu 6 ký tự)</label>
               <input 
                 type="password" 
                 id="password" 
                 className="signup-form-input" 
-                placeholder="Tối thiểu 6 ký tự"
+                placeholder="••••••••"
                 value={formData.password}
                 onChange={handleChange}
                 required
@@ -111,7 +116,7 @@ const SignUp = ({ onSignUpSuccess, onGoToLogIn }) => {
             
             <div className="signup-form-actions">
               <button type="submit" className="signup-submit-btn" disabled={loading}>
-                {loading ? 'Đang khởi tạo...' : 'Tạo Tài Khoản'}
+                {loading ? 'Đang tạo hồ sơ...' : 'Đăng Ký Tài Khoản'}
               </button>
               
               <div className="signup-divider-row">
@@ -121,7 +126,7 @@ const SignUp = ({ onSignUpSuccess, onGoToLogIn }) => {
               </div>
 
               <button type="button" className="signup-switch-btn" onClick={onGoToLogIn}>
-                Đăng Nhập Ngay (Log In)
+                Đăng nhập ngay
               </button>
             </div>
           </form>
