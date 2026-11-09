@@ -55,7 +55,10 @@ function App() {
 
       if (response.status === 401) {
         localStorage.removeItem('token');
+        localStorage.removeItem('access_token');
         localStorage.removeItem('user');
+        setUser(null);
+        setCurrentScreen('login');
         return null;
       }
 
@@ -95,25 +98,48 @@ function App() {
       localStorage.removeItem('workoutSchedule');
 
       const savedUser = localStorage.getItem('user');
-      const token = localStorage.getItem('token');
+      const storedToken = localStorage.getItem('token') || localStorage.getItem('access_token');
 
-      if (token && savedUser) {
-        const parsedUser = JSON.parse(savedUser);
+      if (savedUser) {
+        let parsedUser = null;
+        try {
+          parsedUser = JSON.parse(savedUser);
+        } catch (e) {
+          console.error("Lỗi parse user từ localStorage:", e);
+        }
 
-        setWorkoutSchedule(loadScheduleForUser(parsedUser));
+        const token = storedToken || parsedUser?.token || parsedUser?.access_token;
 
-        const [profile, stats] = await Promise.all([
-          fetchUserProfileByEmail(parsedUser.email, token),
-          fetchUserStats(token)
-        ]);
+        if (token && parsedUser) {
+          if (!localStorage.getItem('token')) {
+            localStorage.setItem('token', token);
+          }
+          if (!localStorage.getItem('access_token')) {
+            localStorage.setItem('access_token', token);
+          }
 
-        const fullUserData = { ...parsedUser, ...profile, ...stats, hasProfile: !!profile };
+          setWorkoutSchedule(loadScheduleForUser(parsedUser));
 
-        setUser(fullUserData);
-        localStorage.setItem('user', JSON.stringify(fullUserData));
-        setCurrentScreen('main');
+          const [profile, stats] = await Promise.all([
+            fetchUserProfileByEmail(parsedUser.email, token),
+            fetchUserStats(token)
+          ]);
 
-        if (!profile) setShowCreateProfileModal(true);
+          const fullUserData = { 
+            ...parsedUser, 
+            ...profile, 
+            ...stats, 
+            token,
+            access_token: token,
+            hasProfile: !!profile 
+          };
+
+          setUser(fullUserData);
+          localStorage.setItem('user', JSON.stringify(fullUserData));
+          setCurrentScreen('main');
+
+          if (!profile) setShowCreateProfileModal(true);
+        }
       }
     };
 
@@ -124,7 +150,10 @@ function App() {
     const token = data?.access_token || data?.token;
     const userObj = data?.user;
 
-    if (token) localStorage.setItem('token', token);
+    if (token) {
+      localStorage.setItem('token', token);
+      localStorage.setItem('access_token', token);
+    }
 
     setWorkoutSchedule(isSignUp ? null : loadScheduleForUser(userObj));
 
@@ -145,6 +174,8 @@ function App() {
       ...userObj,
       ...profile,
       ...stats,
+      token,
+      access_token: token,
       hasProfile: !!profile
     };
 
@@ -209,6 +240,7 @@ function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('access_token');
     localStorage.removeItem('user');
     setWorkoutSchedule(null);
     setUser(null);
