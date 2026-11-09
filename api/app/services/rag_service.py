@@ -85,7 +85,13 @@ def filter_foods(df: pd.DataFrame, user_diet: str, user_allergens) -> pd.DataFra
                   a.strip().lower() for a in (user_allergens or []) if a and a.strip()
             ]
 
-      mapped_allergens = [ALLERGEN_SYNONYMS.get(a, a) for a in raw_allergens]
+      mapped_allergens = set()
+      for a in raw_allergens:
+            if a in ('đậu', 'dau', 'beans', 'legumes'):
+                  mapped_allergens.add('soy')
+                  mapped_allergens.add('peanut')
+            else:
+                  mapped_allergens.add(ALLERGEN_SYNONYMS.get(a, a))
 
       def has_allergen(item_allergens):
             if not item_allergens:

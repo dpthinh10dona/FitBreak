@@ -87,3 +87,34 @@
   - `frontend/src/App.jsx`: Tích hợp thay thế sang `TelehealthDoctorChatbot`.
 * **Kiểm tra**: `vite build` thành công 100% trong 366ms.
 * **Tổng kết lộ trình**: Toàn bộ 6 giai đoạn chuẩn hóa giao diện y tế **Healthcare & MedTech Web Platform** đã hoàn tất 100%. Mọi tiêu chuẩn WCAG 2.1 AA, Mobile-First, Low Cognitive Load và thiết kế lâm sàng đã được áp dụng đồng bộ.
+
+---
+
+## 7. ĐỒNG BỘ TOÀN DIỆN HỆ THỐNG GIAO DIỆN XANH TRẮNG & CHUẨN HÓA DATASET DINH DƯỠNG
+
+### 7.1 Chuẩn hóa Form Dinh Dưỡng & Dataset (`clinicalNutritionModule.jsx`, `rag_service.py`)
+- **Mục tiêu thể hình & Sức khỏe (`aim`)**:
+  - `Giảm cân`: Giảm tinh bột (🏃)
+  - `Tăng cơ`: Tăng Protein (💪)
+  - `Duy trì`: Cân bằng (⚖️)
+- **Chế độ ăn (`diet_type`)**:
+  - `Ăn chay`: Thuần thực vật (🌱) -> lọc món `vegetarian` trong dataset.
+  - `Không kiêng`: Đa dạng thực phẩm (🍽️) -> cho phép toàn bộ món ăn trong dataset.
+  - `Eat clean`: Tự nhiên & Tươi sạch (🥦) -> lọc món `eat_clean` trong dataset.
+- **Thực phẩm kiêng cữ / Dị ứng y khoa (`allergens`)**: Chuẩn hóa chính xác 3 loại dị ứng theo quy ước:
+  - `Đậu`: Đậu nành, Đậu phộng (`soy`, `peanut`).
+  - `Hải sản`: Tôm cua cá (`seafood`).
+  - `Lactose`: Sữa bò & chế phẩm (`lactose`).
+
+### 7.2 Đồng bộ toàn bộ Frontend sang Xanh Dương + Trắng (Medical Blue & Crisp White)
+- **Toàn cục (`index.css` & `App.css`)**:
+  - Chuyển toàn bộ nền `#root` và `body` từ nền tối sang nền trắng y tế `#f8fafc` cùng hiệu ứng gradient vòm xanh nhạt thanh lịch (`rgba(2, 132, 199, 0.08)`, `rgba(56, 189, 248, 0.06)`).
+  - Khử bỏ hoàn toàn sự đứt gãy giao diện giữa Patient Header và TaskBoard/Pomodoro.
+- **Bảng bài tập & Đồng hồ Pomodoro (`taskBoard.css`)**:
+  - `.pomodoro-sidebar`: Card trắng sáng `#ffffff`, viền nhẹ `#e2e8f0`, đổ bóng mềm mại, tiêu đề chữ đậm `#0f172a`.
+  - `.timer-display-wrapper`: Nền xanh nhạt `#f0f9ff`, viền `#bae6fd`, chữ số Pomodoro xanh y tế `#0284c7`.
+  - `.workout-block`, `.exercise-card`: Nền trắng sáng, hiệu ứng hover xanh sky `#f0f9ff` kèm viền `#bae6fd`.
+- **Cửa hàng & Trang bị (`shop.css`)**:
+  - Khung xem trước Avatar và các thẻ vật phẩm chuyển sang phong cách trắng xanh đồng bộ, chữ rõ nét `#0f172a`.
+- **Đội nhóm & Khám sức khỏe (`joinTeam.css`, `updateProfile.css`, `createProfile.css`)**:
+  - Input form nền sáng `#f8fafc`, focus viền xanh `#0284c7`, thẻ thành viên và modal sạch sẽ, hiện đại.

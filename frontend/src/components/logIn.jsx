@@ -54,43 +54,48 @@ const LogIn = ({ onLoginSuccess, onGoToSignUp }) => {
     <div className="login-fitbreak-login-page">
       <div className="login-fitbreak-content-wrapper">
         <div className="login-fitbreak-logo-section">
-          <div className="login-badge-hero">FITNESS RPG PLATFORM</div>
-          <h1 className="login-fitbreak-logo">FitBreak</h1>
+          <div className="login-badge-hero">
+            <span>🛡️</span>
+            <span>NỀN TẢNG Y TẾ & PHỤC HỒI THỂ LỰC</span>
+          </div>
+          <h1 className="login-fitbreak-logo">
+            FitBreak <span className="login-logo-accent">Health</span>
+          </h1>
           <p className="login-hero-tagline">
-            Biến mỗi đợt nghỉ ngơi thành sức mạnh. Vận động, đánh Boss cùng đồng đội và nâng tầm thể lực mỗi ngày.
+            Giải pháp theo dõi chỉ số sinh hiệu, lịch trình vận động thể chất khoa học và hỗ trợ dinh dưỡng chuẩn y khoa được cá nhân hóa bởi AI.
           </p>
           <div className="login-features-list">
             <div className="feature-item">
-              <span className="feature-icon">⚔️</span>
-              <span>Chiến Boss Raid nhận vàng & trang bị</span>
+              <span className="feature-icon">🩺</span>
+              <span>Theo dõi chỉ số sinh hiệu (BMI, Huyết áp, SpO2, Đường huyết)</span>
             </div>
             <div className="feature-item">
-              <span className="feature-icon">⏰</span>
-              <span>Đồng hồ Pomodoro nhắc nhở vận động</span>
+              <span className="feature-icon">🥗</span>
+              <span>Đề xuất thực đơn dinh dưỡng lâm sàng theo bệnh lý</span>
             </div>
             <div className="feature-item">
-              <span className="feature-icon">🍱</span>
-              <span>Thực đơn dinh dưỡng cá nhân hóa bằng AI</span>
+              <span className="feature-icon">🤖</span>
+              <span>Bác sĩ AI Telehealth tư vấn trực tuyến 24/7</span>
             </div>
           </div>
         </div>
 
         <div className="login-form-container">
           <div className="login-form-header">
-            <h2>Chào Mừng Trở Lại!</h2>
-            <p>Đăng nhập vào tài khoản của bạn để tiếp tục chuỗi nhiệm vụ</p>
+            <h2>Đăng Nhập Hệ Thống</h2>
+            <p>Truy cập hồ sơ y tế và tiếp tục lộ trình chăm sóc sức khỏe của bạn</p>
           </div>
 
           <form className="login-form" onSubmit={handleSubmit}>
             {error && <div className="login-error-alert">⚠️ {error}</div>}
             
             <div className="login-form-group">
-              <label htmlFor="email" className="login-form-label">Email</label>
+              <label htmlFor="email" className="login-form-label">Email tài khoản</label>
               <input 
                 type="email" 
                 id="email" 
                 className="login-form-input" 
-                placeholder="tennguoidung@example.com"
+                placeholder="bacsi_hoac_benhnhan@example.com"
                 value={formData.email}
                 onChange={handleChange}
                 required
@@ -98,7 +103,7 @@ const LogIn = ({ onLoginSuccess, onGoToSignUp }) => {
             </div>
 
             <div className="login-form-group">
-              <label htmlFor="password" className="login-form-label">Mật khẩu (Password)</label>
+              <label htmlFor="password" className="login-form-label">Mật khẩu</label>
               <input 
                 type="password" 
                 id="password" 
@@ -112,17 +117,17 @@ const LogIn = ({ onLoginSuccess, onGoToSignUp }) => {
             
             <div className="login-form-actions">
               <button type="submit" className="login-submit-btn" disabled={loading}>
-                {loading ? 'Đang xác thực...' : 'Đăng Nhập'}
+                {loading ? 'Đang xác thực bảo mật...' : 'Đăng Nhập'}
               </button>
               
               <div className="login-divider-row">
                 <span className="divider-line"></span>
-                <span className="divider-text">Chưa có tài khoản?</span>
+                <span className="divider-text">Chưa có hồ sơ?</span>
                 <span className="divider-line"></span>
               </div>
 
               <button type="button" className="login-switch-btn" onClick={onGoToSignUp}>
-                Tạo tài khoản mới (Sign Up)
+                Đăng ký tài khoản mới
               </button>
             </div>
           </form>

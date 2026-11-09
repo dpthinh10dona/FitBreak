@@ -226,6 +226,24 @@
   color: var(--med-navy);
 }
 
+.clinical-radio-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.clinical-radio-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--med-navy);
+}
+
+.clinical-radio-sub {
+  font-size: 0.78rem;
+  color: var(--med-muted);
+  font-weight: 500;
+}
+
 /* Allergens Chips */
 .clinical-allergen-tags {
   display: flex;

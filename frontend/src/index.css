@@ -1,56 +1,56 @@
 :root {
-  --bg-base: #080a12;
-  --bg-surface: #101424;
-  --bg-surface-elevated: #161c33;
-  --bg-surface-hover: #1c233f;
-  --bg-glass: rgba(16, 20, 36, 0.85);
-  --bg-glass-card: rgba(22, 28, 51, 0.65);
+  --bg-base: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #ffffff;
+  --bg-surface-hover: #f0f9ff;
+  --bg-glass: rgba(255, 255, 255, 0.9);
+  --bg-glass-card: rgba(255, 255, 255, 0.95);
   
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-medium: rgba(255, 255, 255, 0.14);
-  --border-glow: rgba(139, 92, 246, 0.4);
-  --border-cyan: rgba(56, 189, 248, 0.35);
+  --border-subtle: #e2e8f0;
+  --border-medium: #cbd5e1;
+  --border-glow: rgba(2, 132, 199, 0.25);
+  --border-cyan: rgba(2, 132, 199, 0.35);
 
-  --accent-purple: #8b5cf6;
-  --accent-purple-hover: #7c3aed;
-  --accent-purple-glow: rgba(139, 92, 246, 0.3);
+  --accent-purple: #0284c7;
+  --accent-purple-hover: #0369a1;
+  --accent-purple-glow: rgba(2, 132, 199, 0.2);
   
-  --accent-cyan: #38bdf8;
-  --accent-cyan-hover: #0284c7;
-  --accent-cyan-glow: rgba(56, 189, 248, 0.25);
+  --accent-cyan: #0284c7;
+  --accent-cyan-hover: #0369a1;
+  --accent-cyan-glow: rgba(2, 132, 199, 0.2);
 
   --accent-emerald: #10b981;
   --accent-emerald-hover: #059669;
-  --accent-emerald-glow: rgba(16, 185, 129, 0.25);
+  --accent-emerald-glow: rgba(16, 185, 129, 0.2);
 
-  --accent-amber: #f59e0b;
-  --accent-amber-glow: rgba(245, 158, 11, 0.25);
+  --accent-amber: #d97706;
+  --accent-amber-glow: rgba(217, 119, 6, 0.2);
 
-  --accent-rose: #f43f5e;
-  --accent-rose-hover: #e11d48;
-  --accent-rose-glow: rgba(244, 63, 94, 0.3);
+  --accent-rose: #ef4444;
+  --accent-rose-hover: #dc2626;
+  --accent-rose-glow: rgba(239, 68, 68, 0.2);
 
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
   --text-muted: #64748b;
-  --text-inverse: #080a12;
+  --text-inverse: #ffffff;
 
-  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Apple Color Emoji', 'Segoe UI Emoji', monospace;
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   --radius-xs: 4px;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
-  --radius-xl: 24px;
+  --radius-xl: 20px;
   --radius-full: 9999px;
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 8px 24px -4px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 16px 40px -8px rgba(0, 0, 0, 0.65);
-  --shadow-glow-purple: 0 0 25px rgba(139, 92, 246, 0.25);
-  --shadow-glow-rose: 0 0 25px rgba(244, 63, 94, 0.3);
-  --shadow-glow-emerald: 0 0 25px rgba(16, 185, 129, 0.25);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 16px -2px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 12px 32px -4px rgba(15, 23, 42, 0.1);
+  --shadow-glow-purple: 0 0 20px rgba(2, 132, 199, 0.15);
+  --shadow-glow-rose: 0 0 20px rgba(239, 68, 68, 0.15);
+  --shadow-glow-emerald: 0 0 20px rgba(16, 185, 129, 0.15);
 
   --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -83,10 +83,10 @@ html, body {
   max-width: 100%;
   display: flex;
   flex-direction: column;
-  background-color: var(--bg-base);
+  background-color: #f8fafc;
   background-image: 
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(139, 92, 246, 0.12), transparent),
-    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(56, 189, 248, 0.05), transparent);
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(2, 132, 199, 0.08), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(56, 189, 248, 0.06), transparent 70%);
   background-attachment: fixed;
 }
 
@@ -128,15 +128,15 @@ button {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #232a47;
+  background: #cbd5e1;
   border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #37426b;
+  background: #94a3b8;
 }
 
 ::selection {
-  background: rgba(139, 92, 246, 0.4);
-  color: #ffffff;
+  background: rgba(2, 132, 199, 0.2);
+  color: #0284c7;
 }

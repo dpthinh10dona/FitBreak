@@ -33,7 +33,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 32px;
-  background: rgba(10, 13, 24, 0.85);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-subtle);
@@ -44,9 +44,7 @@
   font-size: 1.4rem;
   font-weight: 800;
   letter-spacing: -0.04em;
-  background: linear-gradient(135deg, #ffffff 30%, var(--accent-purple) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -60,17 +58,16 @@
   letter-spacing: 0.08em;
   padding: 3px 8px;
   border-radius: var(--radius-full);
-  background: rgba(139, 92, 246, 0.15);
-  border: 1px solid rgba(139, 92, 246, 0.35);
-  color: var(--accent-purple);
-  -webkit-text-fill-color: var(--accent-purple);
+  background: #e0f2fe;
+  border: 1px solid #bae6fd;
+  color: #0284c7;
 }
 
 .header-nav {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(22, 28, 51, 0.5);
+  background: #f1f5f9;
   padding: 5px;
   border-radius: var(--radius-full);
   border: 1px solid var(--border-subtle);
@@ -91,13 +88,13 @@
 
 .header-nav a:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.05);
+  background: #ffffff;
 }
 
 .header-nav a.active {
   color: #ffffff;
-  background: linear-gradient(135deg, var(--accent-purple) 0%, #6d28d9 100%);
-  box-shadow: 0 2px 12px var(--accent-purple-glow);
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  box-shadow: 0 2px 10px rgba(2, 132, 199, 0.25);
 }
 
 .header-stats {
