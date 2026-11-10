@@ -8,6 +8,9 @@ from app.services.clinical_rag import retrieve_medical_docs
 
 logger = logging.getLogger(__name__)
 
+# ==============================================================================
+# AGENT 1: BÁC SĨ TRỢ LÝ ẢO (CLINICAL AI ADVISOR) - RAG-FIRST & MARKDOWN
+# ==============================================================================
 CLINICAL_ADVISOR_PROMPT_TEMPLATE = """# ROLE & OBJECTIVE
 Bạn là Bác sĩ Trợ lý Ảo (Clinical AI Advisor). Nhiệm vụ của bạn là tiếp nhận mô tả triệu chứng hoặc thắc mắc sức khỏe từ người dùng, đối chiếu với tài liệu y khoa được truy xuất (RAG) và tình trạng sức khỏe sẵn có trong hồ sơ cá nhân để đưa ra câu trả lời tư vấn khoa học, an toàn, dễ hiểu và thấu cảm.
 
@@ -49,8 +52,70 @@ Bạn được cung cấp 3 biến ngữ cảnh:
 - KHÔNG tự động hỏi xác nhận lưu dữ liệu Supabase (việc này do Node UI xử lý riêng).
 """
 
+# ==============================================================================
+# AGENT 2: ĐỘNG CƠ CÁ NHÂN HOÁ DỮ LIỆU SỨC KHOẺ (PERSONALIZATION LOGIC ENGINE)
+# ==============================================================================
+PERSONALIZATION_ENGINE_PROMPT_TEMPLATE = """# ROLE & OBJECTIVE
+Bạn là Động cơ Cá nhân hoá Dữ liệu Sức khoẻ (Personalization Logic Engine). Nhiệm vụ của bạn là phân tích cuộc hội thoại giữa người dùng và Agent y khoa, đánh giá xem có cần điều chỉnh 2 trường dữ liệu trên Supabase: `food_recommendation` (chế độ dinh dưỡng) và `level_of_physical_activity` (cường độ vận động) hay không, đồng thời kiểm tra xung đột logic y khoa nghiêm ngặt.
+
+---
+
+# CONTEXT VARIABLES
+1. {{user_message}}:
+{user_message}
+
+2. {{agent_response}}:
+{agent_response}
+
+3. {{current_user_profile}}:
+{current_user_profile}
+
+---
+
+# LOGIC & CONFLICT RESOLUTION RULES
+
+1. **Phát hiện nhu cầu cập nhật:**
+   - Chỉ đề xuất thay đổi khi người dùng có triệu chứng mới kéo dài, bệnh lý cấp tính, hoặc có sự thay đổi rõ ràng về thể trạng.
+   - Nếu câu hỏi chỉ mang tính tò mò/hỏi hộ ("bệnh sởi lây qua đâu?", "uống gì tốt cho tim?"), đặt `has_proposed_changes = false`.
+
+2. **Quy tắc phân giải xung đột (CRITICAL):**
+   - **Hard Constraints (Ràng buộc cứng):** `health_metrics` cố định (tiểu đường, suy thận, gãy xương, tăng huyết áp, dị ứng). Đề xuất mới TUYỆT ĐỐI KHÔNG ĐƯỢC vi phạm các ràng buộc này.
+     - *Ví dụ vi phạm:* Đề xuất tập cardio cường độ cao khi người dùng có tiền sử suy tim hoặc đang sốt cao; đề xuất ăn chuối/cam khi hồ sơ có chỉ số suy thận tăng kali huyết.
+   - Khi phát hiện xung đột: Đặt `conflict_detected = true`, ghi rõ lý do vào `conflict_explanation` và điều chỉnh đề xuất sao cho an toàn nhất hoặc giữ nguyên giá trị cũ.
+   - **Nguyên tắc bổ sung/hợp nhất (Merge):** Nếu đề xuất mới an toàn và chi tiết hoá thêm cho khuyến nghị hiện có, hãy tích hợp một cách hài hoà thay vì xoá bỏ hoàn toàn dữ liệu cũ.
+
+3. **Cơ chế xác nhận người dùng (Human-in-the-Loop):**
+   - Mọi thay đổi đều ở trạng thái đề xuất chờ duyệt (`requires_user_confirmation: true`).
+   - Cung cấp dữ liệu ngắn gọn, dễ hiểu để Frontend render thành giao diện Action Card (thẻ xác nhận với 2 nút: [Đồng ý cập nhật] / [Bỏ qua]).
+
+---
+
+# OUTPUT FORMAT (STRICT JSON ONLY)
+Chỉ trả về duy nhất một khối JSON hợp lệ, không kèm bất kỳ văn bản dẫn nhập hay kết luận nào:
+
+{{
+  "has_proposed_changes": true,
+  "conflict_detected": false,
+  "conflict_explanation": null,
+  "summary_for_ui_card": "Tóm tắt ngắn gọn thay đổi (1-2 câu) để hiển thị trên UI Card cho người dùng đọc",
+  "proposed_updates": {{
+    "food_recommendation": {{
+      "previous_value": "Giá trị hiện tại lấy từ profile",
+      "new_value": "Nội dung dinh dưỡng mới được đề xuất",
+      "reason": "Lý do dựa trên triệu chứng hiện tại"
+    }},
+    "level_of_physical_activity": {{
+      "previous_value": "Mức vận động hiện tại",
+      "new_value": "Nghỉ ngơi | Vận động nhẹ | Trung bình | Năng động",
+      "reason": "Lý do điều chỉnh cường độ"
+    }}
+  }},
+  "requires_user_confirmation": true
+}}
+"""
+
 def format_user_profile(user_profile: Dict[str, Any]) -> str:
-    """Format Supabase profile data into clear medical context."""
+    """Format Supabase profile data into medical context string."""
     if not user_profile:
         return "Chưa có thông tin hồ sơ sức khỏe trên hệ thống."
 
@@ -77,7 +142,6 @@ def format_user_profile(user_profile: Dict[str, Any]) -> str:
     activity_level = user_profile.get("level_of_physical_activity") or "Chưa xác định"
     allergies = user_profile.get("allergies") or "Không có dị ứng ghi nhận"
 
-    # Health metrics (nếu có từ medical checkup)
     metrics = user_profile.get("health_metrics")
     metrics_str = ""
     if isinstance(metrics, dict):
@@ -89,81 +153,92 @@ def format_user_profile(user_profile: Dict[str, Any]) -> str:
     profile_lines = [
         f"- Chỉ số thể trạng: Chiều cao {height or '?'} cm, Cân nặng {weight or '?'} kg | BMI: {bmi_str} ({bmi_category})",
         f"- Tiền sử dị ứng y khoa (ràng buộc cứng): {allergies}",
-        f"- Chỉ số xét nghiệm/bệnh lý lâm sàng: {metrics_str or 'Không có ghi nhận bất thường'}",
-        f"- Chế độ dinh dưỡng đang áp dụng: \"{food_rec}\"",
-        f"- Mức độ vận động hiện tại: \"{activity_level}\"",
+        f"- Chỉ số xét nghiệm/bệnh lý lâm sàng (Hard Constraints): {metrics_str or 'Không có ghi nhận bất thường'}",
+        f"- Chế độ dinh dưỡng đang áp dụng (food_recommendation): \"{food_rec}\"",
+        f"- Mức độ vận động hiện tại (level_of_physical_activity): \"{activity_level}\"",
     ]
     return "\n".join(profile_lines)
 
 
-async def extract_profile_proposal(
+def map_activity_to_code(activity_str: Optional[str]) -> Optional[str]:
+    """Map Vietnamese activity levels to database codes ('light', 'medium', 'heavy')."""
+    if not activity_str:
+        return None
+    s = activity_str.strip().lower()
+    if any(k in s for k in ["nghỉ ngơi", "nhẹ", "light", "phục hồi"]):
+        return "light"
+    elif any(k in s for k in ["trung bình", "medium", "vừa"]):
+        return "medium"
+    elif any(k in s for k in ["năng động", "heavy", "nặng", "cường độ cao"]):
+        return "heavy"
+    return "light"
+
+
+async def run_clinical_advisor(
     user_message: str,
-    user_profile: Dict[str, Any],
-    clinical_reply: str
+    user_profile: Dict[str, Any]
+) -> str:
+    """Agent 1: Clinical AI Advisor (RAG-First, Markdown only)."""
+    retrieved_docs = retrieve_medical_docs(user_message, top_k=2)
+    profile_formatted = format_user_profile(user_profile)
+
+    prompt = CLINICAL_ADVISOR_PROMPT_TEMPLATE.format(
+        user_message=user_message,
+        retrieved_medical_docs=retrieved_docs,
+        current_user_profile=profile_formatted
+    )
+
+    raw_response = await generate_chat(prompt, response_mime_type="text/plain")
+    clinical_reply = raw_response.strip()
+
+    # Clean code blocks if any
+    if clinical_reply.startswith("```markdown"):
+        clinical_reply = clinical_reply[len("```markdown"):].strip()
+    if clinical_reply.startswith("```"):
+        clinical_reply = clinical_reply[len("```"):].strip()
+    if clinical_reply.endswith("```"):
+        clinical_reply = clinical_reply[:-3].strip()
+
+    return clinical_reply
+
+
+async def run_personalization_engine(
+    user_message: str,
+    agent_response: str,
+    user_profile: Dict[str, Any]
 ) -> Dict[str, Any]:
-    """
-    Trích xuất đề xuất cập nhật hồ sơ (food_recommendation & level_of_physical_activity)
-    cho Node UI xử lý riêng biệt mà không làm nhiễu câu trả lời lâm sàng.
-    """
-    clean_msg = user_message.lower()
-    current_level = (user_profile.get("level_of_physical_activity") or "").lower()
-    current_food = user_profile.get("food_recommendation") or ""
+    """Agent 2: Personalization Logic Engine (Conflict Detection & Strict JSON Schema)."""
+    profile_formatted = format_user_profile(user_profile)
 
-    proposal = {
-        "has_update": False,
-        "suggested_food_recommendation": None,
-        "suggested_level_of_physical_activity": None,
-        "reason": None,
-        "conflict_detected": False,
-        "conflict_message": None,
-        "verification_question": "Bạn có muốn FitBreak cập nhật thông tin này vào hồ sơ cá nhân của bạn không?"
-    }
+    prompt = PERSONALIZATION_ENGINE_PROMPT_TEMPLATE.format(
+        user_message=user_message,
+        agent_response=agent_response,
+        current_user_profile=profile_formatted
+    )
 
-    # 1. Phát hiện xung đột (Conflict)
-    if "tập nặng" in clean_msg or "heavy" in clean_msg:
-        if current_level == "light" or "tim" in current_food.lower() or "huyết áp" in current_food.lower():
-            proposal["conflict_detected"] = True
-            proposal["conflict_message"] = "Hồ sơ sức khỏe của bạn hiện được khuyến nghị ở mức 'Light' (vận động nhẹ/phục hồi). Việc tập nặng có thể gây nguy hiểm cho tim mạch hoặc cơ xương khớp."
+    try:
+        raw_json = await generate_chat(prompt, response_mime_type="application/json")
+        clean_json = raw_json.strip()
+        if "```json" in clean_json:
+            clean_json = clean_json.split("```json")[1].split("```")[0].strip()
+        elif "```" in clean_json:
+            clean_json = clean_json.split("```")[1].split("```")[0].strip()
 
-    # 2. Nhận diện các vấn đề sức khỏe mới cần hạ mức vận động hoặc điều chỉnh dinh dưỡng
-    stomach_keywords = ["đau dạ dày", "viêm loét", "trào ngược", "đau thượng vị", "đau bụng"]
-    hypo_keywords = ["hạ đường huyết", "choáng váng", "chóng mặt", "tụt huyết áp", "ngất"]
-    joint_keywords = ["đau khớp", "thoái hóa khớp", "chấn thương", "căng cơ", "đứt dây chằng", "đau lưng"]
-    fatigue_keywords = ["kiệt sức", "mệt mỏi", "suy nhược", "sốt"]
-
-    updates_food = []
-    need_light_activity = False
-
-    if any(k in clean_msg for k in stomach_keywords):
-        updates_food.append("Ưu tiên thức ăn mềm, dễ tiêu hóa; kiêng đồ chua cay, nhiều dầu mỡ, cà phê, nước ngọt có ga và chất kích thích dạ dày")
-        need_light_activity = True
-
-    if any(k in clean_msg for k in hypo_keywords):
-        updates_food.append("Chia nhỏ bữa ăn trong ngày để ổn định đường huyết, luôn mang theo đồ ăn nhẹ; bù nước và điện giải")
-        need_light_activity = True
-
-    if any(k in clean_msg for k in joint_keywords):
-        need_light_activity = True
-
-    if any(k in clean_msg for k in fatigue_keywords):
-        need_light_activity = True
-
-    if updates_food or (need_light_activity and current_level != "light"):
-        proposal["has_update"] = True
-        if updates_food:
-            new_food_str = "; ".join(updates_food)
-            # Kết hợp với lời khuyên cũ nếu chưa trùng
-            if current_food and current_food != "Chưa có lời khuyên cụ thể":
-                proposal["suggested_food_recommendation"] = f"{current_food}. Lưu ý mới: {new_food_str}."
-            else:
-                proposal["suggested_food_recommendation"] = new_food_str
-            proposal["reason"] = "Phát hiện triệu chứng tiêu hóa/chuyển hóa mới cần tinh chỉnh chế độ dinh dưỡng"
-
-        if need_light_activity and current_level != "light":
-            proposal["suggested_level_of_physical_activity"] = "light"
-            proposal["reason"] = (proposal["reason"] or "") + " - Đề xuất chuyển cường độ tập về 'Light' để bảo vệ cơ thể"
-
-    return proposal
+        data = json.loads(clean_json)
+        return data
+    except Exception as e:
+        logger.warning(f"Agent 2 (Personalization Engine) JSON parse failed: {e}. Falling back to default.")
+        return {
+            "has_proposed_changes": False,
+            "conflict_detected": False,
+            "conflict_explanation": None,
+            "summary_for_ui_card": None,
+            "proposed_updates": {
+                "food_recommendation": None,
+                "level_of_physical_activity": None
+            },
+            "requires_user_confirmation": True
+        }
 
 
 async def analyze_and_chat(
@@ -172,76 +247,79 @@ async def analyze_and_chat(
     history: list = None
 ) -> Dict[str, Any]:
     """
-    Bác sĩ Trợ lý Ảo (Clinical AI Advisor) FitBreak:
-    - RAG-First: Truy xuất tài liệu y khoa chuẩn xác.
-    - Cá nhân hóa theo hồ sơ sức khỏe người dùng (health_metrics, food_recommendation, physical activity).
-    - Trả lời bằng Markdown chuẩn (4 phần bắt buộc).
-    - Không sinh JSON, không sinh cú pháp code block thừa.
-    - Node UI tự động quản lý card xác nhận lưu Supabase.
+    FitBreak Multi-Agent Healthcare Telehealth Architecture:
+    1. Agent 1 (Clinical AI Advisor): RAG-First, Markdown advice, empathetic, evidence-based.
+    2. Agent 2 (Personalization Logic Engine): Strictly evaluates Supabase updates and clinical conflicts.
+    3. UI Human-in-the-Loop Action Card: Renders proposal waiting for user confirmation.
     """
-    # 1. RAG Retrieval
-    retrieved_docs = retrieve_medical_docs(user_message, top_k=2)
-
-    # 2. Format Profile
-    profile_formatted = format_user_profile(user_profile)
-
-    # 3. Build Full Clinical Prompt
-    prompt = CLINICAL_ADVISOR_PROMPT_TEMPLATE.format(
-        user_message=user_message,
-        retrieved_medical_docs=retrieved_docs,
-        current_user_profile=profile_formatted
-    )
-
     try:
-        # Gọi mô hình với text/plain để nhận văn bản Markdown tự nhiên
-        raw_response = await generate_chat(prompt, response_mime_type="text/plain")
-        clinical_reply = raw_response.strip()
+        # Step 1: Run Agent 1 (Clinical AI Advisor)
+        clinical_reply = await run_clinical_advisor(user_message, user_profile)
 
-        # Loại bỏ bọc code block nếu có
-        if clinical_reply.startswith("```markdown"):
-            clinical_reply = clinical_reply[len("```markdown"):].strip()
-        if clinical_reply.startswith("```"):
-            clinical_reply = clinical_reply[len("```"):].strip()
-        if clinical_reply.endswith("```"):
-            clinical_reply = clinical_reply[:-3].strip()
+        # Step 2: Run Agent 2 (Personalization Logic Engine)
+        personalization = await run_personalization_engine(
+            user_message=user_message,
+            agent_response=clinical_reply,
+            user_profile=user_profile
+        )
 
-        # 4. Trích xuất Proposal ngầm cho Node UI
-        proposal = await extract_profile_proposal(user_message, user_profile, clinical_reply)
+        has_proposed = personalization.get("has_proposed_changes", False)
+        proposed = personalization.get("proposed_updates") or {}
+
+        # Extract food recommendation update
+        food_update = proposed.get("food_recommendation")
+        new_food_val = food_update.get("new_value") if isinstance(food_update, dict) else None
+
+        # Extract physical activity update
+        act_update = proposed.get("level_of_physical_activity")
+        raw_act_val = act_update.get("new_value") if isinstance(act_update, dict) else None
+        code_act_val = map_activity_to_code(raw_act_val)
+
+        conflict_detected = personalization.get("conflict_detected", False)
+        conflict_msg = personalization.get("conflict_explanation")
+        summary_ui = personalization.get("summary_for_ui_card")
 
         return {
             "reply": clinical_reply,
-            "has_update": proposal.get("has_update", False),
-            "suggested_food_recommendation": proposal.get("suggested_food_recommendation"),
-            "suggested_level_of_physical_activity": proposal.get("suggested_level_of_physical_activity"),
-            "reason": proposal.get("reason"),
-            "conflict_detected": proposal.get("conflict_detected", False),
-            "conflict_message": proposal.get("conflict_message"),
-            "verification_question": proposal.get("verification_question")
+            "has_update": has_proposed,
+            "has_proposed_changes": has_proposed,
+            "conflict_detected": conflict_detected,
+            "conflict_explanation": conflict_msg,
+            "conflict_message": conflict_msg,
+            "summary_for_ui_card": summary_ui,
+            "suggested_food_recommendation": new_food_val,
+            "suggested_level_of_physical_activity": code_act_val,
+            "suggested_level_display": raw_act_val,
+            "reason": summary_ui,
+            "verification_question": summary_ui or "Bạn có đồng ý để FitBreak cập nhật thông tin này vào hồ sơ cá nhân không?",
+            "proposed_updates": proposed
         }
 
     except Exception as e:
-        logger.error(f"Clinical AI Advisor error: {e}", exc_info=True)
-        # Fallback an toàn dựa trên RAG
+        logger.error(f"Multi-Agent Telehealth execution error: {e}", exc_info=True)
         fallback_reply = (
             "**Nhận định sơ bộ:**\n"
-            "Hệ thống ghi nhận mô tả triệu chứng của bạn. Do kết nối mạng tạm thời bị gián đoạn, "
-            "tôi xin đưa ra khuyến cáo an toàn sơ bộ dựa trên hồ sơ thể trạng của bạn.\n\n"
+            "Hệ thống ghi nhận câu hỏi của bạn. Kết nối mạng hiện đang chậm, "
+            "tôi xin gửi khuyến cáo an toàn sơ bộ dựa trên hồ sơ thể trạng của bạn.\n\n"
             "**Giải pháp & Lời khuyên tức thì:**\n"
-            "- Hãy tạm dừng hoạt động thể chất và công việc, ngồi hoặc nằm nghỉ ngơi ở nơi thoáng mát.\n"
-            "- Uống nước ấm từng ngụm nhỏ, giữ ấm cơ thể và theo dõi diễn biến sức khỏe.\n"
-            "- Duy trì chế độ ăn thanh đạm, tránh các thực phẩm lạ, đồ cay nóng hoặc nhiều dầu mỡ.\n\n"
+            "- Hãy tạm dừng các vận động mạnh và nghỉ ngơi tại nơi thoáng khí.\n"
+            "- Uống nước ấm từng ngụm nhỏ, giữ ấm cơ thể và duy trì chế độ ăn thanh đạm.\n\n"
             "**Dấu hiệu cảnh báo (Red Flags):**\n"
-            "- Nếu xuất hiện đau quặn dữ dội, choáng váng nặng, nôn ói nhiều hoặc khó thở, vui lòng đến ngay cơ sở y tế gần nhất.\n\n"
+            "- Nếu xuất hiện đau dữ dội, choáng ngất hoặc khó thở, vui lòng đến ngay cơ sở y tế gần nhất.\n\n"
             "**Miễn trừ trách nhiệm y tế (Disclaimer):**\n"
             "*Thông tin tư vấn mang tính chất hỗ trợ ban đầu và không thay thế chẩn đoán chuyên khoa của bác sĩ.*"
         )
         return {
             "reply": fallback_reply,
             "has_update": False,
+            "has_proposed_changes": False,
+            "conflict_detected": False,
+            "conflict_explanation": None,
+            "conflict_message": None,
+            "summary_for_ui_card": None,
             "suggested_food_recommendation": None,
             "suggested_level_of_physical_activity": None,
             "reason": None,
-            "conflict_detected": False,
-            "conflict_message": None,
-            "verification_question": None
+            "verification_question": None,
+            "proposed_updates": None
         }

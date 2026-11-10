@@ -140,3 +140,14 @@
 - `frontend/src/style/telehealthChatbot.css`: Bổ sung `white-space: pre-wrap;` và định kiểu chữ in đậm/in nghiêng lâm sàng cho bong bóng chat.
 - `frontend/src/components/telehealthDoctorChatbot.jsx`: Bổ sung hàm render Markdown chuyên dụng `formatClinicalMessage`, hiển thị ngắt dòng và đề mục rõ ràng, trực quan.
 
+### 8.4 Tích hợp Kiến trúc Dual-Agent: Động Cơ Cá Nhân Hóa Dữ Liệu Sức Khỏe (`Personalization Logic Engine`)
+- **Agent 1 (Clinical AI Advisor)**: Nhận `{{user_message}}`, `{{retrieved_medical_docs}}`, `{{current_user_profile}}` để tư vấn lâm sàng tự nhiên bằng Markdown (4 phần chuẩn y khoa).
+- **Agent 2 (Personalization Logic Engine)**: Nhận `{{user_message}}`, `{{agent_response}}`, `{{current_user_profile}}` để phân tích logic điều chỉnh dữ liệu Supabase:
+  - Kiểm tra điều kiện cập nhật (`has_proposed_changes`).
+  - Kiểm tra và giải quyết xung đột y khoa với Hard Constraints (`health_metrics`: tim mạch, huyết áp, dị ứng cố định) -> `conflict_detected`, `conflict_explanation`.
+  - Hợp nhất (Merge) đề xuất mới với lời khuyên dinh dưỡng cũ mà không xóa mất thông tin có sẵn.
+  - Định dạng chuẩn Strict JSON: xuất `summary_for_ui_card`, `proposed_updates` (`food_recommendation`, `level_of_physical_activity`) và `requires_user_confirmation: true`.
+- **Giao diện Human-in-the-Loop Action Card (`telehealthDoctorChatbot.jsx`)**:
+  - Hiển thị trực tiếp thẻ xác nhận kèm tóm tắt lý do y khoa, cảnh báo xung đột (nếu có), chi tiết thay đổi và 2 nút bấm thao tác tức thì: `[✓ Đồng ý cập nhật]` và `[✕ Bỏ qua]`.
+
+
