@@ -102,6 +102,7 @@ async def _call_gemini_once(
 async def _call_groq_once(
     prompt: str,
     timeout_seconds: float,
+    response_mime_type: str = "application/json",
 ) -> str:
     """Gửi request tới Groq API (OpenAI-compatible) với timeout cụ thể."""
     if not GROQ_API_KEY:
@@ -111,18 +112,34 @@ async def _call_groq_once(
         "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json",
     }
-    payload = {
-        "model": GROQ_MODEL,
-        "messages": [
+    
+    if response_mime_type == "text/plain":
+        messages = [
+            {
+                "role": "system",
+                "content": "You are an expert Clinical AI Advisor. Provide empathetic, accurate medical guidance in standard Markdown format.",
+            },
+            {"role": "user", "content": prompt},
+        ]
+        payload = {
+            "model": GROQ_MODEL,
+            "messages": messages,
+            "temperature": 0.3,
+        }
+    else:
+        messages = [
             {
                 "role": "system",
                 "content": "You are a professional nutritionist API. Respond ONLY with valid raw JSON.",
             },
             {"role": "user", "content": prompt},
-        ],
-        "temperature": 0.3,
-        "response_format": {"type": "json_object"},
-    }
+        ]
+        payload = {
+            "model": GROQ_MODEL,
+            "messages": messages,
+            "temperature": 0.3,
+            "response_format": {"type": "json_object"},
+        }
 
     async with httpx.AsyncClient(timeout=timeout_seconds) as client:
         res = await client.post(
@@ -193,6 +210,7 @@ async def generate_chat(
                 content = await _call_groq_once(
                     prompt=prompt,
                     timeout_seconds=groq_timeout,
+                    response_mime_type=response_mime_type,
                 )
                 return content
             except Exception as exc:
