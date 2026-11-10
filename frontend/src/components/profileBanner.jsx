@@ -13,16 +13,16 @@ const ProfileBanner = ({ user, teamName, token: propToken, avatarVersion }) => {
   const coins = user?.coins ?? 0;
 
   const activeTeam = user?.team || teamName || 1;
-  const token = propToken || localStorage.getItem('token');
+  const token = propToken || localStorage.getItem('token') || localStorage.getItem('access_token') || user?.token || user?.access_token;
   const userId = user?.id || user?.user_id;
 
   const [equippedUrls, setEquippedUrls] = useState({});
   const [boss, setBoss] = useState({
-    boss_id: null,
-    boss_name: "Loading...",
+    boss_id: 1,
+    boss_name: "Raid Boss Hắc Long",
     health: 100,
     max_health: 100,
-    reward_coins: 10,
+    reward_coins: 25,
     image_url: ""
   });
   const [isHit, setIsHit] = useState(false);
