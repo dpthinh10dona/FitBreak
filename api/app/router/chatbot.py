@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 from datetime import date
 from collections import defaultdict
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -9,9 +11,32 @@ from app.services.chatbot_agent import analyze_and_chat
 router = APIRouter(prefix="/chatbot", tags=["AI Health ChatBot"])
 
 # Bộ đếm số câu hỏi trong ngày theo user_id: {date_str: {user_id: count}}
-# Tối đa 3 câu hỏi / ngày
+# Tối đa 3 câu hỏi / ngày, lưu trữ file JSON bền vững để không bị mất khi restart server / re-login
 DAILY_LIMIT = 3
+USAGE_FILE = Path(__file__).resolve().parents[1] / "core" / "dataset" / "chatbot_daily_usage.json"
 user_daily_questions = defaultdict(lambda: defaultdict(int))
+
+def _load_persisted_usage():
+    if USAGE_FILE.exists():
+        try:
+            with open(USAGE_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                for d_str, u_map in data.items():
+                    for u_id, cnt in u_map.items():
+                        user_daily_questions[d_str][u_id] = cnt
+        except Exception:
+            pass
+
+def _save_persisted_usage():
+    try:
+        data = {d_str: dict(u_map) for d_str, u_map in user_daily_questions.items()}
+        with open(USAGE_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
+# Khởi tạo dữ liệu đã lưu
+_load_persisted_usage()
 
 def _get_daily_count(user_id: str) -> int:
     today_str = date.today().isoformat()
@@ -20,6 +45,25 @@ def _get_daily_count(user_id: str) -> int:
 def _increment_daily_count(user_id: str):
     today_str = date.today().isoformat()
     user_daily_questions[today_str][user_id] += 1
+    _save_persisted_usage()
+
+@router.get("/quota")
+async def get_chatbot_quota(
+    auth_data: tokenAuthorization = Depends(token_authorization)
+):
+    """Lấy hạn mức số câu hỏi còn lại trong ngày của người dùng."""
+    user_id = auth_data.user_id
+    if not user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User unauthorized")
+
+    count = _get_daily_count(user_id)
+    remaining = max(0, DAILY_LIMIT - count)
+    return {
+        "daily_limit": DAILY_LIMIT,
+        "used_today": count,
+        "remaining_questions_today": remaining,
+        "date": date.today().isoformat()
+    }
 
 @router.post("/ask", response_model=ChatBotResponse)
 async def ask_health_chatbot(

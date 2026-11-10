@@ -176,6 +176,25 @@
   - Khối Card tóm tắt Hồ Sơ Sức Khỏe (`patient-vitals-banner`: BMI, Chỉ số hình thể, TDEE, Cường độ vận động, Chỉ dẫn y tế lâm sàng) chỉ hiển thị khi người dùng vào đúng tab **"Hồ Sơ Y Tế"** (`profile`).
   - Ẩn hoàn toàn khỏi các tab còn lại (`tasks`, `food`, `schedule`, `team`, `shop`), giúp thanh điều hướng trên cùng luôn thanh thoát, hiện đại, giải phóng tối đa diện tích màn hình để người dùng tập trung luyện tập, theo dõi bài tập hằng ngày và chiến đấu cùng Boss.
 
+---
+
+## 10. ĐỒNG BỘ BỀN VỮNG HẠN MỨC TƯ VẤN BÁC SĨ (PERSISTENT TELEHEALTH QUOTA)
+
+### 10.1 Nguyên nhân vấn đề
+- **Frontend**: Khởi tạo state tĩnh `remainingQuestions = 3` trong bộ nhớ RAM của component, không có API kiểm tra trạng thái lúc tải trang hay đăng nhập, dẫn đến việc mỗi lần F5 hoặc Re-login huy hiệu đều hiển thị lại `3/3`.
+- **Backend**: Lưu trữ bộ đếm qua `defaultdict` thuần trong RAM, khi server restart/redeploy hoặc quá trình ngủ đông (spin-down) sẽ làm mất lượt đếm câu hỏi trong ngày.
+
+### 10.2 Giải pháp khắc phục 2 tầng
+- **Tầng Backend (`api/app/router/chatbot.py`)**:
+  - Bổ sung cơ chế lưu trữ bền vững (Persistence) vào file JSON [`chatbot_daily_usage.json`](file:///d:/DOAN-PHU-THINH/FitBreak/api/app/core/dataset/chatbot_daily_usage.json).
+  - Tự động load và save theo cấu trúc ngày `YYYY-MM-DD` và `user_id`.
+  - Mở thêm endpoint `GET /chatbot/quota` giúp client tra cứu hạn mức thực tế bất cứ lúc nào.
+- **Tầng Frontend (`frontend/src/components/telehealthDoctorChatbot.jsx`)**:
+  - Tự động lưu và đọc hạn mức từ `localStorage` theo khóa `fitbreak_telehealth_quota_{email}_{YYYY-MM-DD}` (đảm bảo không bị reset khi đăng xuất/đăng nhập lại cùng tài khoản).
+  - Khởi tạo `useEffect` tự động gọi `GET /chatbot/quota` để đồng bộ chính xác với máy chủ ngay khi người dùng đăng nhập.
+  - Tự động reset hạn mức về 3 khi bước sang ngày mới nhờ khóa định danh theo ngày thực tế.
+
+
 
 
 
