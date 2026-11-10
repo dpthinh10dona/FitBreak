@@ -257,6 +257,13 @@ function App() {
           onSelectTab={setActiveTab} 
         />
         
+        <ProfileBanner 
+          user={user} 
+          teamName={user?.team || 1}
+          token={localStorage.getItem('token') || localStorage.getItem('access_token')}
+          avatarVersion={avatarVersion}
+        />
+        
         <div className="main-content">
           {activeTab === 'tasks' && (
             <TaskBoard 

@@ -150,4 +150,26 @@
 - **Giao diện Human-in-the-Loop Action Card (`telehealthDoctorChatbot.jsx`)**:
   - Hiển thị trực tiếp thẻ xác nhận kèm tóm tắt lý do y khoa, cảnh báo xung đột (nếu có), chi tiết thay đổi và 2 nút bấm thao tác tức thì: `[✓ Đồng ý cập nhật]` và `[✕ Bỏ qua]`.
 
+---
+
+## 9. KHÔI PHỤC VŨ ĐÀI SĂN BOSS & BANNER ANH HÙNG (HERO & ACTIVE RAID BOSS BANNER)
+
+### 9.1 Khôi phục vị trí Boss trong vòng lặp Game (`App.jsx`, `profileBanner.jsx`)
+- Khôi phục component `<ProfileBanner />` vào luồng giao diện chính của `App.jsx` ngay bên dưới `<PatientHeader />`, trả lại không gian chiến đấu Boss cho người chơi.
+- Bổ sung cơ chế fallback token thông minh (`localStorage.getItem('token') || localStorage.getItem('access_token') || user?.token`) giúp kết nối API `/get-raid-boss/{team_id}` luôn thành công 100%.
+- Thiết lập dữ liệu khởi tạo Boss mặc định (*"Raid Boss Hắc Long"*, 100/100 HP, +25 Coins thưởng), đảm bảo thanh máu Boss và avatar luôn hiển thị mượt mà không bị tình trạng treo *"Loading..."*.
+
+### 9.2 Thiết kế lại Giao diện Banner chuẩn Xanh Dương - Trắng MedTech (`profileBanner.css`)
+- **Khung chứa tổng thể (`.profile-banner-inner`)**:
+  - Thẻ card nền trắng sáng `#ffffff`, viền nhẹ `#e2e8f0`, đổ bóng mềm mại `0 2px 8px rgba(15, 23, 42, 0.05)`, bo góc `16px`, độ rộng chuẩn `1400px` ăn khớp với Patient Header.
+- **Khu vực Anh hùng (`.user-profile-group`)**:
+  - Hộp Avatar anh hùng (`.avatar-box`): Nền gradient xanh y tế nhạt `#f0f9ff` đến `#e0f2fe`, viền xanh `#bae6fd`, hiển thị trọn vẹn trang bị (mũ, áo, vũ khí) mua từ Shop.
+  - Tên nhân vật in đậm màu Navy `#0f172a`, huy hiệu nhóm `#e0f2fe` chữ xanh `#0284c7`, thẻ thống kê Sức mạnh (⚔️ DMG - nền hồng đỏ) và Tiền thưởng (🪙 Coins - nền vàng gold).
+- **Vũ đài Boss Đột Kích (`.boss-section`)**:
+  - Thiết kế dạng thẻ chiến đấu công nghệ cao: Nền trắng ánh hồng nhẹ (`#ffffff` đến `#fff5f5`), viền đỏ hồng `#fecdd3`, bóng mờ hồng.
+  - Huy hiệu trạng thái: Chấm đỏ nhấp nháy phát sáng (`pulseDot`) kèm dòng chữ nổi bật `🔴 ACTIVE RAID BOSS`.
+  - Thanh máu Boss (`.boss-hp-bar`): Track nền xám sáng, thanh fill gradient đỏ cam rực rỡ (`#ef4444 -> #f97316 -> #dc2626`) kèm ánh sáng phát quang, hiển thị phần trăm máu và thông số `HP / Max HP`.
+  - Hình ảnh Boss nổi (`.boss-avatar`): Sprite cử động lơ lửng (`floatBoss`), tích hợp hiệu ứng rung lắc đỏ rực (`hitShake`) mỗi khi người dùng hoàn thành bài tập từ `TaskBoard`.
+
+
 
