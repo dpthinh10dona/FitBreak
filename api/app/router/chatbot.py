@@ -2,11 +2,13 @@ import json
 from pathlib import Path
 from datetime import date
 from collections import defaultdict
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from app.core.database import supabase
 from app.core.token_authorization import token_authorization, tokenAuthorization
 from app.schemas.chatbot import ChatBotRequest, ChatBotResponse, ProfileUpdateProposal, ConfirmProposalRequest
 from app.services.chatbot_agent import analyze_and_chat
+from app.services.clinical_rag import get_medical_knowledge_stats, ingest_new_medical_document
+from app.services.knowledge_ingestor import DEFAULT_KNOWLEDGE_DIR
 
 router = APIRouter(prefix="/chatbot", tags=["AI Health ChatBot"])
 
@@ -152,3 +154,48 @@ async def confirm_profile_update(
 
     supabase.table("profiles").update(update_fields).eq("id", user_id).execute()
     return {"success": True, "message": "Đã cập nhật hồ sơ cá nhân hóa thành công!", "updated": update_fields}
+
+
+@router.get("/knowledge-stats")
+async def get_knowledge_statistics():
+    """Lấy thống kê kho tài liệu và các chunk RAG hiện có của Bác sĩ FitBreak."""
+    return get_medical_knowledge_stats()
+
+
+@router.post("/ingest-document")
+async def ingest_medical_document(
+    file: UploadFile = File(...),
+    auth_data: tokenAuthorization = Depends(token_authorization)
+):
+    """
+    Nạp tài liệu y khoa mới (.docx, .pdf, .md, .txt) vào kho tri thức RAG.
+    Hệ thống sẽ tự động Document Parsing -> Chunking -> Cập nhật chỉ mục tìm kiếm.
+    """
+    if not auth_data.user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User unauthorized")
+
+    filename = file.filename
+    ext = Path(filename).suffix.lower()
+    if ext not in [".docx", ".pdf", ".md", ".txt"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Định dạng '{ext}' không được hỗ trợ. Chỉ hỗ trợ .docx, .pdf, .md, .txt"
+        )
+
+    save_path = DEFAULT_KNOWLEDGE_DIR / filename
+    content = await file.read()
+    with open(save_path, "wb") as f:
+        f.write(content)
+
+    try:
+        res = ingest_new_medical_document(save_path)
+        return {
+            "success": True,
+            "message": f"Đã nạp và phân mảnh thành công tài liệu: {filename}",
+            "details": res
+        }
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi khi xử lý nạp tài liệu: {str(exc)}"
+        )

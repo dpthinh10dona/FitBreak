@@ -198,3 +198,44 @@
 
 
 
+
+---
+
+## 11. HỆ THỐNG XỬ LÝ TÀI LIỆU (DOCUMENT PARSER), CHUNKING VÀ RAG TRI THỨC Y KHOA
+
+### 11.1 Kiến Trúc Document Parser Đa Định Dạng (PDF, DOCX, TXT, MD)
+- **`converter_registry.py`**: Hệ thống Registry linh hoạt, cho phép đăng ký converter theo đuôi tệp (`@register(".docx")`, `@register(".pdf")`, `@register(".md")`, `@register(".txt")`).
+- **`docx_converter.py`**:
+  - Hỗ trợ phân tích cú pháp tệp Microsoft Word (`.docx`) sang Markdown tiêu chuẩn.
+  - Tự động nhận diện và trích xuất: Tiêu đề các cấp (H1, H2, H3, H4), đoạn văn định dạng in đậm/in nghiêng, danh sách gạch đầu dòng (`- `) và danh sách có thứ tự, bảng biểu phức hợp (chuyển sang cú pháp Markdown Table `| col1 | col2 |`).
+  - Tích hợp 2 động cơ: Ưu tiên `python-docx` nếu môi trường có sẵn thư viện, và **Động cơ OpenXML tích hợp sẵn** (`zipfile` + `xml.etree.ElementTree`) chạy độc lập chuẩn ECMA-376 không phụ thuộc thư viện ngoài, đảm bảo không bao giờ lỗi.
+- **`text_converter.py`**: Trích xuất tài liệu dạng văn bản thô `.txt` và Markdown `.md`.
+- **`pdf_converter.py`**: Trích xuất tài liệu PDF nhiều trang kèm định vị tọa độ và OCR hình ảnh.
+
+### 11.2 Hệ Thống Phân Mảnh Ngữ Nghĩa (Semantic Chunking Pipeline)
+- **`config.py` (`ChunkConfig`)**: Cấu hình kích thước phân mảnh linh hoạt: `max_chunk_size: 800`, `min_chunk_size: 100`, `chunk_overlap: 150`, kích hoạt `preserve_headings` và `preserve_tables`.
+- **`structure.py`**:
+  - `parse_markdown_units()`: Phân tách tài liệu thành các khối ngữ nghĩa (`heading`, `paragraph`, `list`, `table`).
+  - Ghi nhớ và duy trì đường dẫn phân cấp tiêu đề (`heading_path`: ví dụ: `Hướng dẫn Công thái học > 1. Hội chứng Cổ Vai Gáy`).
+  - `pack_semantic_units()`: Đóng gói các đơn vị ngữ nghĩa thành các chunk tối ưu, bảo toàn nguyên vẹn bảng biểu và danh sách, chống gãy ngữ cảnh.
+- **`chunker_registry.py`**: Quản lý các hàm chunking theo đuôi tệp.
+- **`docx_chunker.py` & `pdf_chunker.py` & `generic_chunker.py`**: Gắn metadata nguồn (`source_file`, `section_title`, `heading_path`, `word_count`, `parent_id`).
+
+### 11.3 Bộ Tài Liệu Tri Thức Y Khoa Chuẩn Lâm Sàng (Medical Knowledge Base)
+Được lưu trữ tại `api/app/core/dataset/medical_knowledge/`:
+1. `01_Huong_Dan_Cong_Thai_Hoc_Va_Co_Xuong_Khop_FitBreak.docx`: Hướng dẫn công thái học tư thế ngồi chuẩn, hội chứng cổ vai gáy (Text Neck), đau thắt lưng cột sống, hội chứng ống cổ tay, bảng so sánh tư thế đúng/sai, bài tập Active Break và dấu hiệu nguy hiểm (Red Flags).
+2. `02_Phac_Do_Dinh_Duong_Va_Tieu_Hoa_FitBreak.docx`: Phác đồ xử trí tiêu chảy cấp, bù nước và điện giải Oresol, chế độ ăn BRAT (chuối, cơm, táo, bánh mì nướng), trào ngược dạ dày thực quản (GERD), cân bằng thâm hụt calo học đường.
+3. `03_Cam_Nang_Y_Hoc_The_Thao_Micro_Workouts.md`: Xử trí đau cơ sau tập (DOMS), chuột rút, nhận biết tiêu cơ vân qua màu nước tiểu, bài tập ngắt quãng Micro-Workouts.
+4. `04_Huong_Dan_Thi_Giac_Va_Giac_Ngu_Van_Phong.md`: Quy tắc vàng 20-20-20 phòng hội chứng thị giác màn hình (CVS), vệ sinh giấc ngủ (Sleep Hygiene) giảm stress.
+
+### 11.4 Động Cơ Knowledge Ingestor & Tích Hợp RAG
+- **`knowledge_ingestor.py`**:
+  - Tự động nạp tài liệu đơn lẻ (`ingest_file`) hoặc toàn bộ thư mục (`ingest_directory`).
+  - Bộ nhớ đệm tự động `chunks_cache.json` cho tốc độ truy vấn tức thì (< 5ms).
+  - Thuật toán tìm kiếm kết hợp Hybrid Search (Trùng khớp tiêu đề, từ khóa chuyên môn y khoa, trọng số triệu chứng lâm sàng).
+  - Hỗ trợ giao diện dòng lệnh CLI: `python -m app.services.knowledge_ingestor --rebuild` hoặc `--ingest <file>`.
+- **Cập nhật `clinical_rag.py`**:
+  - Hàm `retrieve_medical_docs()` tự động ưu tiên tìm kiếm trong các tài liệu động (.docx, .pdf, .md, .txt) trước, sau đó fallback an toàn về cơ sở dữ liệu y khoa sẵn có nếu không có tài liệu động trùng khớp.
+- **API Endpoints mới (`api/app/router/chatbot.py`)**:
+  - `GET /chatbot/knowledge-stats`: Xem thống kê kho tài liệu và các chunk RAG hiện tại.
+  - `POST /chatbot/ingest-document`: Cho phép nạp tài liệu y khoa mới dạng tệp tải lên (upload) bất cứ lúc nào.

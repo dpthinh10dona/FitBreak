@@ -4,8 +4,18 @@ Provides medical guidelines, sports medicine protocols, and clinical nutrition e
 for RAG-First clinical advisor responses.
 """
 
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import re
+import logging
+from pathlib import Path
+
+logger = logging.getLogger("clinical_rag")
+
+try:
+    from app.services.knowledge_ingestor import default_ingestor
+except Exception as exc:
+    logger.warning(f"Không thể khởi động knowledge_ingestor ({exc}), sử dụng tri thức tĩnh dự phòng.")
+    default_ingestor = None
 
 CLINICAL_KNOWLEDGE_BASE: List[Dict[str, Any]] = [
     {
@@ -84,10 +94,32 @@ CLINICAL_KNOWLEDGE_BASE: List[Dict[str, Any]] = [
 def retrieve_medical_docs(user_message: str, top_k: int = 2) -> str:
     """
     RAG Retrieval: Tìm kiếm các đoạn tài liệu y khoa chuẩn xác dựa trên triệu chứng của người dùng.
+    Ưu tiên tìm trong cơ sở tri thức tài liệu động (.docx, .pdf, .md, .txt) trước,
+    sau đó fallback về bộ tri thức chuẩn lâm sàng sẵn có nếu chưa có tài liệu động phù hợp.
     """
     if not user_message:
         return CLINICAL_KNOWLEDGE_BASE[-1]["content"]
 
+    # 1. Ưu tiên tìm kiếm trong Knowledge Ingestor (Document-based RAG)
+    if default_ingestor is not None:
+        try:
+            dynamic_chunks = default_ingestor.search_chunks(user_message, top_k=top_k)
+            if dynamic_chunks:
+                formatted_chunks = []
+                for i, chunk in enumerate(dynamic_chunks, 1):
+                    source = chunk.get("source", "Tài liệu Y khoa FitBreak")
+                    heading = chunk.get("heading_path") or chunk.get("title", "")
+                    content = chunk.get("content", "").strip()
+                    formatted_chunks.append(
+                        f"--- TRÍCH ĐOẠN {i} [{heading}] ---\n"
+                        f"Nguồn tài liệu: {source}\n"
+                        f"{content}"
+                    )
+                return "\n\n".join(formatted_chunks)
+        except Exception as exc:
+            logger.warning(f"Lỗi khi truy xuất tài liệu động: {exc}, chuyển sang tri thức tĩnh dự phòng...")
+
+    # 2. Fallback sang CLINICAL_KNOWLEDGE_BASE
     clean_msg = user_message.lower()
     scored_docs = []
 
@@ -96,7 +128,6 @@ def retrieve_medical_docs(user_message: str, top_k: int = 2) -> str:
         for kw in doc["keywords"]:
             if kw in clean_msg:
                 score += 2
-        # Tăng điểm nếu từ khóa xuất hiện nhiều
         words = set(re.findall(r"\w+", clean_msg))
         for w in words:
             if len(w) >= 3 and w in doc["content"].lower():
@@ -105,7 +136,6 @@ def retrieve_medical_docs(user_message: str, top_k: int = 2) -> str:
 
     scored_docs.sort(key=lambda x: x[0], reverse=True)
 
-    # Chọn top_k tài liệu có điểm số cao nhất (hoặc mặc định nếu điểm = 0)
     selected = [doc for score, doc in scored_docs[:top_k] if score > 0]
     if not selected:
         selected = [CLINICAL_KNOWLEDGE_BASE[0], CLINICAL_KNOWLEDGE_BASE[1]]
@@ -119,3 +149,29 @@ def retrieve_medical_docs(user_message: str, top_k: int = 2) -> str:
         )
 
     return "\n\n".join(formatted_docs)
+
+
+def ingest_new_medical_document(file_path: str | Path) -> dict:
+    """Nạp tài liệu mới (.docx, .pdf, .md, .txt) vào kho tri thức RAG."""
+    if default_ingestor is None:
+        raise RuntimeError("Knowledge Ingestor chưa được khởi tạo thành công.")
+    chunks = default_ingestor.ingest_file(file_path)
+    return {
+        "status": "success",
+        "file": Path(file_path).name,
+        "total_chunks_created": len(chunks),
+    }
+
+
+def get_medical_knowledge_stats() -> dict:
+    """Trả về số liệu thống kê về kho tài liệu RAG hiện tại."""
+    if default_ingestor is None:
+        return {"status": "fallback_only", "static_docs_count": len(CLINICAL_KNOWLEDGE_BASE)}
+    chunks = default_ingestor.load_chunks()
+    sources = list({c.get("source") for c in chunks if c.get("source")})
+    return {
+        "status": "active",
+        "total_chunks": len(chunks),
+        "total_sources": len(sources),
+        "source_files": sources,
+    }
