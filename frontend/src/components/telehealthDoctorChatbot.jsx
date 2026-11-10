@@ -23,6 +23,27 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
   const [remainingQuestions, setRemainingQuestions] = useState(3);
   const [activeProposal, setActiveProposal] = useState(null);
 
+  const formatClinicalMessage = (content) => {
+    if (!content) return null;
+    const lines = content.split('\n');
+    return lines.map((line, lIdx) => {
+      const parts = line.split(/(\*\*.*?\*\*|\*.*?\*)/g);
+      return (
+        <span key={lIdx} style={{ display: 'block', minHeight: line.trim() ? undefined : '0.5em' }}>
+          {parts.map((part, pIdx) => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+              return <strong key={pIdx}>{part.slice(2, -2)}</strong>;
+            }
+            if (part.startsWith('*') && part.endsWith('*')) {
+              return <em key={pIdx}>{part.slice(1, -1)}</em>;
+            }
+            return part;
+          })}
+        </span>
+      );
+    });
+  };
+
   const getWordCount = (str) => {
     return str.trim() ? str.trim().split(/\s+/).length : 0;
   };
@@ -203,7 +224,7 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
           <div className="telehealth-thread">
             {messages.map((m, idx) => (
               <div key={idx} className={`chat-bubble-clinical ${m.role}`}>
-                <div>{m.content}</div>
+                <div>{formatClinicalMessage(m.content)}</div>
 
                 {/* Proposal Verification Card */}
                 {m.proposal && m.proposal.has_update && (

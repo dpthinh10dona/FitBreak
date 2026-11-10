@@ -113,3 +113,30 @@
   - Khung xem trước Avatar và các thẻ vật phẩm chuyển sang phong cách trắng xanh đồng bộ, chữ rõ nét `#0f172a`.
 - **Đội nhóm & Khám sức khỏe (`joinTeam.css`, `updateProfile.css`, `createProfile.css`)**:
   - Input form nền sáng `#f8fafc`, focus viền xanh `#0284c7`, thẻ thành viên và modal sạch sẽ, hiện đại.
+
+---
+
+## 8. CHUẨN HÓA BÁC SĨ TRỢ LÝ ẢO (CLINICAL AI ADVISOR) RAG-FIRST & CÁ NHÂN HÓA HỒ SƠ
+
+### 8.1 Kiến trúc Tri thức Y khoa RAG-First (`clinical_rag.py`)
+- Xây dựng module tri thức y khoa chuẩn mực `clinical_rag.py` tích hợp phác đồ điều trị nội khoa và y học thể thao từ Bộ Y Tế, Viện Dinh Dưỡng Quốc Gia và Hội Dị Ứng Miễn Dịch:
+  - Phân khoa Tiêu hóa & Chuyển hóa lâm sàng: Đau thượng vị, trào ngược axit (GERD), hạ đường huyết cơ năng, tụt huyết áp tư thế.
+  - Phân khoa Cơ xương khớp & Thể chất: Đau cơ khởi phát muộn (DOMS), tổn thương gân cơ, quy trình RICE.
+  - Cảnh báo cấp cứu & Red Flags: Các dấu hiệu chuyển viện khẩn cấp (đau thắt ngực, xuất huyết tiêu hóa, ngất xỉu, khó thở).
+- Thuật toán trích xuất tài liệu theo từ khóa ngữ nghĩa (`retrieve_medical_docs`), gán nhãn nguồn trích dẫn y khoa chuẩn mực để đưa vào biến `{{retrieved_medical_docs}}`.
+
+### 8.2 Chuẩn hóa System Prompt Kỹ thuật Lâm sàng (`chatbot_agent.py`)
+- Áp dụng cấu trúc Prompt Engineering chuẩn xác của Bác sĩ Trợ lý Ảo:
+  - **3 biến ngữ cảnh bắt buộc**: `{{user_message}}`, `{{retrieved_medical_docs}}`, `{{current_user_profile}}` (thể trạng BMI, dị ứng cứng, chỉ số lâm sàng, lời khuyên hiện tại, mức vận động).
+  - **4 phần câu trả lời chuẩn mực**:
+    1. **Nhận định sơ bộ**: Tóm tắt cơ chế phát sinh triệu chứng dựa trên tài liệu y khoa.
+    2. **Giải pháp & Lời khuyên tức thì**: Hướng dẫn nghỉ ngơi, xử trí tại nhà, dinh dưỡng tạm thời an toàn (tuyệt đối không xung đột bệnh nền hay dị ứng).
+    3. **Dấu hiệu cảnh báo (Red Flags)**: Chỉ rõ triệu chứng nguy hiểm cần cấp cứu.
+    4. **Miễn trừ trách nhiệm y tế (Disclaimer)**: Khẳng định vai trò tham khảo ban đầu.
+  - **Ràng buộc định dạng**: Trả về Markdown tiêu chuẩn, không bọc JSON, không sinh code block, tách biệt hoàn toàn câu hỏi xác nhận lưu Supabase cho Node UI xử lý riêng.
+
+### 8.3 Tối ưu hóa Failover & Hiển thị Frontend
+- `api/app/core/ollama_client.py`: Tinh chỉnh cơ chế luân chuyển dự phòng Gemini / Groq hỗ trợ chế độ `text/plain` cho Markdown chuẩn xác.
+- `frontend/src/style/telehealthChatbot.css`: Bổ sung `white-space: pre-wrap;` và định kiểu chữ in đậm/in nghiêng lâm sàng cho bong bóng chat.
+- `frontend/src/components/telehealthDoctorChatbot.jsx`: Bổ sung hàm render Markdown chuyên dụng `formatClinicalMessage`, hiển thị ngắt dòng và đề mục rõ ràng, trực quan.
+
