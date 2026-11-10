@@ -171,5 +171,11 @@
   - Thanh máu Boss (`.boss-hp-bar`): Track nền xám sáng, thanh fill gradient đỏ cam rực rỡ (`#ef4444 -> #f97316 -> #dc2626`) kèm ánh sáng phát quang, hiển thị phần trăm máu và thông số `HP / Max HP`.
   - Hình ảnh Boss nổi (`.boss-avatar`): Sprite cử động lơ lửng (`floatBoss`), tích hợp hiệu ứng rung lắc đỏ rực (`hitShake`) mỗi khi người dùng hoàn thành bài tập từ `TaskBoard`.
 
+### 9.3 Tối ưu hóa Hiển thị Hồ Sơ Sức Khỏe (Conditional Rendering by Tab)
+- Cập nhật [`patientHeader.jsx`](file:///d:/DOAN-PHU-THINH/FitBreak/frontend/src/components/patientHeader.jsx) với điều kiện `{activeTab === 'profile' && ...}`:
+  - Khối Card tóm tắt Hồ Sơ Sức Khỏe (`patient-vitals-banner`: BMI, Chỉ số hình thể, TDEE, Cường độ vận động, Chỉ dẫn y tế lâm sàng) chỉ hiển thị khi người dùng vào đúng tab **"Hồ Sơ Y Tế"** (`profile`).
+  - Ẩn hoàn toàn khỏi các tab còn lại (`tasks`, `food`, `schedule`, `team`, `shop`), giúp thanh điều hướng trên cùng luôn thanh thoát, hiện đại, giải phóng tối đa diện tích màn hình để người dùng tập trung luyện tập, theo dõi bài tập hằng ngày và chiến đấu cùng Boss.
+
+
 
 

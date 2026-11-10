@@ -120,7 +120,8 @@ const PatientHeader = ({
         </div>
       </div>
 
-      {/* 2. PATIENT SUMMARY & CLINICAL VITALS BANNER */}
+      {/* 2. PATIENT SUMMARY & CLINICAL VITALS BANNER (Chỉ hiển thị tại tab Hồ Sơ Y Tế) */}
+      {activeTab === 'profile' && (
       <div className="patient-vitals-banner">
         <div className="patient-banner-card">
           {/* Header Row of Banner */}
@@ -221,6 +222,7 @@ const PatientHeader = ({
           )}
         </div>
       </div>
+      )}
     </div>
   );
 };
