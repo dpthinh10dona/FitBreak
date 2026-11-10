@@ -227,19 +227,24 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
                 <div>{formatClinicalMessage(m.content)}</div>
 
                 {/* Proposal Verification Card */}
-                {m.proposal && m.proposal.has_update && (
+                {m.proposal && (m.proposal.has_update || m.proposal.has_proposed_changes) && (
                   <div className={`clinical-proposal-card ${m.proposal.conflict_detected ? 'has-conflict' : ''}`}>
                     <span className="proposal-heading">
-                      {m.proposal.conflict_detected ? '⚠️ Cảnh Báo Xung Đột Dữ Liệu Y Tế' : '📋 Đề Xuất Cập Nhật Hồ Sơ Bệnh Án'}
+                      {m.proposal.conflict_detected ? '⚠️ Cảnh Báo Xung Đột Dữ Liệu Y Tế' : '📋 Đề Xuất Cập Nhật Hồ Sơ Sức Khỏe'}
                     </span>
-                    {m.proposal.conflict_message && (
-                      <p className="proposal-item" style={{ color: 'var(--med-danger)', fontWeight: 600 }}>
-                        {m.proposal.conflict_message}
+                    {m.proposal.summary_for_ui_card && (
+                      <p className="proposal-summary" style={{ fontWeight: 600, color: 'var(--med-navy)', margin: '6px 0 10px 0', fontSize: '0.85rem' }}>
+                        {m.proposal.summary_for_ui_card}
+                      </p>
+                    )}
+                    {(m.proposal.conflict_explanation || m.proposal.conflict_message) && (
+                      <p className="proposal-item" style={{ color: 'var(--med-danger)', fontWeight: 600, backgroundColor: '#fef2f2', padding: '6px 10px', borderRadius: '6px' }}>
+                        ⚠️ {m.proposal.conflict_explanation || m.proposal.conflict_message}
                       </p>
                     )}
                     {m.proposal.food_recommendation && (
                       <p className="proposal-item">
-                        🥗 <strong>Chế độ ăn:</strong> {m.proposal.food_recommendation}
+                        🥗 <strong>Chế độ ăn đề xuất:</strong> {m.proposal.food_recommendation}
                       </p>
                     )}
                     {m.proposal.level_of_physical_activity && (
@@ -248,7 +253,7 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
                       </p>
                     )}
                     <p className="proposal-verification-question">
-                      ❓ {m.proposal.verification_question}
+                      ❓ {m.proposal.verification_question || 'Bạn có đồng ý áp dụng cập nhật này vào hồ sơ cá nhân không?'}
                     </p>
 
                     {activeProposal === m.proposal && (
@@ -257,7 +262,7 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
                           className="btn-accept-proposal"
                           onClick={() => handleConfirmProposal(m.proposal)}
                         >
-                          ✓ Xác nhận cập nhật
+                          ✓ Đồng ý cập nhật
                         </button>
                         <button 
                           className="btn-decline-proposal"

@@ -63,15 +63,20 @@ async def ask_health_chatbot(
 
     # 5. Xây dựng đề xuất cập nhật nếu AI phát hiện thông tin mới
     proposal = None
-    if agent_output.get("has_update"):
+    if agent_output.get("has_update") or agent_output.get("has_proposed_changes"):
         proposal = ProfileUpdateProposal(
             has_update=True,
+            has_proposed_changes=True,
+            conflict_detected=agent_output.get("conflict_detected", False),
+            conflict_explanation=agent_output.get("conflict_explanation"),
+            conflict_message=agent_output.get("conflict_message"),
+            summary_for_ui_card=agent_output.get("summary_for_ui_card"),
             food_recommendation=agent_output.get("suggested_food_recommendation"),
             level_of_physical_activity=agent_output.get("suggested_level_of_physical_activity"),
             reason=agent_output.get("reason"),
-            conflict_detected=agent_output.get("conflict_detected", False),
-            conflict_message=agent_output.get("conflict_message"),
-            verification_question=agent_output.get("verification_question") or "Bạn có đồng ý để FitBreak cập nhật thông tin này vào hồ sơ cá nhân không?"
+            verification_question=agent_output.get("verification_question") or "Bạn có đồng ý để FitBreak cập nhật thông tin này vào hồ sơ cá nhân không?",
+            proposed_updates=agent_output.get("proposed_updates"),
+            requires_user_confirmation=True
         )
 
     return ChatBotResponse(
