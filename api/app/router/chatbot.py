@@ -8,7 +8,10 @@ from app.core.token_authorization import token_authorization, tokenAuthorization
 from app.schemas.chatbot import ChatBotRequest, ChatBotResponse, ProfileUpdateProposal, ConfirmProposalRequest
 from app.services.chatbot_agent import analyze_and_chat
 from app.services.clinical_rag import get_medical_knowledge_stats, ingest_new_medical_document
-from app.services.knowledge_ingestor import DEFAULT_KNOWLEDGE_DIR
+try:
+    from app.services.knowledge_ingestor import DEFAULT_KNOWLEDGE_DIR
+except Exception:
+    DEFAULT_KNOWLEDGE_DIR = Path(__file__).resolve().parents[1] / "core" / "dataset" / "medical_knowledge"
 
 router = APIRouter(prefix="/chatbot", tags=["AI Health ChatBot"])
 

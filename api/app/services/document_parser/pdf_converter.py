@@ -8,7 +8,10 @@ from typing import Dict, List, Tuple, Optional
 from collections import Counter, defaultdict
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-from PIL import Image
+try:
+    from PIL import Image
+except ImportError:
+    Image = None
 from app.services.document_parser.converter_registry import register
 
 logger = logging.getLogger("pdf_converter")
