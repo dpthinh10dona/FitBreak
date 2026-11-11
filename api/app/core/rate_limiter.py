@@ -118,7 +118,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.max_requests = max_requests
         self.window_seconds = window_seconds
-        self.exempt_paths = {"/docs", "/redoc", "/openapi.json", "/api/health"}
+        self.exempt_paths = {"/docs", "/redoc", "/openapi.json", "/api/health", "/health", "/ping"}
 
     async def dispatch(self, request: Request, call_next):
         # Bỏ qua các endpoint không cần giới hạn
