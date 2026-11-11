@@ -91,16 +91,36 @@ CLINICAL_KNOWLEDGE_BASE: List[Dict[str, Any]] = [
     }
 ]
 
-def retrieve_medical_docs(user_message: str, top_k: int = 2) -> str:
+def retrieve_medical_docs(user_message: str, top_k: int = 3) -> str:
     """
     RAG Retrieval: Tìm kiếm các đoạn tài liệu y khoa chuẩn xác dựa trên triệu chứng của người dùng.
-    Ưu tiên tìm trong cơ sở tri thức tài liệu động (.docx, .pdf, .md, .txt) trước,
-    sau đó fallback về bộ tri thức chuẩn lâm sàng sẵn có nếu chưa có tài liệu động phù hợp.
+    Ưu tiên tìm trong Supabase pgvector (text-embedding-004), sau đó fallback sang Knowledge Ingestor,
+    và cuối cùng fallback về bộ tri thức chuẩn lâm sàng sẵn có.
     """
     if not user_message:
         return CLINICAL_KNOWLEDGE_BASE[-1]["content"]
 
-    # 1. Ưu tiên tìm kiếm trong Knowledge Ingestor (Document-based RAG)
+    # 0. ƯU TIÊN SỐ 1: Tìm kiếm ngữ nghĩa Cosine Similarity trên Supabase pgvector
+    try:
+        from app.services.supabase_rag_chat import search_medical_knowledge_pgvector
+        pg_chunks = search_medical_knowledge_pgvector(user_message, top_k=top_k, match_threshold=0.45)
+        if pg_chunks:
+            formatted_chunks = []
+            for i, chunk in enumerate(pg_chunks, 1):
+                source = chunk.get("source_name", "Tài liệu Y tế Bộ Y Tế")
+                heading = chunk.get("heading_path") or "Thông tin lâm sàng"
+                content = chunk.get("content", "").strip()
+                sim = chunk.get("similarity", 0)
+                formatted_chunks.append(
+                    f"--- TRÍCH ĐOẠN {i} [{heading}] (Độ tương đồng: {sim:.1%}) ---\n"
+                    f"Nguồn tài liệu: {source}\n"
+                    f"{content}"
+                )
+            return "\n\n".join(formatted_chunks)
+    except Exception as exc:
+        logger.debug(f"Không thể truy vấn Supabase pgvector: {exc}")
+
+    # 1. Ưu tiên số 2: Tìm kiếm trong Knowledge Ingestor (Document-based RAG local)
     if default_ingestor is not None:
         try:
             dynamic_chunks = default_ingestor.search_chunks(user_message, top_k=top_k)

@@ -125,6 +125,7 @@ async def _call_groq_once(
             "model": GROQ_MODEL,
             "messages": messages,
             "temperature": 0.3,
+            "max_tokens": 800,
         }
     else:
         messages = [
@@ -138,6 +139,7 @@ async def _call_groq_once(
             "model": GROQ_MODEL,
             "messages": messages,
             "temperature": 0.3,
+            "max_tokens": 800,
             "response_format": {"type": "json_object"},
         }
 
