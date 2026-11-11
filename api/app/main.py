@@ -39,7 +39,21 @@ app.include_router(stats.router, tags=["Stats"])
 app.include_router(shop.router, tags=["Shop"])
 app.include_router(chatbot.router, tags=["AI Health ChatBot"])
 
-@app.get("/api/health")
+@app.get("/health", tags=["Health"])
+@app.get("/ping", tags=["Health"])
+async def lightweight_health():
+    """
+    Endpoint siêu nhẹ (Zero Dependency / No AI call / No DB query)
+    Dành riêng cho uptime bot (UptimeRobot, Cron-job.org, BetterUptime) ping định kỳ
+    để ngăn server ngủ đông trên Render, Railway, Koyeb, Fly.io. Phản hồi < 1ms.
+    """
+    return {
+        "status": "healthy",
+        "service": "FitBreak API",
+        "message": "Server is awake and active"
+    }
+
+@app.get("/api/health", tags=["Health"])
 async def health_check():
     try:
         await check_ollama()

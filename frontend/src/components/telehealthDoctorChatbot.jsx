@@ -19,9 +19,68 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
       content: 'Kính chào bạn! Tôi là Bác sĩ Trợ lý Y khoa FitBreak. Bạn đang gặp phải triệu chứng, vấn đề tiêu hóa, xương khớp hay cần tư vấn điều chỉnh chế độ sinh hoạt như thế nào?',
     }
   ]);
+  const getTodayDateStr = () => {
+    return new Date().toISOString().split('T')[0];
+  };
+
+  const getQuotaStorageKey = (currentUser) => {
+    const u = currentUser || user;
+    let email = u?.email;
+    if (!email) {
+      try {
+        const cachedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        email = cachedUser?.email;
+      } catch (e) {}
+    }
+    return `fitbreak_telehealth_quota_${email || 'guest'}_${getTodayDateStr()}`;
+  };
+
   const [loading, setLoading] = useState(false);
-  const [remainingQuestions, setRemainingQuestions] = useState(3);
+  const [remainingQuestions, setRemainingQuestions] = useState(() => {
+    try {
+      let email = user?.email;
+      if (!email) {
+        const cachedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        email = cachedUser?.email;
+      }
+      const key = `fitbreak_telehealth_quota_${email || 'guest'}_${new Date().toISOString().split('T')[0]}`;
+      const saved = localStorage.getItem(key);
+      if (saved !== null) {
+        return parseInt(saved, 10);
+      }
+    } catch (e) {}
+    return 3;
+  });
   const [activeProposal, setActiveProposal] = useState(null);
+
+  useEffect(() => {
+    const fetchQuota = async () => {
+      const token = getAuthToken();
+      if (!token) return;
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/chatbot/quota`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (typeof data.remaining_questions_today === 'number') {
+            setRemainingQuestions(data.remaining_questions_today);
+            localStorage.setItem(getQuotaStorageKey(), String(data.remaining_questions_today));
+          }
+        }
+      } catch (err) {
+        console.warn('Lỗi đồng bộ hạn mức bác sĩ từ máy chủ:', err);
+      }
+    };
+
+    fetchQuota();
+  }, [user]);
 
   const formatClinicalMessage = (content) => {
     if (!content) return null;
@@ -115,10 +174,16 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
         if (response.status === 401) {
           throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục tư vấn với Bác sĩ.');
         }
+        if (response.status === 429) {
+          setRemainingQuestions(0);
+          localStorage.setItem(getQuotaStorageKey(), '0');
+          throw new Error(data.detail || 'Bạn đã sử dụng hết 3 lượt tư vấn miễn phí hôm nay. Vui lòng quay lại vào ngày mai!');
+        }
         throw new Error(data.detail || 'Không thể kết nối đến hệ thống Bác sĩ AI.');
       }
 
       setRemainingQuestions(data.remaining_questions_today);
+      localStorage.setItem(getQuotaStorageKey(), String(data.remaining_questions_today));
 
       const botMsg = {
         role: 'assistant',
