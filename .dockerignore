@@ -47,3 +47,9 @@ frontend/dist/
 .DS_Store
 Thumbs.db
 
+# Medical knowledge raw source files (hosted on Supabase Storage & pgvector)
+api/app/core/dataset/medical_knowledge/*.pdf
+api/app/core/dataset/medical_knowledge/*.doc
+api/app/core/dataset/medical_knowledge/*.docx
+
+
