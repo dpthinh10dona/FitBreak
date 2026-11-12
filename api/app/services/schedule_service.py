@@ -165,13 +165,48 @@ async def schedule_maker(user_information: dict) -> dict:
     resistance_cnt = cardio_cnt = pilate_cnt = 0
     generated_schedule = {}
     last_trained_type = None
+    total_active_days = 0
 
     for day, raw_slots in timetable.items():
-        slots = raw_slots if isinstance(raw_slots, list) else [raw_slots]
+        # Chuẩn hóa raw_slots thành list các số nguyên (phút)
+        slots = []
+        if isinstance(raw_slots, dict):
+            # Nhận từ frontend dạng {"available_minutes": X, "max_session_minutes": Y}
+            b_max = int(raw_slots.get("max_session_minutes") or 0)
+            b_avail = int(raw_slots.get("available_minutes") or 0)
+            b = max(b_max, min(b_avail, 60))
+            slots = [b] if b > 0 else [0]
+        elif isinstance(raw_slots, list):
+            for s in raw_slots:
+                if isinstance(s, dict):
+                    b_max = int(s.get("max_session_minutes") or 0)
+                    b_avail = int(s.get("available_minutes") or 0)
+                    b = max(b_max, min(b_avail, 60))
+                    slots.append(b)
+                elif isinstance(s, (int, float)):
+                    slots.append(int(s))
+        elif isinstance(raw_slots, (int, float)):
+            slots = [int(raw_slots)]
+        else:
+            slots = [0]
+
+        if any(s >= 20 for s in slots):
+            total_active_days += 1
+
         generated_schedule[day] = []
         today_trained_type = None
 
         for budget in slots:
+            budget = int(budget)
+            if budget <= 0:
+                generated_schedule[day].append({
+                    "day_type": "Rest",
+                    "total_time": 0,
+                    "slot_budget": 0,
+                    "exercises": []
+                })
+                continue
+
             chosen_block = pick_block_with_recovery(
                 aim=aim,
                 prev_type=last_trained_type,
@@ -229,21 +264,39 @@ async def schedule_maker(user_information: dict) -> dict:
 
         last_trained_type = today_trained_type
 
-    # Kiểm tra tính hợp lệ tối thiểu theo đúng spec
-    if aim == 0 and (resistance_cnt < 3 or cardio_cnt < 3):
+    # Kiểm tra tính hợp lệ thích ứng theo số ngày hoạt động thực tế
+    total_trained = resistance_cnt + cardio_cnt + pilate_cnt
+    if total_trained == 0 and total_active_days > 0:
         raise InvalidSchedule(
-            f"Mục tiêu Giảm cân cần tối thiểu 3 Kháng lực và 3 Cardio. "
-            f"Hiện có: {resistance_cnt} Kháng lực, {cardio_cnt} Cardio."
+            "Thời gian rảnh bạn đã chọn chưa đủ để sắp xếp bài tập (mỗi buổi cần tối thiểu 20-30 phút). Vui lòng chọn thêm khung giờ."
         )
-    elif aim == 1 and resistance_cnt < 3:
-        raise InvalidSchedule(
-            f"Mục tiêu Tăng cơ cần tối thiểu 3 Kháng lực. "
-            f"Hiện có: {resistance_cnt} Kháng lực."
-        )
-    elif aim == 2 and (resistance_cnt < 2 or cardio_cnt < 2 or pilate_cnt < 2):
-        raise InvalidSchedule(
-            f"Mục tiêu Duy trì cần tối thiểu 2 Kháng lực, 2 Cardio nhẹ, 2 Pilates. "
-            f"Hiện có: {resistance_cnt} Kháng lực, {cardio_cnt} Cardio, {pilate_cnt} Pilates."
-        )
+
+    # Nếu người dùng có từ 6 ngày rảnh hợp lệ trở lên, kiểm tra chỉ tiêu tối ưu theo phân phối
+    if total_active_days >= 6:
+        if aim == 0 and (resistance_cnt < 3 or cardio_cnt < 3):
+            if total_trained < 5:
+                raise InvalidSchedule(
+                    f"Mục tiêu Giảm cân cần tối thiểu 3 Kháng lực và 3 Cardio. "
+                    f"Hiện có: {resistance_cnt} Kháng lực, {cardio_cnt} Cardio."
+                )
+        elif aim == 1 and resistance_cnt < 3:
+            if resistance_cnt < 2:
+                raise InvalidSchedule(
+                    f"Mục tiêu Tăng cơ cần tối thiểu 3 Kháng lực. "
+                    f"Hiện có: {resistance_cnt} Kháng lực."
+                )
+        elif aim == 2 and (resistance_cnt < 2 or cardio_cnt < 2 or pilate_cnt < 2):
+            if total_trained < 5:
+                raise InvalidSchedule(
+                    f"Mục tiêu Duy trì cần tối thiểu 2 Kháng lực, 2 Cardio nhẹ, 2 Pilates. "
+                    f"Hiện có: {resistance_cnt} Kháng lực, {cardio_cnt} Cardio, {pilate_cnt} Pilates."
+                )
+    else:
+        # Khi người dùng rảnh từ 3-5 ngày trong tuần
+        if total_trained < min(2, total_active_days):
+            raise InvalidSchedule(
+                "Thời gian rảnh của các buổi chưa đủ để phân bổ bài tập an toàn. "
+                "Vui lòng tăng thời lượng mỗi buổi lên ít nhất 30-45 phút."
+            )
 
     return generated_schedule

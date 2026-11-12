@@ -193,26 +193,53 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/schedule/generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          timetable,
-          level: userProfile?.level_of_physical_activity || 'medium',
-        }),
-      });
+      if (!token) {
+        setErrorMsg('Vui lòng đăng nhập để thiết lập lịch phục hồi thể lực!');
+        setLoading(false);
+        return;
+      }
+
+      let response;
+      try {
+        response = await fetch(`${API_BASE_URL}/schedule/generate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            timetable,
+            level: userProfile?.level_of_physical_activity || 'medium',
+          }),
+        });
+      } catch (netErr) {
+        console.warn('Endpoint /schedule/generate không phản hồi, thử /schedule-maker:', netErr);
+      }
+
+      if (!response || response.status === 404) {
+        response = await fetch(`${API_BASE_URL}/schedule-maker`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            timetable,
+            level: userProfile?.level_of_physical_activity || 'medium',
+          }),
+        });
+      }
 
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.detail || 'Không thể tạo thời khóa biểu phục hồi!');
       }
 
+      const scheduleToStore = data.schedule || data;
+      localStorage.setItem('workoutSchedule', JSON.stringify(scheduleToStore));
       localStorage.setItem('selectedTimeSlots', JSON.stringify(Array.from(selectedSlots)));
       if (onScheduleGenerated) {
-        onScheduleGenerated(data);
+        onScheduleGenerated(scheduleToStore);
       }
       setIsEditing(false);
     } catch (err) {
@@ -290,9 +317,13 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated }) => {
         {/* 7 Days Grid */}
         <div className="clinical-board-grid">
           {days.map((day) => {
-            const dayData = weeklySchedule[day];
-            const isRest = !dayData || dayData.type === 'Rest' || !dayData.exercises || dayData.exercises.length === 0;
-            const categoryInfo = dayTypeClinicalLabels[dayData?.type] || dayTypeClinicalLabels.Rest;
+            const rawDayData = weeklySchedule[day];
+            const slots = Array.isArray(rawDayData) ? rawDayData : (rawDayData ? [rawDayData] : []);
+            const activeSlot = slots.find(s => (s.day_type || s.type) !== 'Rest' && s.exercises && s.exercises.length > 0) || slots[0];
+            const dayType = activeSlot?.day_type || activeSlot?.type || 'Rest';
+            const exercises = slots.flatMap(s => s.exercises || []);
+            const isRest = !exercises || exercises.length === 0 || dayType === 'Rest';
+            const categoryInfo = dayTypeClinicalLabels[dayType] || dayTypeClinicalLabels.Rest;
             const timeRangeText = formatDayTimeRanges(selectedSlotsArray, day);
 
             return (
@@ -321,17 +352,24 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated }) => {
                       <div style={{ fontSize: '0.75rem', marginTop: '4px' }}>Nghỉ ngơi, ngủ đủ giấc & giãn cơ nhẹ</div>
                     </div>
                   ) : (
-                    dayData.exercises.map((ex, idx) => (
-                      <div key={ex.id || idx} className="clinical-task-card">
-                        <div className="task-name-clinical">{ex.name}</div>
-                        <div className="task-meta-clinical">
-                          <span>{ex.body_part || 'Toàn thân'}</span>
-                          <span className="task-sets-clinical">
-                            {ex.sets ? `${ex.sets} hiệp` : ''} {ex.reps ? `× ${ex.reps}` : ex.duration ? `${ex.duration}p` : ''}
-                          </span>
+                    exercises.map((ex, idx) => {
+                      const exName = ex.exercise || ex.name || ex.exercise_name || "Bài tập";
+                      const bodyPart = ex.body_part ? ex.body_part.replace('_', ' ') : "Toàn thân";
+                      const duration = ex.time_need || ex.duration || 15;
+                      const setsReps = ex.sets 
+                        ? `${ex.sets} hiệp ${ex.reps ? `× ${ex.reps}` : ''}`
+                        : `${duration} phút`;
+
+                      return (
+                        <div key={ex.id || idx} className="clinical-task-card">
+                          <div className="task-name-clinical">{exName}</div>
+                          <div className="task-meta-clinical">
+                            <span style={{ textTransform: 'capitalize' }}>🎯 {bodyPart}</span>
+                            <span className="task-sets-clinical">⏱ {setsReps}</span>
+                          </div>
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </div>

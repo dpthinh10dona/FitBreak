@@ -6,25 +6,31 @@ from app.services.schedule_service import schedule_maker
 router = APIRouter()
 
 @router.post("/schedule-maker")
+@router.post("/schedule/generate")
+@router.post("/generate")
 async def scheduleMaker(inp: dict,
                         token: tokenAuthorization = Depends(token_authorization)):
     try:
-        response = token.client.table("profiles").select("*").eq("id", token.user_id).execute()
-        stat = response.data[0]
-        if not stat:
-            raise HTTPException(status_code=404, detail="Stats record not found")
+        stat = {}
+        try:
+            response = token.client.table("profiles").select("*").eq("id", token.user_id).execute()
+            if response.data and len(response.data) > 0:
+                stat = response.data[0]
+        except Exception as db_err:
+            print(f"[WARN] Error fetching profile in scheduleMaker: {db_err}")
 
         goal = stat.get("goal")
         if goal == "giảm cân": 
             goal = 0
         elif goal == "tăng cơ":
             goal = 1
-        else:
+        elif goal == "duy trì":
             goal = 2
+        else:
+            goal = inp.get("aim", 0)
 
-        # Lấy trực tiếp level_of_physical_activity từ bảng profiles (đã được phân loại dựa trên sức khỏe / BMI)
-        # Giá trị lưu trong DB là text: 'heavy', 'medium', hoặc 'light'
-        level_of_physical_activity = stat.get("level_of_physical_activity")
+        # Lấy trực tiếp level_of_physical_activity từ bảng profiles hoặc từ payload input
+        level_of_physical_activity = stat.get("level_of_physical_activity") or inp.get("level")
         
         # Nếu cột này còn NULL (user cũ chưa cập nhật), fallback theo BMI hoặc activity_frequency
         if not level_of_physical_activity:
@@ -48,10 +54,13 @@ async def scheduleMaker(inp: dict,
                 elif act_freq == 2:
                     level_of_physical_activity = "medium"
                 else:
-                    level_of_physical_activity = "light"
+                    level_of_physical_activity = "medium"
+
+        # Bóc tách timetable từ payload: inp có thể là {"timetable": {...}, "level": ...} hoặc trực tiếp là timetable dict
+        timetable_data = inp.get("timetable", inp) if isinstance(inp, dict) and "timetable" in inp else inp
 
         user_info = {
-            "timetable": inp,
+            "timetable": timetable_data,
             "level_of_physical_activity": level_of_physical_activity,
             "aim": goal
         }
