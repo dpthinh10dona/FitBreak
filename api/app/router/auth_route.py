@@ -34,10 +34,12 @@ async def register(data: signUp):
         })
         if auth_response is None:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Register that bai")
+        session_token = auth_response.session.access_token if auth_response.session else None
+        msg = "Đăng ký thành công" if session_token else "Đăng ký thành công. Vui lòng xác nhận email trước khi đăng nhập."
         return authResponse(
             success=True,
-            message="Đăng ký thành công",
-            access_token=auth_response.session.access_token,
+            message=msg,
+            access_token=session_token,
             user=auth_response.user,
         )
     except Exception as e:
