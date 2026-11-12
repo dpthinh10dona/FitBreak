@@ -125,6 +125,16 @@ function App() {
             fetchUserStats(token)
           ]);
 
+          // Nếu token đã hết hạn hoặc không hợp lệ -> đưa về trang đăng nhập
+          if (!profile && !stats) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('user');
+            setUser(null);
+            setCurrentScreen('login');
+            return;
+          }
+
           const fullUserData = { 
             ...parsedUser, 
             ...profile, 

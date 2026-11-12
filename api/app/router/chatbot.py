@@ -95,8 +95,8 @@ async def ask_health_chatbot(
             detail="Bạn đã sử dụng hết 3 lượt tư vấn miễn phí hôm nay. Vui lòng quay lại vào ngày mai!"
         )
 
-    # 3. Lấy profile hiện tại từ Supabase
-    profile_res = supabase.table("profiles").select("*").eq("id", user_id).execute()
+    # 3. Lấy profile hiện tại từ Supabase (dùng auth_data.client đã xác thực JWT)
+    profile_res = auth_data.client.table("profiles").select("*").eq("id", user_id).execute()
     user_profile = profile_res.data[0] if (profile_res.data and len(profile_res.data) > 0) else {}
 
     # 4. Gửi qua AI Agent phân tích
@@ -155,7 +155,7 @@ async def confirm_profile_update(
     if not update_fields:
         return {"success": False, "message": "Không có thông tin nào cần cập nhật."}
 
-    supabase.table("profiles").update(update_fields).eq("id", user_id).execute()
+    auth_data.client.table("profiles").update(update_fields).eq("id", user_id).execute()
     return {"success": True, "message": "Đã cập nhật hồ sơ cá nhân hóa thành công!", "updated": update_fields}
 
 
