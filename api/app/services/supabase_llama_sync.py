@@ -217,36 +217,55 @@ class SupabaseLlamaSync:
         logger.info(f"[+] Tải lên thành công! URL: {public_url}")
         return public_url
 
+    def _extract_local_fallback(self, local_path: Path) -> str:
+        """Trích xuất văn bản dự phòng nếu LlamaParse gặp sự cố hoặc trả về rỗng."""
+        ext = local_path.suffix.lower()
+        if ext == ".pdf":
+            try:
+                import pypdf
+                reader = pypdf.PdfReader(str(local_path))
+                pages_text = []
+                for idx, page in enumerate(reader.pages, 1):
+                    t = page.extract_text() or ""
+                    if t.strip():
+                        pages_text.append(f"## Trang {idx}\n\n{t.strip()}")
+                return "\n\n".join(pages_text)
+            except Exception as e:
+                logger.warning(f"Lỗi khi đọc PDF bằng pypdf: {e}")
+        elif ext in [".txt", ".md"]:
+            try:
+                with open(local_path, "r", encoding="utf-8") as f:
+                    return f.read()
+            except Exception:
+                pass
+        return ""
+
     def parse_document_with_llama(self, local_path: Path, public_url: Optional[str] = None) -> str:
         """
-        Gọi LlamaParse API để phân tích cú pháp tài liệu phức tạp (bảng biểu, sơ đồ, font tiếng Việt)
-        thành chuỗi định dạng Markdown hoàn chỉnh.
+        Gọi LlamaParse API để phân tích cú pháp tài liệu.
+        Tự động fallback sang bộ trích xuất nội bộ (pypdf) nếu LlamaParse lỗi hoặc trả về 0 ký tự (do 410 Gone).
         """
-        if not self.llama_api_key:
-            raise ValueError(
-                "Thiếu LLAMA_CLOUD_API_KEY hoặc LLAMA_API_KEY trong file .env!\n"
-                "Bạn có thể lấy API Key miễn phí tại: https://cloud.llamaindex.ai"
-            )
+        full_text = ""
+        if self.llama_api_key and _HAS_LLAMA_PARSE:
+            try:
+                logger.info(f"Đang gửi tài liệu sang LlamaParse API (tiếng Việt, chế độ trích xuất Markdown nâng cao)...")
+                parser = LlamaParse(
+                    api_key=self.llama_api_key,
+                    result_type="markdown",
+                    language="vi",
+                    verbose=False,
+                )
+                parsed_docs = parser.load_data(str(local_path))
+                full_text = "\n\n".join([doc.text for doc in parsed_docs if doc.text])
+            except Exception as e:
+                logger.warning(f"LlamaParse API gặp lỗi ({e}). Chuyển sang trích xuất nội bộ...")
 
-        if not _HAS_LLAMA_PARSE:
-            raise ImportError(
-                "Chưa cài đặt thư viện 'llama-parse'. Hãy chạy: pip install llama-parse"
-            )
+        # Nếu LlamaParse trả về rỗng (do API V1 410 Gone / hết quota)
+        if not full_text.strip():
+            logger.info(f"LlamaParse trả về 0 ký tự (do API V1 bị đóng hoặc hết hạn). Kích hoạt bộ trích xuất nội bộ...")
+            full_text = self._extract_local_fallback(local_path)
 
-        logger.info(f"Đang gửi tài liệu sang LlamaParse API (tiếng Việt, chế độ trích xuất Markdown nâng cao)...")
-
-        parser = LlamaParse(
-            api_key=self.llama_api_key,
-            result_type="markdown",
-            language="vi",
-            verbose=True,
-        )
-
-        # Ưu tiên parse trực tiếp từ local path để không bị lỗi timeout đường truyền mạng
-        parsed_docs = parser.load_data(str(local_path))
-        full_text = "\n\n".join([doc.text for doc in parsed_docs if doc.text])
-
-        logger.info(f"[+] LlamaParse hoàn tất! Độ dài văn bản trích xuất: {len(full_text):,} ký tự.")
+        logger.info(f"[+] Trích xuất hoàn tất! Độ dài văn bản: {len(full_text):,} ký tự.")
         return full_text
 
     def chunk_markdown(self, full_markdown: str, source_name: str) -> List[Dict[str, Any]]:
@@ -320,13 +339,34 @@ class SupabaseLlamaSync:
                 total_saved += len(batch)
                 logger.info(f"  -> Đã lưu {total_saved}/{total_chunks} chunks...")
             except Exception as e:
-                logger.error(f"Lỗi khi lưu batch chunks {i} - {i+len(batch)}: {e}")
+                err_str = str(e)
+                if "Could not find the 'embedding' column" in err_str or "PGRST204" in err_str:
+                    logger.warning("Bảng 'medical_chunks' trên Supabase chưa có cột 'embedding' (vector). Đang lưu các trường văn bản (không kèm vector)...")
+                    clean_batch = [{k: v for k, v in row.items() if k != "embedding"} for row in batch]
+                    try:
+                        self.client.table(self.table_name).upsert(clean_batch).execute()
+                        total_saved += len(clean_batch)
+                        logger.info(f"  -> Đã lưu {total_saved}/{total_chunks} chunks (dạng văn bản)...")
+                        continue
+                    except Exception as inner_err:
+                        logger.error(f"Lỗi khi lưu batch text: {inner_err}")
+                else:
+                    logger.error(f"Lỗi khi lưu batch chunks {i} - {i+len(batch)}: {e}")
+
                 # Thử lại từng record để không mất toàn bộ batch
                 for row in batch:
                     try:
                         self.client.table(self.table_name).upsert(row).execute()
                         total_saved += 1
                     except Exception as row_err:
+                        if "embedding" in str(row_err):
+                            try:
+                                clean_row = {k: v for k, v in row.items() if k != "embedding"}
+                                self.client.table(self.table_name).upsert(clean_row).execute()
+                                total_saved += 1
+                                continue
+                            except Exception:
+                                pass
                         logger.error(f"  -> Lỗi lưu chunk [{row.get('id')}]: {row_err}")
 
         logger.info(f"[+] Hoàn tất lưu {total_saved}/{total_chunks} chunks vào Supabase Database!")
