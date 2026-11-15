@@ -1,60 +1,73 @@
 :root {
-  --bg-base: #f8fafc;
-  --bg-surface: #ffffff;
+  /* -------------------------------------------------------------
+     EDITORIAL REFINED SYSTEM (60 - 30 - 10 COLOR PALETTE)
+     60% Neutral Ground: Off-white canvas with warmth & optical depth
+     30% Secondary Surfaces & Hairline Borders
+     10% Purposeful Medical Accent (Deep Forest Teal & Sharp Steel)
+     ------------------------------------------------------------- */
+  --bg-base: #f9f8f6;           /* Warm, organic off-white (No sterile #FFFFFF wash) */
+  --bg-canvas: #f9f8f6;
+  --bg-surface: #ffffff;        /* Crisp elevated layer */
   --bg-surface-elevated: #ffffff;
-  --bg-surface-hover: #f0f9ff;
-  --bg-glass: rgba(255, 255, 255, 0.9);
-  --bg-glass-card: rgba(255, 255, 255, 0.95);
+  --bg-surface-hover: #f3f2ee;   /* Subtle natural tint */
+  --bg-surface-subtle: #f4f3ef;
   
-  --border-subtle: #e2e8f0;
-  --border-medium: #cbd5e1;
-  --border-glow: rgba(2, 132, 199, 0.25);
-  --border-cyan: rgba(2, 132, 199, 0.35);
+  /* Hairline borders - 1px low contrast, no chunky borders */
+  --border-subtle: rgba(24, 24, 27, 0.08);   /* Hairline dark/8% */
+  --border-medium: rgba(24, 24, 27, 0.14);   /* Deliberate divider */
+  --border-strong: rgba(24, 24, 27, 0.24);
+  --border-focus: #0f766e;
 
-  --accent-purple: #0284c7;
-  --accent-purple-hover: #0369a1;
-  --accent-purple-glow: rgba(2, 132, 199, 0.2);
-  
-  --accent-cyan: #0284c7;
-  --accent-cyan-hover: #0369a1;
-  --accent-cyan-glow: rgba(2, 132, 199, 0.2);
+  /* Accent: Authentic Clinical Emerald & Deep Forest Teal (No AI cyan/purple gradient) */
+  --accent-primary: #0f766e;        /* Deep Teal 700 - Clinical Authority & Calming Trust */
+  --accent-primary-hover: #115e59;  /* Teal 800 */
+  --accent-primary-light: #f0fdfa;  /* Mint 50 */
+  --accent-primary-border: #99f6e4; /* Mint 200 */
 
-  --accent-emerald: #10b981;
-  --accent-emerald-hover: #059669;
-  --accent-emerald-glow: rgba(16, 185, 129, 0.2);
+  --accent-secondary: #0369a1;      /* Steel Blue 700 */
+  --accent-secondary-hover: #075985;
+  --accent-secondary-light: #f0f9ff;
 
-  --accent-amber: #d97706;
-  --accent-amber-glow: rgba(217, 119, 6, 0.2);
+  --accent-emerald: #15803d;        /* Green 700 - Clinical Normal / Stable */
+  --accent-emerald-bg: #f0fdf4;
+  --accent-emerald-border: #bbf7d0;
 
-  --accent-rose: #ef4444;
-  --accent-rose-hover: #dc2626;
-  --accent-rose-glow: rgba(239, 68, 68, 0.2);
+  --accent-amber: #b45309;          /* Amber 700 - Attention needed */
+  --accent-amber-bg: #fffbeb;
+  --accent-amber-border: #fde68a;
 
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
+  --accent-rose: #be123c;           /* Rose 700 - Critical / Acute */
+  --accent-rose-bg: #fff1f2;
+  --accent-rose-border: #fecdd3;
+
+  /* Typography: High contrast, purposeful letter-spacing */
+  --text-primary: #18181b;          /* Zinc 900 - Deep, rich contrast */
+  --text-secondary: #52525b;        /* Zinc 600 - Measured readability */
+  --text-muted: #71717a;            /* Zinc 500 - Auxiliary notes */
+  --text-subtle: #a1a1aa;           /* Zinc 400 - Captions / Micro-hints */
   --text-inverse: #ffffff;
 
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  --radius-xs: 4px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
+  /* Hairline precision geometry (avoid hyper-inflated bubbly pill cards) */
+  --radius-xs: 3px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
   --radius-full: 9999px;
 
-  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
-  --shadow-md: 0 4px 16px -2px rgba(15, 23, 42, 0.08);
-  --shadow-lg: 0 12px 32px -4px rgba(15, 23, 42, 0.1);
-  --shadow-glow-purple: 0 0 20px rgba(2, 132, 199, 0.15);
-  --shadow-glow-rose: 0 0 20px rgba(239, 68, 68, 0.15);
-  --shadow-glow-emerald: 0 0 20px rgba(16, 185, 129, 0.15);
+  /* Physical Shadow Hierarchy (Subtle, crisp, directional - No neon glowing blobs) */
+  --shadow-xs: 0 1px 2px 0 rgba(24, 24, 27, 0.04);
+  --shadow-sm: 0 1px 3px 0 rgba(24, 24, 27, 0.06), 0 1px 2px -1px rgba(24, 24, 27, 0.06);
+  --shadow-md: 0 4px 12px -2px rgba(24, 24, 27, 0.06), 0 2px 6px -1px rgba(24, 24, 27, 0.04);
+  --shadow-lg: 0 12px 28px -6px rgba(24, 24, 27, 0.08), 0 4px 10px -2px rgba(24, 24, 27, 0.03);
 
-  --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-slow: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Natural physics transitions (cubic-bezier) */
+  --transition-fast: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-normal: all 260ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow: all 450ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 *, *::before, *::after {
@@ -68,7 +81,7 @@ html, body {
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: 15px;
-  line-height: 1.5;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -83,22 +96,38 @@ html, body {
   max-width: 100%;
   display: flex;
   flex-direction: column;
-  background-color: #f8fafc;
-  background-image: 
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(2, 132, 199, 0.08), transparent 70%),
-    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(56, 189, 248, 0.06), transparent 70%);
-  background-attachment: fixed;
+  background-color: var(--bg-base);
 }
 
+/* Editorial Typography */
 h1, h2, h3, h4, h5, h6 {
   color: var(--text-primary);
   font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1.25;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: 2rem;
+  letter-spacing: -0.035em;
+  font-weight: 800;
+}
+
+h2 {
+  font-size: 1.5rem;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+}
+
+h3 {
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+  font-weight: 600;
 }
 
 p {
   color: var(--text-secondary);
+  max-width: 65ch; /* Maintain optimal reading line-length */
 }
 
 a {
@@ -116,11 +145,18 @@ button {
   cursor: pointer;
   background: none;
   border: none;
+  transition: var(--transition-fast);
 }
 
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Crafted Micro-details: Scrollbar & Text Selection */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
@@ -128,15 +164,15 @@ button {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: rgba(24, 24, 27, 0.16);
   border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgba(24, 24, 27, 0.28);
 }
 
 ::selection {
-  background: rgba(2, 132, 199, 0.2);
-  color: #0284c7;
+  background: rgba(15, 118, 110, 0.18);
+  color: var(--text-primary);
 }

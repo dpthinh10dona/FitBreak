@@ -246,8 +246,8 @@ const TaskBoard = ({ scheduleData, onUpdateCoins, onUpdateSchedule }) => {
     <div className="taskboard-page-wrapper">
       <div className="pomodoro-sidebar">
         <div className="pomodoro-header-row">
-          <span className="pomodoro-badge">FITNESS FOCUS</span>
-          <h3>🔥 Pomodoro Thể Chất</h3>
+          <span className="pomodoro-badge">NHỊP ĐỘ LÀM VIỆC</span>
+          <h3>Pomodoro Phục Hồi</h3>
         </div>
 
         {!isBreak ? (
@@ -257,11 +257,11 @@ const TaskBoard = ({ scheduleData, onUpdateCoins, onUpdateSchedule }) => {
                 {formatTime(timeLeft)}
               </div>
               <div className="timer-mode-tag">
-                {isRunning ? '🟢 Active Focus' : '⚪ Paused'}
+                {isRunning ? 'Đang chạy' : 'Tạm dừng'}
               </div>
             </div>
 
-            <p className="timer-desc">Tập trung làm việc. Nghỉ ngơi vận động sau mỗi 25 phút!</p>
+            <p className="timer-desc">Tập trung làm việc. Nghỉ ngơi giải lao và vận động sau mỗi 25 phút.</p>
 
             <div className="timer-controls">
               <button 
@@ -273,7 +273,7 @@ const TaskBoard = ({ scheduleData, onUpdateCoins, onUpdateSchedule }) => {
                   setIsRunning(!isRunning);
                 }}
               >
-                {isRunning ? '⏸ Tạm dừng' : '▶ Bắt đầu'}
+                {isRunning ? 'Tạm dừng' : 'Bắt đầu'}
               </button>
               <button 
                 className="btn-timer btn-reset"
@@ -282,23 +282,22 @@ const TaskBoard = ({ scheduleData, onUpdateCoins, onUpdateSchedule }) => {
                   setTimeLeft(POMODORO_TIME);
                 }}
               >
-                ↺ Reset
+                Đặt lại
               </button>
             </div>
           </div>
         ) : (
           <div className="break-section fade-in">
-            <div className="break-badge-alert">BREAK TIME</div>
-            <div className="break-icon">⏰</div>
-            <h4 className="break-title">Đã hết 25 phút!</h4>
-            <p className="break-task-text">Đứng lên và thực hiện:</p>
+            <div className="break-badge-alert">THỜI GIAN NGHỈ</div>
+            <h4 className="break-title">Hết 25 phút làm việc</h4>
+            <p className="break-task-text">Đứng lên và thực hiện vận động nhẹ:</p>
             <div className="highlight-task">{currentMiniTask}</div>
             <button 
               className="btn-complete-mini"
               disabled={isCompletingMini}
               onClick={handleMiniTaskComplete}
             >
-              {isCompletingMini ? 'Đang gửi...' : '✓ Hoàn thành (+2 Coins)'}
+              {isCompletingMini ? 'Đang ghi nhận...' : 'Đã hoàn thành (+2 Coins)'}
             </button>
             <button 
               className="btn-skip-mini"
@@ -316,16 +315,15 @@ const TaskBoard = ({ scheduleData, onUpdateCoins, onUpdateSchedule }) => {
       <div className="taskboard-container">
         <div className="taskboard-header">
           <div className="taskboard-header-content">
-            <h2>Bài tập hôm nay</h2>
+            <h2>Kế hoạch vận động trong ngày</h2>
             <span className="taskboard-day-chip">{todayName}</span>
           </div>
         </div>
 
         {todaySchedule.length === 0 ? (
           <div className="empty-schedule-card">
-            <div className="empty-icon">📅</div>
-            <h3>Chưa có lịch tập cho hôm nay</h3>
-            <p>Vui lòng vào mục <b>Schedule</b> để chọn khung giờ và tạo lịch tập mới!</p>
+            <h3>Chưa có lịch vận động hôm nay</h3>
+            <p>Vui lòng chuyển sang mục Lịch Trình Vận Động để đăng ký khung giờ rảnh và tạo lịch phục hồi.</p>
           </div>
         ) : (
           todaySchedule.map((slot, slotIndex) => {
@@ -334,9 +332,8 @@ const TaskBoard = ({ scheduleData, onUpdateCoins, onUpdateSchedule }) => {
             if (slot.day_type === 'Rest') {
               return (
                 <div key={slotIndex} className="rest-day-card">
-                  <div className="rest-day-icon">🌿</div>
-                  <h3>Hôm nay là ngày nghỉ (Rest Day)</h3>
-                  <p>Hãy dành thời gian phục hồi cơ bắp và nghỉ ngơi đầy đủ nhé!</p>
+                  <h3>Hôm nay là ngày nghỉ phục hồi</h3>
+                  <p>Dành thời gian nghỉ ngơi để cơ bắp tái tạo và thư giãn cột sống.</p>
                 </div>
               );
             }
@@ -344,9 +341,8 @@ const TaskBoard = ({ scheduleData, onUpdateCoins, onUpdateSchedule }) => {
             if (!hasExercises) {
               return (
                 <div key={slotIndex} className="completed-block">
-                  <div className="completed-icon">🎉</div>
-                  <h3>Bạn đã hoàn thành toàn bộ bài tập trong mục này!</h3>
-                  <p>Tuyệt vời! Tiếp tục giữ vững phong độ nhé.</p>
+                  <h3>Đã hoàn tất toàn bộ bài tập trong mục này</h3>
+                  <p>Bạn đã duy trì thói quen vận động rất tốt hôm nay.</p>
                 </div>
               );
             }
@@ -355,15 +351,14 @@ const TaskBoard = ({ scheduleData, onUpdateCoins, onUpdateSchedule }) => {
               <div key={slotIndex} className="workout-block">
                 <div className="block-title">
                   <div className="block-title-main">
-                    <span className="block-title-icon">⚔️</span>
-                    <h3>Chủ đề: <span className="highlight-type">{(slot.day_type || '').replace('_', ' ').toUpperCase()}</span></h3>
+                    <h3>Phân nhóm: <span className="highlight-type">{(slot.day_type || '').replace('_', ' ').toUpperCase()}</span></h3>
                   </div>
                   {(() => {
                     const timeRange = formatDayTimeRanges(todayName);
                     return timeRange ? (
-                      <span className="block-time-badge">🕒 {timeRange}</span>
+                      <span className="block-time-badge">{timeRange}</span>
                     ) : (
-                      <span className="block-time-badge">⏱ {slot.total_time} / {slot.slot_budget} phút</span>
+                      <span className="block-time-badge">{slot.total_time} / {slot.slot_budget} phút</span>
                     );
                   })()}
                 </div>
@@ -392,18 +387,18 @@ const TaskBoard = ({ scheduleData, onUpdateCoins, onUpdateSchedule }) => {
                         <div className="exercise-info">
                           <div className="exercise-header-row">
                             <h4>{exerciseTitle}</h4>
-                            <span className="body-part-badge">🎯 {bodyPart}</span>
+                            <span className="body-part-badge">{bodyPart}</span>
                           </div>
                           <div className="exercise-meta-row">
-                            <span className="exercise-duration">⏱ <b>{duration} phút</b></span>
+                            <span className="exercise-duration">Thời lượng: <b>{duration} phút</b></span>
                             <span className="exercise-meta-separator">•</span>
-                            <span className="exercise-level">Cấp độ: <span className="level-text">{level}</span></span>
+                            <span className="exercise-level">Cường độ: <span className="level-text">{level}</span></span>
                             <span className="exercise-meta-separator">•</span>
                             {(() => {
                                 const safeExId = String(item.id || item.exercise || item.name || '0');
                                 const isDoneToday = getCompletedExercisesToday().includes(safeExId);
                                 return isDoneToday ? (
-                                  <span className="exercise-reward-tag exercise-reward-claimed" title="Đã nhận thưởng hôm nay">✓ Đã nhận thưởng</span>
+                                  <span className="exercise-reward-tag exercise-reward-claimed" title="Đã nhận thưởng hôm nay">Đã nhận thưởng</span>
                                 ) : (
                                   <span className="exercise-reward-tag">+{item.reward_coins || 10} Coins</span>
                                 );

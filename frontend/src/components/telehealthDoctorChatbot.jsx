@@ -257,9 +257,8 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
           onClick={() => setIsOpen(true)}
           aria-label="Mở cửa sổ tư vấn bác sĩ trực tuyến"
         >
-          <span aria-hidden="true">🩺</span>
-          <span>Bác Sĩ Trực Tuyến</span>
-          <span className="telehealth-badge-counter">{remainingQuestions}/3</span>
+          <span>Tư Vấn Y Khoa</span>
+          <span className="telehealth-badge-counter">{remainingQuestions}/3 lượt</span>
         </button>
       )}
 
@@ -269,11 +268,11 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
           <div className="telehealth-header">
             <div className="doctor-identity-meta">
               <div className="doctor-avatar-circle" aria-hidden="true">
-                👨‍⚕️
+                DR
               </div>
               <div className="doctor-text-info">
-                <h4>FitBreak Health Doctor</h4>
-                <span className="doctor-availability">Chuyên gia Y học Thể thao & Dinh dưỡng</span>
+                <h4>Hội Chẩn Lâm Sàng</h4>
+                <span className="doctor-availability">Y học thể thao & Vận động phục hồi</span>
               </div>
             </div>
             <button 
