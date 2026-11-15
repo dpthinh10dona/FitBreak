@@ -71,13 +71,20 @@ if GEMINI_API_KEY:
     except Exception as e:
         logger.debug(f"Không thể khởi tạo google.genai: {e}")
 
-# Kiểm tra thư viện LlamaParse & LlamaIndex
+# Kiểm tra thư viện LlamaParse / LlamaCloud v2 & LlamaIndex
+_HAS_LLAMA_CLOUD = False
 _HAS_LLAMA_PARSE = False
+try:
+    from llama_cloud.client import LlamaCloud
+    _HAS_LLAMA_CLOUD = True
+except ImportError:
+    pass
+
 try:
     from llama_parse import LlamaParse
     _HAS_LLAMA_PARSE = True
 except ImportError:
-    logger.warning("Thư viện 'llama-parse' chưa được cài đặt. Vui lòng chạy: pip install llama-parse")
+    pass
 
 _HAS_LLAMA_INDEX = False
 try:
@@ -100,12 +107,14 @@ class SupabaseLlamaSync:
         llama_api_key: Optional[str] = None,
         bucket_name: Optional[str] = None,
         table_name: Optional[str] = None,
+        parser_engine: Optional[str] = None,
     ):
         self.supabase_url = supabase_url or SUPABASE_URL
         self.supabase_key = supabase_key or SUPABASE_KEY
         self.llama_api_key = llama_api_key or LLAMA_API_KEY
         self.bucket_name = bucket_name or SUPABASE_BUCKET
         self.table_name = table_name or MEDICAL_CHUNKS_TABLE
+        self.parser_engine = (parser_engine or os.getenv("PARSER_ENGINE", "local")).lower()
 
         if not self.supabase_url or not self.supabase_key:
             raise ValueError(
@@ -240,32 +249,116 @@ class SupabaseLlamaSync:
                 pass
         return ""
 
-    def parse_document_with_llama(self, local_path: Path, public_url: Optional[str] = None) -> str:
-        """
-        Gọi LlamaParse API để phân tích cú pháp tài liệu.
-        Tự động fallback sang bộ trích xuất nội bộ (pypdf) nếu LlamaParse lỗi hoặc trả về 0 ký tự (do 410 Gone).
-        """
-        full_text = ""
-        if self.llama_api_key and _HAS_LLAMA_PARSE:
-            try:
-                logger.info(f"Đang gửi tài liệu sang LlamaParse API (tiếng Việt, chế độ trích xuất Markdown nâng cao)...")
-                parser = LlamaParse(
-                    api_key=self.llama_api_key,
-                    result_type="markdown",
-                    language="vi",
-                    verbose=False,
-                )
-                parsed_docs = parser.load_data(str(local_path))
-                full_text = "\n\n".join([doc.text for doc in parsed_docs if doc.text])
-            except Exception as e:
-                logger.warning(f"LlamaParse API gặp lỗi ({e}). Chuyển sang trích xuất nội bộ...")
+    def _extract_with_gemini(self, local_path: Path) -> str:
+        """Trích xuất tài liệu sử dụng mô hình Google Gemini AI Vision mới nhất."""
+        if not _HAS_GENAI or not _genai_client:
+            logger.warning("Google GenAI client chưa khả dụng, chuyển sang local parser...")
+            return self._extract_local_fallback(local_path)
 
-        # Nếu LlamaParse trả về rỗng (do API V1 410 Gone / hết quota)
+        ext = local_path.suffix.lower()
+        mime_map = {
+            ".pdf": "application/pdf",
+            ".txt": "text/plain",
+            ".md": "text/markdown",
+        }
+        mime_type = mime_map.get(ext)
+        if not mime_type:
+            return self._extract_local_fallback(local_path)
+
+        try:
+            from google.genai import types
+            with open(local_path, "rb") as f:
+                file_bytes = f.read()
+
+            gemini_model = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
+            logger.info(f"Đang gọi Google Gemini ({gemini_model}) phân tích nội dung tài liệu...")
+            resp = _genai_client.models.generate_content(
+                model=gemini_model,
+                contents=[
+                    types.Part.from_bytes(data=file_bytes, mime_type=mime_type),
+                    "Bạn là chuyên gia y khoa số hóa tài liệu. Hãy trích xuất toàn bộ nội dung tài liệu sau thành Markdown tiếng Việt hoàn chỉnh, giữ nguyên cấu trúc tiêu đề (#, ##), danh sách và bảng biểu phác đồ."
+                ]
+            )
+            return resp.text or ""
+        except Exception as e:
+            logger.warning(f"Lỗi khi gọi Gemini parsing ({e}), tự động chuyển sang local parser...")
+            return self._extract_local_fallback(local_path)
+
+    def parse_document(self, local_path: Path, public_url: Optional[str] = None) -> str:
+        """
+        Phân tích cú pháp tài liệu theo engine được chọn:
+        - 'llama' hoặc 'v2' (mặc định cho Llama): LlamaParse v2 Parse API (llama_cloud client).
+        - 'gemini': Google Gemini 3.1 Flash-Lite AI Vision hiện đại.
+        - 'local': pypdf siêu tốc, chính xác, không phụ thuộc internet.
+        """
+        engine = self.parser_engine
+        logger.info(f"Đang phân tích tài liệu '{local_path.name}' bằng engine [{engine.upper()}]...")
+
+        if engine == "gemini":
+            full_text = self._extract_with_gemini(local_path)
+        elif engine in ("llama", "v2"):
+            full_text = self.parse_document_with_llama_v2(local_path, public_url=public_url)
+        else:  # 'local'
+            full_text = self._extract_local_fallback(local_path)
+
         if not full_text.strip():
-            logger.info(f"LlamaParse trả về 0 ký tự (do API V1 bị đóng hoặc hết hạn). Kích hoạt bộ trích xuất nội bộ...")
+            logger.info("Dùng fallback trích xuất nội bộ để đảm bảo văn bản không bị rỗng...")
             full_text = self._extract_local_fallback(local_path)
 
         logger.info(f"[+] Trích xuất hoàn tất! Độ dài văn bản: {len(full_text):,} ký tự.")
+        return full_text
+
+    def parse_document_with_llama_v2(self, local_path: Path, public_url: Optional[str] = None) -> str:
+        """
+        Gọi LlamaParse v2 Parse API (thông qua llama_cloud.client.LlamaCloud).
+        1. Tải file lên LlamaCloud qua files.upload_file().
+        2. Tạo tác vụ phân tích v2 qua v_2.parse_file(tier='cost_effective', version='latest').
+        3. Poll v_2.get_parse_job(expand='markdown') để nhận toàn bộ nội dung Markdown các trang.
+        Tự động fallback về pypdf nếu token không hợp lệ hoặc gặp sự cố mạng.
+        """
+        full_text = ""
+        if self.llama_api_key and _HAS_LLAMA_CLOUD:
+            try:
+                logger.info("Đang gửi tài liệu sang LlamaParse v2 API (LlamaCloud v2, tier: cost_effective)...")
+                client = LlamaCloud(token=self.llama_api_key)
+                
+                with open(local_path, "rb") as f:
+                    uploaded_file = client.files.upload_file(upload_file=f)
+                
+                logger.info(f"LlamaCloud File ID: {uploaded_file.id}. Đang khởi tạo v2 Parse Job...")
+                job = client.v_2.parse_file(
+                    file_id=uploaded_file.id,
+                    tier="cost_effective",
+                    version="latest",
+                    output_options={"markdown": {}}
+                )
+                
+                # Poll kết quả với timeout 120s
+                max_polls = 60
+                for poll_idx in range(max_polls):
+                    res = client.v_2.get_parse_job(job_id=job.id, expand="markdown")
+                    status_str = str(res.job.status).upper()
+                    if "COMPLETED" in status_str or "SUCCESS" in status_str:
+                        if hasattr(res, "markdown") and res.markdown and hasattr(res.markdown, "pages"):
+                            pages = [p.markdown for p in res.markdown.pages if hasattr(p, "markdown") and p.markdown]
+                            full_text = "\n\n".join(pages)
+                        elif hasattr(res, "markdown") and isinstance(res.markdown, str):
+                            full_text = res.markdown
+                        logger.info(f"[+] LlamaParse v2 hoàn thành! Trích xuất được {len(full_text):,} ký tự.")
+                        break
+                    elif "FAIL" in status_str or "ERROR" in status_str:
+                        logger.warning(f"LlamaParse v2 job báo lỗi: {res.job.error_message}")
+                        break
+                    
+                    time.sleep(2)
+            except Exception as e:
+                logger.warning(f"LlamaParse v2 API gặp sự cố ({e}). Tự động chuyển sang fallback...")
+
+        # Nếu LlamaParse v2 không trả về nội dung
+        if not full_text.strip():
+            logger.info("Kích hoạt bộ trích xuất nội bộ pypdf dự phòng...")
+            full_text = self._extract_local_fallback(local_path)
+
         return full_text
 
     def chunk_markdown(self, full_markdown: str, source_name: str) -> List[Dict[str, Any]]:
@@ -401,8 +494,8 @@ class SupabaseLlamaSync:
         # 1. Upload lên Supabase Storage
         public_url = self.upload_file_to_storage(path_obj, remote_filename=file_name)
 
-        # 2. Phân tích qua LlamaParse
-        markdown_text = self.parse_document_with_llama(path_obj, public_url=public_url)
+        # 2. Phân tích văn bản qua Parser Engine được chọn (local / gemini / llama)
+        markdown_text = self.parse_document(path_obj, public_url=public_url)
 
         # 3. Phân mảnh Markdown thành các node ngữ nghĩa
         chunks = self.chunk_markdown(markdown_text, source_name=file_name)
@@ -480,6 +573,13 @@ if __name__ == "__main__":
         help="Thư mục chứa các tài liệu cần đồng bộ hàng loạt (mặc định: medical_knowledge)",
     )
     parser.add_argument(
+        "--parser",
+        type=str,
+        choices=["v2", "llama", "local", "gemini"],
+        default=os.getenv("PARSER_ENGINE", "v2"),
+        help="Chọn công nghệ phân tích tài liệu: 'v2' / 'llama' (LlamaParse v2 Parse API mới nhất), 'local' (pypdf nội bộ siêu tốc), 'gemini' (Google Gemini AI Vision)",
+    )
+    parser.add_argument(
         "--force",
         action="store_true",
         help="Ép buộc xử lý và upload lại ngay cả khi file đã tồn tại trên Supabase Database.",
@@ -488,12 +588,19 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # In thông tin các key môi trường
+    engine_desc = (
+        "LlamaParse v2 Parse API (LlamaCloud v2)"
+        if args.parser in ("v2", "llama")
+        else ("Google Gemini 3.1 Flash-Lite AI Vision" if args.parser == "gemini" else "pypdf nội bộ siêu tốc (Không phụ thuộc API bên ngoài)")
+    )
     print("=" * 65)
-    print("FITBREAK SUPABASE & LLAMAPARSER INGESTION PIPELINE")
+    print("FITBREAK SUPABASE DOCUMENT INGESTION PIPELINE")
     print("=" * 65)
+    print(f"Parser Engine:   {args.parser.upper()} [{engine_desc}]")
     print(f"Supabase URL:    {SUPABASE_URL or '[Chưa cấu hình trong .env]'}")
     print(f"Supabase Key:    {'[Đã cấu hình]' if SUPABASE_KEY else '[CHƯA CÓ TRONG .ENV]'}")
-    print(f"LlamaParse Key:  {'[Đã cấu hình]' if LLAMA_API_KEY else '[CHƯA CÓ TRONG .ENV]'}")
+    if args.parser in ("v2", "llama"):
+        print(f"Llama Cloud Key: {'[Đã cấu hình]' if LLAMA_API_KEY else '[CHƯA CÓ TRONG .ENV]'}")
     print(f"Gemini Key:      {'[Đã cấu hình]' if GEMINI_API_KEY else '[Tùy chọn - Chưa có]'}")
     print(f"Target Bucket:   {SUPABASE_BUCKET}")
     print(f"Database Table:  {MEDICAL_CHUNKS_TABLE}")
@@ -504,12 +611,12 @@ if __name__ == "__main__":
         print("\n[!] LỖI: Vui lòng cấu hình SUPABASE_URL và SUPABASE_KEY / SUPABASE_SERVICE_ROLE_KEY trong file api/app/.env!")
         sys.exit(1)
 
-    if not LLAMA_API_KEY:
-        print("\n[!] LỖI: Vui lòng cấu hình LLAMA_CLOUD_API_KEY (hoặc LLAMA_API_KEY) trong file api/app/.env!")
+    if args.parser in ("v2", "llama") and not LLAMA_API_KEY:
+        print("\n[!] LỖI: Vui lòng cấu hình LLAMA_CLOUD_API_KEY (hoặc LLAMA_API_KEY) trong file .env khi dùng parser LlamaParse v2!")
         print("    Đăng ký lấy key miễn phí tại: https://cloud.llamaindex.ai\n")
         sys.exit(1)
 
-    sync_service = SupabaseLlamaSync()
+    sync_service = SupabaseLlamaSync(parser_engine=args.parser)
 
     if args.file:
         sync_service.process_and_save(args.file, force=args.force)
