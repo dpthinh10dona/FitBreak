@@ -67,9 +67,9 @@ const ClinicalNutritionModule = () => {
   }, []);
 
   const allergenOptions = [
-    { id: 'đậu', label: 'Đậu (Đậu nành, Đậu phộng)', icon: '🥜' },
-    { id: 'hải sản', label: 'Hải sản (Tôm, Cua, Cá)', icon: '🦐' },
-    { id: 'lactose', label: 'Lactose (Sữa bò, Phô mai)', icon: '🥛' },
+    { id: 'đậu', label: 'Đậu phộng / Đậu nành' },
+    { id: 'hải sản', label: 'Hải sản có vỏ' },
+    { id: 'lactose', label: 'Sữa bò & Sản phẩm từ lactose' },
   ];
 
   const handleAllergenToggle = (id) => {
@@ -194,7 +194,7 @@ const ClinicalNutritionModule = () => {
           {/* Ngân sách */}
           <div>
             <div className="clinical-form-section-title">
-              <span>💵</span> 1. Ngân sách phân bổ bữa ăn (VNĐ / Ngày)
+              1. Ngân sách phân bổ khẩu phần (VNĐ / ngày)
             </div>
             <div className="clinical-budget-row">
               <div className="clinical-budget-input-box">
@@ -226,20 +226,19 @@ const ClinicalNutritionModule = () => {
           {/* Mục tiêu thể trạng */}
           <div>
             <div className="clinical-form-section-title">
-              <span>🎯</span> 2. Mục tiêu thể hình & Sức khỏe
+              2. Mục tiêu thể hình & Phục hồi
             </div>
             <div className="clinical-cards-selector">
               {[
-                { id: 'Giảm cân', title: 'Giảm cân', subtitle: 'Giảm tinh bột', icon: '🏃' },
-                { id: 'Tăng cơ', title: 'Tăng cơ', subtitle: 'Tăng Protein', icon: '💪' },
-                { id: 'Duy trì', title: 'Duy trì', subtitle: 'Cân bằng', icon: '⚖️' },
+                { id: 'Giảm cân', title: 'Giảm mỡ', subtitle: 'Kiểm soát tinh bột' },
+                { id: 'Tăng cơ', title: 'Tăng cơ', subtitle: 'Ưu tiên đạm chuẩn' },
+                { id: 'Duy trì', title: 'Duy trì', subtitle: 'Cân bằng vi chất' },
               ].map((aimItem) => (
                 <div
                   key={aimItem.id}
                   className={`clinical-radio-card ${formData.aim === aimItem.id ? 'selected' : ''}`}
                   onClick={() => setFormData({ ...formData, aim: aimItem.id })}
                 >
-                  <span className="clinical-radio-icon">{aimItem.icon}</span>
                   <div className="clinical-radio-content">
                     <span className="clinical-radio-title">{aimItem.title}</span>
                     <span className="clinical-radio-sub">{aimItem.subtitle}</span>
@@ -252,20 +251,19 @@ const ClinicalNutritionModule = () => {
           {/* Hình thức bữa ăn (Chế độ ăn) */}
           <div>
             <div className="clinical-form-section-title">
-              <span>🍳</span> 3. Chế độ ăn uống
+              3. Chế độ dinh dưỡng
             </div>
             <div className="clinical-cards-selector">
               {[
-                { id: 'Ăn chay', title: 'Ăn chay', subtitle: 'Thuần thực vật', icon: '🌱' },
-                { id: 'Không kiêng', title: 'Không kiêng', subtitle: 'Đa dạng thực phẩm', icon: '🍽️' },
-                { id: 'Eat clean', title: 'Eat clean', subtitle: 'Tự nhiên & Tươi sạch', icon: '🥦' },
+                { id: 'Ăn chay', title: 'Ăn chay', subtitle: 'Thực vật chọn lọc' },
+                { id: 'Không kiêng', title: 'Đa dạng', subtitle: 'Thực đơn đầy đủ nhóm chất' },
+                { id: 'Eat clean', title: 'Eat Clean', subtitle: 'Hạn chế gia vị công nghiệp' },
               ].map((dietItem) => (
                 <div
                   key={dietItem.id}
                   className={`clinical-radio-card ${formData.diet_type === dietItem.id ? 'selected' : ''}`}
                   onClick={() => setFormData({ ...formData, diet_type: dietItem.id })}
                 >
-                  <span className="clinical-radio-icon">{dietItem.icon}</span>
                   <div className="clinical-radio-content">
                     <span className="clinical-radio-title">{dietItem.title}</span>
                     <span className="clinical-radio-sub">{dietItem.subtitle}</span>
@@ -278,7 +276,7 @@ const ClinicalNutritionModule = () => {
           {/* Dị ứng y khoa */}
           <div>
             <div className="clinical-form-section-title">
-              <span>🚫</span> 4. Thực phẩm kiêng cữ / Dị ứng y khoa
+              4. Thực phẩm kiêng cữ / Dị ứng y khoa
             </div>
             <div className="clinical-allergen-tags">
               {allergenOptions.map((opt) => {
@@ -290,7 +288,6 @@ const ClinicalNutritionModule = () => {
                     className={`clinical-allergen-chip ${isSelected ? 'selected' : ''}`}
                     onClick={() => handleAllergenToggle(opt.id)}
                   >
-                    <span>{opt.icon}</span>
                     <span>{opt.label}</span>
                   </button>
                 );
@@ -300,7 +297,7 @@ const ClinicalNutritionModule = () => {
 
           <div className="clinical-diet-submit-row">
             <button type="submit" className="btn-generate-diet">
-              ⚕️ Phân Tích & Xuất Thực Đơn Y Khoa
+              Phân Tích & Thiết Lập Thực Đơn
             </button>
           </div>
         </form>

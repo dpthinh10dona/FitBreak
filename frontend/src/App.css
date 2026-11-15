@@ -3,21 +3,22 @@
   width: 100%;
   display: flex;
   flex-direction: column;
+  background-color: var(--bg-base);
 }
 
 .main-content {
   flex: 1;
   width: 100%;
-  max-width: 1440px;
+  max-width: 1360px;
   margin: 0 auto;
-  padding: 32px 24px 64px;
-  animation: appFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 40px 28px 80px;
+  animation: appFadeIn 280ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes appFadeIn {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -25,6 +26,7 @@
   }
 }
 
+/* Editorial Structured Header */
 .header {
   position: sticky;
   top: 0;
@@ -32,22 +34,22 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 32px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  padding: 16px 36px;
+  background: rgba(249, 248, 246, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-subtle);
   transition: var(--transition-normal);
 }
 
 .header-logo {
-  font-size: 1.4rem;
+  font-size: 1.35rem;
   font-weight: 800;
   letter-spacing: -0.04em;
   color: var(--text-primary);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   user-select: none;
 }
 
@@ -56,70 +58,71 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  padding: 3px 8px;
-  border-radius: var(--radius-full);
-  background: #e0f2fe;
-  border: 1px solid #bae6fd;
-  color: #0284c7;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-primary-light);
+  border: 1px solid var(--accent-primary-border);
+  color: var(--accent-primary);
 }
 
 .header-nav {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: #f1f5f9;
-  padding: 5px;
-  border-radius: var(--radius-full);
+  gap: 4px;
+  background: rgba(24, 24, 27, 0.04);
+  padding: 4px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
 }
 
 .header-nav a {
   position: relative;
-  padding: 8px 18px;
-  border-radius: var(--radius-full);
-  font-size: 0.9rem;
-  font-weight: 600;
+  padding: 7px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-weight: 500;
   color: var(--text-secondary);
   transition: var(--transition-fast);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .header-nav a:hover {
   color: var(--text-primary);
-  background: #ffffff;
+  background: var(--bg-surface);
 }
 
 .header-nav a.active {
-  color: #ffffff;
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-  box-shadow: 0 2px 10px rgba(2, 132, 199, 0.25);
+  color: var(--text-primary);
+  font-weight: 600;
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-xs);
+  border: 1px solid var(--border-subtle);
 }
 
 .header-stats {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 
 .header-coin-badge {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: rgba(245, 158, 11, 0.1);
-  border: 1px solid rgba(245, 158, 11, 0.25);
-  padding: 7px 14px;
-  border-radius: var(--radius-full);
-  color: #fef08a;
+  gap: 6px;
+  background: var(--accent-amber-bg);
+  border: 1px solid var(--accent-amber-border);
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--accent-amber);
   font-weight: 700;
-  font-size: 0.92rem;
-  box-shadow: 0 0 15px rgba(245, 158, 11, 0.15);
+  font-size: 0.88rem;
   transition: var(--transition-fast);
 }
 
 .header-coin-badge:hover {
-  border-color: rgba(245, 158, 11, 0.5);
+  border-color: var(--accent-amber);
   transform: translateY(-1px);
 }
 
@@ -132,17 +135,18 @@
   .header-nav {
     order: 3;
     width: 100%;
-    justify-content: space-around;
+    justify-content: flex-start;
     overflow-x: auto;
   }
   .header-nav a {
     padding: 6px 12px;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
+    white-space: nowrap;
   }
 }
 
 @media (max-width: 640px) {
   .main-content {
-    padding: 20px 12px 48px;
+    padding: 24px 16px 56px;
   }
 }

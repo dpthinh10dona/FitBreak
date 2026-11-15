@@ -50,12 +50,12 @@ const PatientHeader = ({
   const activityMeta = getActivityLevelLabel(levelOfActivity);
 
   const navItems = [
-    { id: 'tasks', label: 'Bài Tập Hằng Ngày', icon: '📋' },
-    { id: 'profile', label: 'Hồ Sơ Y Tế', icon: '🩺' },
-    { id: 'food', label: 'Dinh Dưỡng Lâm Sàng', icon: '🥗' },
-    { id: 'schedule', label: 'Lịch Trình Vận Động', icon: '🗓️' },
-    { id: 'team', label: 'Nhóm Sức Khỏe', icon: '👥' },
-    { id: 'shop', label: 'Trang Bị Hỗ Trợ', icon: '🛡️' },
+    { id: 'tasks', label: 'Vận Động Phục Hồi' },
+    { id: 'profile', label: 'Hồ Sơ Y Tế' },
+    { id: 'food', label: 'Dinh Dưỡng Lâm Sàng' },
+    { id: 'schedule', label: 'Lịch Trình Vận Động' },
+    { id: 'team', label: 'Nhóm Rèn Luyện' },
+    { id: 'shop', label: 'Vật Phẩm Hỗ Trợ' },
   ];
 
   return (
@@ -70,11 +70,11 @@ const PatientHeader = ({
           aria-label="Về trang chủ FitBreak Health"
         >
           <div className="patient-brand-logo" aria-hidden="true">
-            ⚕️
+            FB
           </div>
           <div className="patient-brand-text">
             <h1>FitBreak</h1>
-            <span>MEDTECH PLATFORM</span>
+            <span>Clinical Platform</span>
           </div>
         </div>
 
@@ -91,7 +91,6 @@ const PatientHeader = ({
               }}
               aria-current={activeTab === item.id ? 'page' : undefined}
             >
-              <span aria-hidden="true">{item.icon}</span>
               <span>{item.label}</span>
             </a>
           ))}
@@ -128,7 +127,7 @@ const PatientHeader = ({
           <div className="patient-banner-header">
             <div className="patient-meta-group">
               <div className="patient-big-avatar" aria-hidden="true">
-                🧑‍⚕️
+                {name.charAt(0).toUpperCase()}
               </div>
               <div className="patient-meta-text">
                 <h2>Hồ Sơ Sức Khỏe: {name}</h2>
@@ -138,7 +137,7 @@ const PatientHeader = ({
 
             <div className="patient-badge-row">
               <span className={`clinical-badge ${bmiMeta.badge}`}>
-                BMI: {bmi} kg/m²
+                BMI {bmi} kg/m²
               </span>
               <span className={`clinical-badge ${activityMeta.badge}`}>
                 {activityMeta.text}
@@ -152,13 +151,12 @@ const PatientHeader = ({
             <div className="vital-card">
               <div className="vital-card-top">
                 <span className="vital-title">Thể trạng (BMI)</span>
-                <span className="vital-icon" style={{ backgroundColor: '#e0f2fe', color: '#0369a1' }}>⚖️</span>
               </div>
               <div className="vital-value-row">
                 <span className="vital-value">{bmi}</span>
                 <span className="vital-unit">kg/m²</span>
               </div>
-              <div className="vital-evaluation" style={{ color: bmiMeta.badge === 'badge-success' ? '#10b981' : '#f59e0b' }}>
+              <div className="vital-evaluation" style={{ color: bmiMeta.badge === 'badge-success' ? '#15803d' : '#b45309' }}>
                 ● {bmiMeta.text}
               </div>
             </div>
@@ -167,13 +165,12 @@ const PatientHeader = ({
             <div className="vital-card">
               <div className="vital-card-top">
                 <span className="vital-title">Chỉ số hình thể</span>
-                <span className="vital-icon" style={{ backgroundColor: '#f0fdf4', color: '#15803d' }}>📏</span>
               </div>
               <div className="vital-value-row">
                 <span className="vital-value">{weight || '--'}</span>
                 <span className="vital-unit">kg / {height || '--'} cm</span>
               </div>
-              <div className="vital-evaluation" style={{ color: '#64748b' }}>
+              <div className="vital-evaluation" style={{ color: '#71717a' }}>
                 Đo đạc kiểm tra định kỳ
               </div>
             </div>
@@ -182,14 +179,13 @@ const PatientHeader = ({
             <div className="vital-card">
               <div className="vital-card-top">
                 <span className="vital-title">Năng lượng mục tiêu (TDEE)</span>
-                <span className="vital-icon" style={{ backgroundColor: '#fff7ed', color: '#c2410c' }}>🔥</span>
               </div>
               <div className="vital-value-row">
                 <span className="vital-value">{user?.calories_need || user?.tdee || '2,000'}</span>
                 <span className="vital-unit">kcal/ngày</span>
               </div>
-              <div className="vital-evaluation" style={{ color: '#0284c7' }}>
-                Protein: <strong>{user?.protein_need || user?.protein || '75'}g</strong>
+              <div className="vital-evaluation" style={{ color: '#0f766e' }}>
+                Đạm mục tiêu: <strong>{user?.protein_need || user?.protein || '75'}g</strong>
               </div>
             </div>
 
@@ -197,25 +193,23 @@ const PatientHeader = ({
             <div className="vital-card">
               <div className="vital-card-top">
                 <span className="vital-title">Cường độ khuyến nghị</span>
-                <span className="vital-icon" style={{ backgroundColor: '#fdf2f8', color: '#be185d' }}>🏋️</span>
               </div>
               <div className="vital-value-row">
                 <span className="vital-value" style={{ textTransform: 'capitalize' }}>
                   {levelOfActivity}
                 </span>
               </div>
-              <div className="vital-evaluation" style={{ color: '#64748b' }}>
-                Đồng bộ cùng lịch tập AI
+              <div className="vital-evaluation" style={{ color: '#71717a' }}>
+                Đồng bộ theo phác đồ vận động
               </div>
             </div>
           </div>
 
-          {/* Card 5: Lời khuyên y khoa cá nhân hóa (nếu có từ medical_checkup hoặc chatbot) */}
+          {/* Card 5: Lời khuyên y khoa cá nhân hóa */}
           {foodRecommendation && (
             <div className="patient-diet-notice">
-              <span className="diet-notice-icon">🩺</span>
               <div className="diet-notice-content">
-                <h4>Chỉ dẫn y tế & Lời khuyên dinh dưỡng lâm sàng:</h4>
+                <h4>Chỉ dẫn y tế & Dinh dưỡng lâm sàng</h4>
                 <p>{foodRecommendation}</p>
               </div>
             </div>
