@@ -82,9 +82,10 @@ Lập kế hoạch thực đơn gồm 3 bữa đáp ứng hoàn hảo các tiêu
    - Tổng Protein đạt hoặc vượt mức tối thiểu {protein_need} g.
 2. ĐA DẠNG MÓN ĂN (BẮT BUỘC KHÔNG TRÙNG LẶP):
    - 3 món ăn cho 3 bữa (Sáng, Trưa, Tối) **BẮT BUỘC PHẢI KHÁC NHAU HOÀN TOÀN**, tuyệt đối không lặp lại cùng một món trong ngày.
-3. CƠ CHẾ ĐIỀU CHỈNH HỆ SỐ KHẨU PHẦN (`portion_multiplier`):
+3. CƠ CHẾ ĐIỀU CHỈNH HỆ SỐ KHẨU PHẦN (`portion_multiplier`) & CƠM TRẮNG (`rice_grams`):
    - `portion_multiplier`: Số thập phân hoặc nguyên từ 0.5 đến 2.5 (Mặc định 1.0).
    - `rice_grams`: Số nguyên từ 0 đến 300 (cho bữa trưa và tối) để bổ sung năng lượng sạch vừa vặn TDEE.
+   - **LƯU Ý QUAN TRỌNG VỀ CƠM**: Nếu món ăn đã là "Cơm suất", "Cơm gà", "Cơm bụi", "Cơm bình dân", "Phở", "Bún", "Miến", "Mỳ", "Bánh canh", "Bánh mỳ" (đã có sẵn tinh bột và năng lượng từ 500-1100 kcal), hãy đặt `rice_grams: 0` để tránh bị thừa calo quá mức. Chỉ thêm `rice_grams > 0` khi chọn các món xào, món mặn ăn kèm (như thịt xào, sườn xào, rau xào).
 4. TUÂN THỦ NGÂN SÁCH (HỆ THỐNG BACKEND SẼ TỰ ĐỘNG TÍNH TOÁN LẠI CHI PHÍ CHÍNH XÁC):
    - Tổng chi phí thực tế (Chi phí 3 món [sau nhân hệ số] + Tiền cơm) PHẢI <= {daily_budget:,} VNĐ.
    - Bạn có thể ghi nhẩm tính hoặc để giá trị 0 ở trường `estimated_total_cost`, backend sẽ tự động tính toán tổng số tiền thực tế chuẩn xác 100%.
