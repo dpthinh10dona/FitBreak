@@ -4,24 +4,24 @@
    ========================================================================== */
 
 :root {
-  /* --- Primary Medical Brand Palette (Teal & Forest - Grounded & Clinical) --- */
-  --med-primary: #0f766e;           /* Deep Teal 700 - Clinical Authority */
-  --med-primary-dark: #115e59;      /* Teal 800 - Active state */
-  --med-primary-light: #f0fdfa;     /* Mint 50 - Subtle accent ground */
-  --med-primary-subtle: #f4fbf9;    /* Tones for selected item backgrounds */
+  /* --- Primary Medical Brand Palette (Clinical Sky & Ocean Blue) --- */
+  --med-primary: #0284c7;           /* Sky 600 - Main Clinical Action & Trust */
+  --med-primary-dark: #0369a1;      /* Sky 700 - Hover / Active state */
+  --med-primary-light: #e0f2fe;     /* Sky 100 - Gentle highlights */
+  --med-primary-subtle: #f0f9ff;    /* Sky 50 - Card Tints / Selected Background */
   
   /* --- Secondary & Professional Surfaces --- */
-  --med-navy: #18181b;              /* Zinc 900 - Headings & High Contrast Text */
-  --med-slate: #3f3f46;             /* Zinc 700 - Measured Body Text */
-  --med-muted: #71717a;             /* Zinc 500 - Secondary Labels / Captions */
-  --med-subtle-text: #a1a1aa;       /* Zinc 400 - Placeholders / Disabled */
+  --med-navy: #0f172a;              /* Slate 900 - Headings & High Contrast Text */
+  --med-slate: #334155;             /* Slate 700 - Measured Body Text */
+  --med-muted: #64748b;             /* Slate 500 - Secondary Labels / Captions */
+  --med-subtle-text: #94a3b8;       /* Slate 400 - Placeholders / Disabled */
 
-  /* --- Backgrounds & Hairline Borders (Anti-AI Slop 60-30-10) --- */
-  --med-bg-canvas: #f9f8f6;         /* Organic, warm off-white */
-  --med-bg-surface: #ffffff;        /* Pure Clinical Surface */
+  /* --- Backgrounds & Hairline Borders (Clean Clinical Blue Atmosphere) --- */
+  --med-bg-canvas: #f0f7fc;         /* Nền xanh y tế nhạt êm dịu */
+  --med-bg-surface: #ffffff;        /* Pure White Clinical Cards */
   --med-bg-elevated: #ffffff;       /* Modals & Dropdowns */
-  --med-border-light: rgba(24, 24, 27, 0.08);  /* 1px Hairline border */
-  --med-border-strong: rgba(24, 24, 27, 0.16); /* Interactive dividers */
+  --med-border-light: #e2e8f0;      /* Slate 200 - Clean Borders */
+  --med-border-strong: #cbd5e1;     /* Slate 300 - Interactive Dividers */
 
   /* --- Semantic Medical Health Indicators (Calibrated Contrast) --- */
   --med-success: #15803d;           /* Green 700 - Normal / Safe Vitals */

@@ -5,10 +5,10 @@ Auditor & Architect: Principal Product Designer & Frontend Architect
 
 ## 1. MỤC TIÊU & TIÊU CHUẨN ĐÃ ÁP DỤNG (DESIGN PRINCIPLES)
 - **Loại bỏ hoàn toàn cảm giác "AI Slop" / "Vibe code công nghiệp"**:
-  1. **Hệ màu 60 - 30 - 10 tự nhiên**:
-     - 60% Nền ấm có chiều sâu quang học (`#F9F8F6` Off-white tự nhiên), loại bỏ hoàn toàn dải gradient tím/xanh (`indigo-500` / `purple-600` / `cyan-400`) và nền `slate-900` sáo rỗng.
-     - 30% Bề mặt phụ (`#FFFFFF`) kết hợp **Hairline borders** (`1px rgba(24, 24, 27, 0.08)`).
-     - 10% Màu nhấn sắc nét, chân thực: **Deep Forest Teal (`#0F766E`)** và **Clinical Steel Blue (`#0369A1`)**.
+  1. **Hệ màu 60 - 30 - 10 tự nhiên (Clinical Blue Atmosphere)**:
+     - 60% Nền trung tính y tế: Xanh dương nhạt êm dịu (`#F0F7FC` Medical Slate Blue) kết hợp ánh sáng lan tỏa nhẹ, giúp dịu mắt và đậm chất phòng khám / y học thể thao kỹ thuật số.
+     - 30% Bề mặt phụ (`#FFFFFF`) kết hợp **Hairline borders** (`1px #E2E8F0` / Slate 200).
+     - 10% Màu nhấn sắc nét: **Clinical Medical Sky Blue (`#0284C7`)** và **Ocean Slate (`#0369A1`)**.
   2. **Hairline Precision vs. Box-shadow nặng nề**:
      - Triệt tiêu các hiệu ứng phát sáng mờ ảo (glowing neon blobs / colored glow shadows). Thay thế bằng đổ bóng vật lý tinh tế (`--shadow-xs`, `--shadow-sm`) và đường viền phân tách mảnh dứt khoát.
   3. **Editorial Typography & Visual Hierarchy**:

@@ -1,56 +1,56 @@
 :root {
   /* -------------------------------------------------------------
-     EDITORIAL REFINED SYSTEM (60 - 30 - 10 COLOR PALETTE)
-     60% Neutral Ground: Off-white canvas with warmth & optical depth
-     30% Secondary Surfaces & Hairline Borders
-     10% Purposeful Medical Accent (Deep Forest Teal & Sharp Steel)
+     CLINICAL BLUE MEDICAL DESIGN SYSTEM (60 - 30 - 10)
+     60% Neutral Ground: Nền xanh dương dịu mát y tế (Slate / Medical Cyan Blue)
+     30% Secondary Surfaces & Hairline Borders (#FFFFFF cards + subtle borders)
+     10% Clinical Accent: Sky & Ocean Blue tin cậy, chuẩn mực
      ------------------------------------------------------------- */
-  --bg-base: #f9f8f6;           /* Warm, organic off-white (No sterile #FFFFFF wash) */
-  --bg-canvas: #f9f8f6;
-  --bg-surface: #ffffff;        /* Crisp elevated layer */
+  --bg-base: #f0f7fc;           /* Nền xanh dương nhạt y tế chuyên sâu, êm dịu mắt */
+  --bg-canvas: #f0f7fc;
+  --bg-surface: #ffffff;        /* Mặt thẻ trắng tinh sạch */
   --bg-surface-elevated: #ffffff;
-  --bg-surface-hover: #f3f2ee;   /* Subtle natural tint */
-  --bg-surface-subtle: #f4f3ef;
+  --bg-surface-hover: #e0f2fe;   /* Ánh xanh hover nhẹ */
+  --bg-surface-subtle: #f8fafc;
   
-  /* Hairline borders - 1px low contrast, no chunky borders */
-  --border-subtle: rgba(24, 24, 27, 0.08);   /* Hairline dark/8% */
-  --border-medium: rgba(24, 24, 27, 0.14);   /* Deliberate divider */
-  --border-strong: rgba(24, 24, 27, 0.24);
-  --border-focus: #0f766e;
+  /* Hairline borders - Đường viền 1px tinh tế */
+  --border-subtle: #e2e8f0;      /* Slate 200 mảnh mai */
+  --border-medium: #cbd5e1;      /* Slate 300 */
+  --border-strong: #94a3b8;
+  --border-focus: #0284c7;
 
-  /* Accent: Authentic Clinical Emerald & Deep Forest Teal (No AI cyan/purple gradient) */
-  --accent-primary: #0f766e;        /* Deep Teal 700 - Clinical Authority & Calming Trust */
-  --accent-primary-hover: #115e59;  /* Teal 800 */
-  --accent-primary-light: #f0fdfa;  /* Mint 50 */
-  --accent-primary-border: #99f6e4; /* Mint 200 */
+  /* Accent: Xanh dương y tế lâm sàng (Clinical Medical Blue) */
+  --accent-primary: #0284c7;        /* Sky 600 - Main Medical Trust */
+  --accent-primary-hover: #0369a1;  /* Sky 700 */
+  --accent-primary-light: #e0f2fe;  /* Sky 100 */
+  --accent-primary-border: #bae6fd; /* Sky 200 */
 
-  --accent-secondary: #0369a1;      /* Steel Blue 700 */
+  --accent-secondary: #0369a1;      /* Deep Sky Blue */
   --accent-secondary-hover: #075985;
   --accent-secondary-light: #f0f9ff;
 
-  --accent-emerald: #15803d;        /* Green 700 - Clinical Normal / Stable */
+  --accent-emerald: #15803d;        /* Green 700 - Chỉ số an toàn */
   --accent-emerald-bg: #f0fdf4;
   --accent-emerald-border: #bbf7d0;
 
-  --accent-amber: #b45309;          /* Amber 700 - Attention needed */
+  --accent-amber: #b45309;          /* Amber 700 - Lưu ý y tế */
   --accent-amber-bg: #fffbeb;
   --accent-amber-border: #fde68a;
 
-  --accent-rose: #be123c;           /* Rose 700 - Critical / Acute */
+  --accent-rose: #be123c;           /* Rose 700 - Cảnh báo */
   --accent-rose-bg: #fff1f2;
   --accent-rose-border: #fecdd3;
 
-  /* Typography: High contrast, purposeful letter-spacing */
-  --text-primary: #18181b;          /* Zinc 900 - Deep, rich contrast */
-  --text-secondary: #52525b;        /* Zinc 600 - Measured readability */
-  --text-muted: #71717a;            /* Zinc 500 - Auxiliary notes */
-  --text-subtle: #a1a1aa;           /* Zinc 400 - Captions / Micro-hints */
+  /* Typography: Độ tương phản cao, dễ đọc */
+  --text-primary: #0f172a;          /* Slate 900 */
+  --text-secondary: #334155;        /* Slate 700 */
+  --text-muted: #64748b;            /* Slate 500 */
+  --text-subtle: #94a3b8;           /* Slate 400 */
   --text-inverse: #ffffff;
 
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* Hairline precision geometry (avoid hyper-inflated bubbly pill cards) */
+  /* Hairline precision geometry */
   --radius-xs: 3px;
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -58,13 +58,13 @@
   --radius-xl: 18px;
   --radius-full: 9999px;
 
-  /* Physical Shadow Hierarchy (Subtle, crisp, directional - No neon glowing blobs) */
-  --shadow-xs: 0 1px 2px 0 rgba(24, 24, 27, 0.04);
-  --shadow-sm: 0 1px 3px 0 rgba(24, 24, 27, 0.06), 0 1px 2px -1px rgba(24, 24, 27, 0.06);
-  --shadow-md: 0 4px 12px -2px rgba(24, 24, 27, 0.06), 0 2px 6px -1px rgba(24, 24, 27, 0.04);
-  --shadow-lg: 0 12px 28px -6px rgba(24, 24, 27, 0.08), 0 4px 10px -2px rgba(24, 24, 27, 0.03);
+  /* Physical Shadow Hierarchy */
+  --shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 12px 28px -6px rgba(15, 23, 42, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.03);
 
-  /* Natural physics transitions (cubic-bezier) */
+  /* Natural physics transitions */
   --transition-fast: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
   --transition-normal: all 260ms cubic-bezier(0.16, 1, 0.3, 1);
   --transition-slow: all 450ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -96,7 +96,11 @@ html, body {
   max-width: 100%;
   display: flex;
   flex-direction: column;
-  background-color: var(--bg-base);
+  background-color: #f0f7fc;
+  background-image: 
+    radial-gradient(ellipse 70% 45% at 50% 0%, rgba(2, 132, 199, 0.07), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(56, 189, 248, 0.05), transparent 70%);
+  background-attachment: fixed;
 }
 
 /* Editorial Typography */
