@@ -516,6 +516,32 @@
   line-height: 1.45;
 }
 
+.meal-source-citation {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  background-color: rgba(2, 132, 199, 0.04);
+  border-left: 2px solid var(--accent-primary);
+  border-radius: var(--radius-xs);
+  font-size: 0.75rem;
+  margin-top: 2px;
+}
+
+.meal-source-citation .citation-label {
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.68rem;
+}
+
+.meal-source-citation .citation-text {
+  color: var(--text-secondary);
+  font-style: italic;
+  line-height: 1.4;
+}
+
 /* Action buttons at bottom */
 .clinical-diet-actions {
   display: flex;

@@ -304,6 +304,7 @@ def format_meal_summary(response: str, df_pool: pd.DataFrame, user_information: 
                         "carbs": round(bf_carb, 1),
                         "fat": round(bf_fat, 1),
                         "ingredients": bf_info["ingredients"],
+                        "source_citation": "Bảng thành phần dinh dưỡng thực phẩm Việt Nam (Viện Dinh dưỡng Quốc gia - Bộ Y tế)",
                   },
                   {
                         "type": "Bữa trưa",
@@ -318,6 +319,7 @@ def format_meal_summary(response: str, df_pool: pd.DataFrame, user_information: 
                         "carbs": round(lu_total_carb, 1),
                         "fat": round(lu_total_fat, 1),
                         "ingredients": lu_main["ingredients"],
+                        "source_citation": "Bảng thành phần dinh dưỡng thực phẩm Việt Nam (Viện Dinh dưỡng Quốc gia - Bộ Y tế)",
                   },
                   {
                         "type": "Bữa tối",
@@ -332,6 +334,7 @@ def format_meal_summary(response: str, df_pool: pd.DataFrame, user_information: 
                         "carbs": round(dn_total_carb, 1),
                         "fat": round(dn_total_fat, 1),
                         "ingredients": dn_main["ingredients"],
+                        "source_citation": "Bảng thành phần dinh dưỡng thực phẩm Việt Nam (Viện Dinh dưỡng Quốc gia - Bộ Y tế)",
                   },
             ],
       }

@@ -394,6 +394,13 @@ const ClinicalNutritionModule = () => {
                       <strong>Thành phần:</strong> {meal.ingredients}
                     </div>
                   )}
+
+                  <div className="meal-source-citation">
+                    <span className="citation-label">Trích dẫn nguồn y tế:</span>
+                    <span className="citation-text">
+                      {meal.source_citation || "Bảng thành phần dinh dưỡng thực phẩm Việt Nam (Viện Dinh dưỡng Quốc gia - Bộ Y tế)"}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}
