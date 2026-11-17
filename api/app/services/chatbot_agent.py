@@ -4,7 +4,7 @@ import re
 from typing import Dict, Any, Optional
 
 from app.core.ollama_client import generate_chat
-from app.services.clinical_rag import retrieve_medical_docs
+from app.services.clinical_rag import InsufficientMedicalEvidenceError, retrieve_medical_docs
 
 logger = logging.getLogger(__name__)
 
@@ -369,6 +369,30 @@ async def analyze_and_chat(
             "proposed_updates": proposed
         }
 
+    except InsufficientMedicalEvidenceError as e:
+        logger.info("Clinical RAG stopped due to insufficient evidence: %s", e)
+        return {
+            "reply": (
+                "**Chưa đủ căn cứ y khoa để trả lời**\n\n"
+                "FitBreak chưa tìm thấy tài liệu đã xác minh đủ liên quan đến câu hỏi này, "
+                "nên hệ thống không tạo khuyến nghị tự động. Vui lòng tham khảo bác sĩ hoặc "
+                "nhân viên y tế có chuyên môn.\n\n"
+                "**Miễn trừ trách nhiệm y tế:** FitBreak không thay thế chẩn đoán hoặc phác đồ điều trị."
+            ),
+            "status": "INSUFFICIENT_DATA",
+            "allow_ai_generation": False,
+            "has_update": False,
+            "has_proposed_changes": False,
+            "conflict_detected": False,
+            "conflict_explanation": None,
+            "conflict_message": None,
+            "summary_for_ui_card": None,
+            "suggested_food_recommendation": None,
+            "suggested_level_of_physical_activity": None,
+            "reason": str(e),
+            "verification_question": None,
+            "proposed_updates": None,
+        }
     except Exception as e:
         logger.error(f"Multi-Agent Telehealth execution error: {e}", exc_info=True)
         fallback_reply = (

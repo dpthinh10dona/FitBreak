@@ -219,7 +219,9 @@ class KnowledgeIngestor:
                 if cb in query_clean and cb in content:
                     score += 3.0
 
-            if score > 0:
+            # Loại kết quả chỉ trùng một vài từ phổ thông. Ngưỡng 3 vẫn giữ
+            # các từ khóa lâm sàng (được boost) nhưng chặn câu hỏi ngoài miền.
+            if score >= 3.0:
                 scored.append((score, chunk))
 
         scored.sort(key=lambda x: x[0], reverse=True)

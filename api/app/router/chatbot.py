@@ -131,7 +131,9 @@ async def ask_health_chatbot(
     return ChatBotResponse(
         reply=agent_output.get("reply", "Bác sĩ FitBreak đã ghi nhận thông tin của bạn."),
         remaining_questions_today=remaining,
-        proposal=proposal
+        proposal=proposal,
+        status=agent_output.get("status", "PASS"),
+        allow_ai_generation=agent_output.get("allow_ai_generation", True),
     )
 
 @router.post("/confirm-update")

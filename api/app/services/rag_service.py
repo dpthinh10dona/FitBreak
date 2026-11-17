@@ -12,6 +12,7 @@ from app.core.exceptions import (
 )
 from app.core.ollama_client import generate_chat
 from app.services.prompt_builder import prompt_builder
+from app.services.safety_guardrail import check_filtered_meals_sufficiency
 #####
 
 # DATABASE #
@@ -153,7 +154,7 @@ def get_dish_info(dish_name: str, df: pd.DataFrame) -> dict:
 
       if matched.empty and not df.empty:
             matched = df.head(1)
-            
+
       if not matched.empty:
             row = matched.iloc[0]
             ingredients_val = row.get("ingredients", row["name"])
@@ -162,7 +163,7 @@ def get_dish_info(dish_name: str, df: pd.DataFrame) -> dict:
                   "calories": float(row.get("calories", 0)),
                   "protein": float(row.get("protein_g", 0)),
                   "carbs": float(row.get("carbs_g", 0)),
-                  "fat": float(row.get("fat_g", 0)), 
+                  "fat": float(row.get("fat_g", 0)),
                   "price": float(row.get("cost_vnd", 0)),
                   "ingredients": str(ingredients_val) if pd.notna(ingredients_val) else row["name"],
                   "limitation_type": str(limitation_val).strip() if pd.notna(limitation_val) else "",
@@ -393,6 +394,17 @@ async def process_rag_pipeline(user_information: dict) -> str:
             if len(remaining_df) >= 3:
                   filtered_df = remaining_df
 
+      # Post-retrieval guardrail: không gọi LLM nếu kho món sau lọc không đủ
+      # số lượng, ngân sách hoặc khả năng đáp ứng năng lượng mục tiêu.
+      sufficiency = check_filtered_meals_sufficiency(
+            filtered_df=filtered_df,
+            target_calories=float(get_user_value(user_information, "calories_need", 0)),
+            daily_budget_vnd=float(get_user_value(user_information, "daily_budget", 0)),
+      )
+      if not sufficiency.allow_ai_generation:
+            blocked = sufficiency.model_dump()
+            return {"guardrail": blocked, **blocked}
+
       # Truyền filtered_df vào prompt_builder để LLM chỉ chọn trong danh sách này
       food_rec = get_user_value(user_information, "food_recommendation", None)
 
@@ -419,7 +431,7 @@ async def main():
             "diet_type": "home_cooked",
             "allergen": "seafood"
       }
-      
+
       result = await process_rag_pipeline(user_information)
       print(result)
 

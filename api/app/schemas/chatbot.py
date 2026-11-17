@@ -36,6 +36,8 @@ class ChatBotResponse(BaseModel):
     reply: str
     remaining_questions_today: int
     proposal: Optional[ProfileUpdateProposal] = None
+    status: str = "PASS"
+    allow_ai_generation: bool = True
 
 class ConfirmProposalRequest(BaseModel):
     food_recommendation: Optional[str] = None

@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '../config';
 import { useState, useEffect } from 'react';
+import SafetyGuardrailAlert from './safetyGuardrailAlert';
 import '../style/clinicalDiet.css';
 
 /**
@@ -23,6 +24,7 @@ const ClinicalNutritionModule = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [resultData, setResultData] = useState(null);
+  const [guardrailData, setGuardrailData] = useState(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -91,6 +93,7 @@ const ClinicalNutritionModule = () => {
     if (e) e.preventDefault();
     setLoading(true);
     setError(null);
+    setGuardrailData(null);
 
     const budgetNum = Number(formData.daily_budget);
     if (!budgetNum || budgetNum <= 0) {
@@ -139,7 +142,8 @@ const ClinicalNutritionModule = () => {
       }
 
       if (data.success === false && data.result?.guardrail) {
-        throw new Error(data.result.guardrail.reasons?.join(' ') || data.error);
+        setGuardrailData(data.result.guardrail);
+        return;
       }
 
       setResultData(data.result || data);
@@ -153,6 +157,7 @@ const ClinicalNutritionModule = () => {
   const handleReset = () => {
     setResultData(null);
     setError(null);
+    setGuardrailData(null);
   };
 
   return (
@@ -182,6 +187,10 @@ const ClinicalNutritionModule = () => {
             </div>
           )}
         </div>
+      )}
+
+      {guardrailData && (
+        <SafetyGuardrailAlert data={guardrailData} onReset={handleReset} />
       )}
 
       {/* 3. QUESTIONNAIRE FORM (Khi chưa có kết quả) */}
