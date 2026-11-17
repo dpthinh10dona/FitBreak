@@ -11,6 +11,10 @@ from pathlib import Path
 
 logger = logging.getLogger("clinical_rag")
 
+
+class InsufficientMedicalEvidenceError(RuntimeError):
+    """Không có tài liệu đã xác minh đủ liên quan để cho phép AI tư vấn."""
+
 try:
     from app.services.knowledge_ingestor import default_ingestor
 except Exception as exc:
@@ -98,7 +102,7 @@ def retrieve_medical_docs(user_message: str, top_k: int = 3) -> str:
     và cuối cùng fallback về bộ tri thức chuẩn lâm sàng sẵn có.
     """
     if not user_message:
-        return CLINICAL_KNOWLEDGE_BASE[-1]["content"]
+        raise InsufficientMedicalEvidenceError("Câu hỏi trống, không thể truy xuất căn cứ y khoa.")
 
     # 0. ƯU TIÊN SỐ 1: Tìm kiếm ngữ nghĩa Cosine Similarity trên Supabase pgvector
     try:
@@ -124,6 +128,15 @@ def retrieve_medical_docs(user_message: str, top_k: int = 3) -> str:
     if default_ingestor is not None:
         try:
             dynamic_chunks = default_ingestor.search_chunks(user_message, top_k=top_k)
+            query_lower = user_message.lower()
+            dynamic_chunks = [
+                chunk
+                for chunk in dynamic_chunks
+                if any(
+                    keyword and keyword.lower() in query_lower
+                    for keyword in chunk.get("keywords", [])
+                )
+            ]
             if dynamic_chunks:
                 formatted_chunks = []
                 for i, chunk in enumerate(dynamic_chunks, 1):
@@ -139,26 +152,35 @@ def retrieve_medical_docs(user_message: str, top_k: int = 3) -> str:
         except Exception as exc:
             logger.warning(f"Lỗi khi truy xuất tài liệu động: {exc}, chuyển sang tri thức tĩnh dự phòng...")
 
-    # 2. Fallback sang CLINICAL_KNOWLEDGE_BASE
+    # 2. Chỉ dùng bộ tĩnh khi thực sự khớp từ khóa; không chọn tài liệu mặc
+    # định cho câu hỏi ngoài phạm vi vì điều đó tạo cảm giác có căn cứ giả.
     clean_msg = user_message.lower()
     scored_docs = []
 
     for doc in CLINICAL_KNOWLEDGE_BASE:
         score = 0
+        matched_verified_keyword = False
         for kw in doc["keywords"]:
             if kw in clean_msg:
                 score += 2
+                matched_verified_keyword = True
         words = set(re.findall(r"\w+", clean_msg))
         for w in words:
             if len(w) >= 3 and w in doc["content"].lower():
                 score += 0.5
-        scored_docs.append((score, doc))
+        scored_docs.append((score, matched_verified_keyword, doc))
 
     scored_docs.sort(key=lambda x: x[0], reverse=True)
 
-    selected = [doc for score, doc in scored_docs[:top_k] if score > 0]
+    selected = [
+        doc
+        for score, matched_verified_keyword, doc in scored_docs[:top_k]
+        if score >= 2 and matched_verified_keyword
+    ]
     if not selected:
-        selected = [CLINICAL_KNOWLEDGE_BASE[0], CLINICAL_KNOWLEDGE_BASE[1]]
+        raise InsufficientMedicalEvidenceError(
+            "Không tìm thấy tài liệu y khoa đã xác minh đủ liên quan đến câu hỏi."
+        )
 
     formatted_docs = []
     for i, doc in enumerate(selected, 1):

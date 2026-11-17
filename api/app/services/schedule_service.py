@@ -2,6 +2,7 @@ from pathlib import Path
 import random
 import pandas as pd
 from app.core.exceptions import InvalidSchedule
+from app.services.safety_guardrail import check_exercise_data_sufficiency
 
 DATA_PATH = Path(__file__).resolve().parents[1] / "core" / "dataset" / "Exercise_Database.csv"
 DF_EXERCISES_CACHE = pd.read_csv(DATA_PATH)
@@ -38,8 +39,8 @@ def get_min_duration(aim: int, block_type: str, user_lv: int) -> int:
 
 
 def select_exercises_knapsack(
-    available_df: pd.DataFrame, 
-    budget: int, 
+    available_df: pd.DataFrame,
+    budget: int,
     min_required: int
 ) -> tuple[list[dict], int]:
     """
@@ -97,10 +98,10 @@ def select_exercises_knapsack(
 
 
 def pick_block_with_recovery(
-    aim: int, 
-    prev_type: str | None, 
-    res_cnt: int, 
-    cardio_cnt: int, 
+    aim: int,
+    prev_type: str | None,
+    res_cnt: int,
+    cardio_cnt: int,
     pilate_cnt: int,
     budget: int,
     user_lv: int
@@ -161,6 +162,34 @@ async def schedule_maker(user_information: dict) -> dict:
 
     timetable = user_information.get("timetable", {})
     valid_exercises = filter_exercises(user_information)
+
+    total_free_minutes = 0
+    for raw_slots in timetable.values() if isinstance(timetable, dict) else []:
+        if isinstance(raw_slots, dict):
+            total_free_minutes += int(
+                raw_slots.get("available_minutes")
+                or raw_slots.get("max_session_minutes")
+                or 0
+            )
+        elif isinstance(raw_slots, list):
+            for slot in raw_slots:
+                if isinstance(slot, dict):
+                    total_free_minutes += int(
+                        slot.get("available_minutes")
+                        or slot.get("max_session_minutes")
+                        or 0
+                    )
+                elif isinstance(slot, (int, float)):
+                    total_free_minutes += int(slot)
+        elif isinstance(raw_slots, (int, float)):
+            total_free_minutes += int(raw_slots)
+
+    sufficiency = check_exercise_data_sufficiency(
+        filtered_exercises_df=valid_exercises,
+        free_minutes_per_week=total_free_minutes,
+    )
+    if not sufficiency["allow_ai_generation"]:
+        return {"guardrail": sufficiency, **sufficiency}
 
     resistance_cnt = cardio_cnt = pilate_cnt = 0
     generated_schedule = {}
@@ -228,11 +257,11 @@ async def schedule_maker(user_information: dict) -> dict:
 
             # Lấy data theo block
             avail = valid_exercises[valid_exercises["type"] == chosen_block]
-            
+
             # Đối với duy trì (aim=2), nếu là cardio thì chỉ lấy LISS hoặc Walking từ database
             if aim == 2 and chosen_block == "cardio":
                 avail = DF_EXERCISES_CACHE[
-                    (DF_EXERCISES_CACHE["type"] == "cardio") & 
+                    (DF_EXERCISES_CACHE["type"] == "cardio") &
                     (DF_EXERCISES_CACHE["exercise"].isin(["LISS", "Walking"]))
                 ]
 

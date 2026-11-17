@@ -46,6 +46,12 @@ async def food_suggest(req: FoodSuggestRequest):
                     error=guardrail.status,
                 )
         result = await process_rag_pipeline(user_info)
+        if result.get("allow_ai_generation") is False:
+            return FoodSuggestResponse(
+                success=False,
+                result=result,
+                error=result.get("status", "INSUFFICIENT_DATA"),
+            )
         return FoodSuggestResponse(success=True, result=result)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

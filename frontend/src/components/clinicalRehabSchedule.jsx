@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../config';
+import SafetyGuardrailAlert from './safetyGuardrailAlert';
 import { useState, useEffect, Fragment } from 'react';
 import '../style/clinicalSchedule.css';
 
@@ -82,6 +83,7 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated }) => {
   const [isSelecting, setIsSelecting] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [guardrailData, setGuardrailData] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -139,6 +141,7 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated }) => {
 
   const handleGenerateSchedule = async () => {
     setErrorMsg('');
+    setGuardrailData(null);
     const slotsByDay = {};
     days.forEach((day) => {
       slotsByDay[day] = [];
@@ -238,7 +241,8 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated }) => {
       }
 
       if (data.allow_ai_generation === false) {
-        throw new Error(data.reasons?.join(' ') || 'Safety Guardrail đã chặn yêu cầu.');
+        setGuardrailData(data.guardrail || data);
+        return;
       }
 
       const scheduleToStore = data.schedule || data;
@@ -460,6 +464,13 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated }) => {
           </button>
         </div>
       </div>
+
+      {guardrailData && (
+        <SafetyGuardrailAlert
+          data={guardrailData}
+          onReset={() => setGuardrailData(null)}
+        />
+      )}
 
       {errorMsg && (
         <div style={{

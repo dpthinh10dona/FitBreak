@@ -185,6 +185,20 @@ def generate_rag_response(
     if retrieved_chunks is None:
         retrieved_chunks = search_medical_knowledge_pgvector(user_query, top_k=top_k)
 
+    if not retrieved_chunks:
+        return {
+            "query": user_query,
+            "status": "INSUFFICIENT_DATA",
+            "allow_ai_generation": False,
+            "answer": (
+                "FitBreak chưa tìm thấy tài liệu y khoa đã xác minh đủ liên quan để trả lời câu hỏi này. "
+                "Vui lòng tham khảo bác sĩ hoặc nhân viên y tế có chuyên môn."
+            ),
+            "sources": [],
+            "chunks_used": 0,
+            "latency_seconds": round(time.time() - start_time, 2),
+        }
+
     # Định dạng các chunks thành ngữ cảnh bằng chứng y khoa
     context_blocks = []
     sources_cited = set()
@@ -203,7 +217,7 @@ def generate_rag_response(
             f"• Nội dung: {content}"
         )
 
-    evidence_text = "\n\n".join(context_blocks) if context_blocks else "Không tìm thấy tài liệu liên quan trực tiếp trong kho tri thức."
+    evidence_text = "\n\n".join(context_blocks)
 
     # Xây dựng Prompt hoàn chỉnh
     prompt = f"""{RAG_TELEHEALTH_SYSTEM_PROMPT}
