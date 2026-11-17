@@ -34,8 +34,10 @@ Auditor & Architect: Principal Product Designer & Frontend Architect
 | 6 | `frontend/src/components/taskBoard.jsx` & `taskBoard.css` | Viết lại Pomodoro thể chất, loại bỏ emoji (`🔥`, `⏰`, `⚔️`), căn chỉnh nhịp điệu typography, bố cục task list tối giản với hairline cards. | Đã hoàn thành |
 | 7 | `frontend/src/components/clinicalNutritionModule.jsx` & `clinicalDiet.css` | Gỡ bỏ icon emoji ở các ô ngân sách, mục tiêu, chế độ ăn và dị ứng; phân chia tỷ lệ vi chất Macro rõ ràng, trung thực. | Đã hoàn thành |
 | 8 | `frontend/src/components/telehealthDoctorChatbot.jsx` & `telehealthChatbot.css` | Widget tư vấn bác sĩ tối giản, chuyên nghiệp, không hiệu ứng nảy rẻ tiền, bong bóng chat trung tính, tinh tế. | Đã hoàn thành |
-| 9 | `frontend/src/style/clinicalSchedule.css` | Điều chỉnh header card, ghi chú chỉ định y tế với hairline border và nhịp điệu thị giác thanh thoát. | Đã hoàn thành |
+| 9 | `frontend/src/style/clinicalSchedule.css` | Điều chỉnh header card, ghi chú chỉ định y tế với hairline border và nhịp điệu thị giác thanh thoát; bổ sung khu vực hiển thị limitation_type cho bài tập. | Đã hoàn thành |
 | 10 | `frontend/src/style/logIn.css` | Tinh chỉnh giao diện xác thực editorial, kiểu chữ chắc chắn, micro-copy điềm tĩnh. | Đã hoàn thành |
+| 11 | `api/app/services/prompt_builder.py` & `rag_service.py` | Cập nhật cơ chế prompt cho phép scale portion_multiplier 0.x - 1.x, tự động scale khối lượng thành phần nguyên liệu và trả về limitation_type từ thực phẩm. | Đã hoàn thành |
+| 12 | `frontend/src/components/clinicalNutritionModule.jsx` & `clinicalDiet.css` | Tận dụng khoảng trống bên phải của ô Phân tích Y khoa để hiển thị Chú ý Y tế & Hạn chế dinh dưỡng (limitation_type). | Đã hoàn thành |
 
 ---
 

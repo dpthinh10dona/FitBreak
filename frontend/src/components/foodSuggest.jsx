@@ -408,6 +408,22 @@ const FoodSuggest = () => {
                                 <div className="food-meal-ingredients">
                                     <strong>Nguyên liệu:</strong> {meal.ingredients}
                                 </div>
+
+                                <div className="food-meal-citation" style={{
+                                    marginTop: '8px',
+                                    padding: '6px 10px',
+                                    background: 'rgba(2, 132, 199, 0.05)',
+                                    borderLeft: '2px solid #0284c7',
+                                    borderRadius: '4px',
+                                    fontSize: '0.74rem'
+                                }}>
+                                    <div style={{ fontWeight: 700, color: '#64748b', textTransform: 'uppercase', fontSize: '0.66rem' }}>
+                                        Nguồn dữ liệu:
+                                    </div>
+                                    <div style={{ color: '#334155', fontStyle: 'italic', marginTop: '2px' }}>
+                                        {meal.source_citation || "Bảng thành phần dinh dưỡng thực phẩm Việt Nam (Viện Dinh dưỡng Quốc gia - Bộ Y tế)"}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     ))}

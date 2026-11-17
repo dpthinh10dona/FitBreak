@@ -121,6 +121,27 @@ import unicodedata
 def normalize_text(text: str) -> str:
       return unicodedata.normalize("NFC", str(text).strip().lower())
 
+def scale_ingredients_text(ingredients_str: str, multiplier: float) -> str:
+      """Nhân khối lượng/thành phần món ăn theo hệ số portion_multiplier."""
+      if abs(multiplier - 1.0) < 0.05 or not ingredients_str:
+            return ingredients_str
+
+      def repl(match):
+            prefix = match.group(1)
+            num_str = match.group(2)
+            unit = match.group(3)
+            try:
+                  val = float(num_str)
+                  scaled = val * multiplier
+                  scaled_str = f"{scaled:.0f}" if scaled >= 10 else f"{scaled:.1f}"
+                  if scaled_str.endswith(".0"):
+                        scaled_str = scaled_str[:-2]
+                  return f"{prefix}{scaled_str}{unit}"
+            except Exception:
+                  return match.group(0)
+
+      return re.sub(r'([-\s:]+)(\d+(?:\.\d+)?)\s*([a-zA-Zà-ỹÀ-Ỹ%]+)', repl, ingredients_str)
+
 def get_dish_info(dish_name: str, df: pd.DataFrame) -> dict:
       """Helper tra cứu thông tin dinh dưỡng an toàn từ tên món."""
       norm_target = normalize_text(dish_name)
@@ -136,6 +157,7 @@ def get_dish_info(dish_name: str, df: pd.DataFrame) -> dict:
       if not matched.empty:
             row = matched.iloc[0]
             ingredients_val = row.get("ingredients", row["name"])
+            limitation_val = row.get("limitation_type", "")
             return {
                   "calories": float(row.get("calories", 0)),
                   "protein": float(row.get("protein_g", 0)),
@@ -143,6 +165,7 @@ def get_dish_info(dish_name: str, df: pd.DataFrame) -> dict:
                   "fat": float(row.get("fat_g", 0)), 
                   "price": float(row.get("cost_vnd", 0)),
                   "ingredients": str(ingredients_val) if pd.notna(ingredients_val) else row["name"],
+                  "limitation_type": str(limitation_val).strip() if pd.notna(limitation_val) else "",
                   "real_name": row["name"]
             }
       raise InvalidResponseError(f"Món ăn không có trong database: {dish_name}")
@@ -284,6 +307,13 @@ def format_meal_summary(response: str, df_pool: pd.DataFrame, user_information: 
 
       nutrition_note = getattr(meal_plan, "nutrition_note", "") or ""
 
+      # Thu thập các điều kiện hạn chế/chú ý y tế từ các món ăn được chọn
+      raw_limitations = []
+      for info in [bf_info, lu_main, dn_main]:
+            lim = info.get("limitation_type", "").strip()
+            if lim and lim not in raw_limitations:
+                  raw_limitations.append(lim)
+
       return {
             "total_calories": round(total_cal),
             "total_protein": round(total_pro, 1),
@@ -291,6 +321,7 @@ def format_meal_summary(response: str, df_pool: pd.DataFrame, user_information: 
             "total_fat": round(total_fat, 1),
             "total_cost": round(total_cost),
             "nutrition_note": nutrition_note.strip(),
+            "limitation_notes": raw_limitations,
             "meals": [
                   {
                         "type": "Bữa sáng",
@@ -303,7 +334,9 @@ def format_meal_summary(response: str, df_pool: pd.DataFrame, user_information: 
                         "protein": round(bf_pro, 1),
                         "carbs": round(bf_carb, 1),
                         "fat": round(bf_fat, 1),
-                        "ingredients": bf_info["ingredients"],
+                        "ingredients": scale_ingredients_text(bf_info["ingredients"], bf_mult),
+                        "limitation_type": bf_info.get("limitation_type", ""),
+                        "source_citation": "Bảng thành phần dinh dưỡng thực phẩm Việt Nam (Viện Dinh dưỡng Quốc gia - Bộ Y tế)",
                   },
                   {
                         "type": "Bữa trưa",
@@ -317,7 +350,9 @@ def format_meal_summary(response: str, df_pool: pd.DataFrame, user_information: 
                         "protein": round(lu_total_pro, 1),
                         "carbs": round(lu_total_carb, 1),
                         "fat": round(lu_total_fat, 1),
-                        "ingredients": lu_main["ingredients"],
+                        "ingredients": scale_ingredients_text(lu_main["ingredients"], lu_mult),
+                        "limitation_type": lu_main.get("limitation_type", ""),
+                        "source_citation": "Bảng thành phần dinh dưỡng thực phẩm Việt Nam (Viện Dinh dưỡng Quốc gia - Bộ Y tế)",
                   },
                   {
                         "type": "Bữa tối",
@@ -331,7 +366,9 @@ def format_meal_summary(response: str, df_pool: pd.DataFrame, user_information: 
                         "protein": round(dn_total_pro, 1),
                         "carbs": round(dn_total_carb, 1),
                         "fat": round(dn_total_fat, 1),
-                        "ingredients": dn_main["ingredients"],
+                        "ingredients": scale_ingredients_text(dn_main["ingredients"], dn_mult),
+                        "limitation_type": dn_main.get("limitation_type", ""),
+                        "source_citation": "Bảng thành phần dinh dưỡng thực phẩm Việt Nam (Viện Dinh dưỡng Quốc gia - Bộ Y tế)",
                   },
             ],
       }

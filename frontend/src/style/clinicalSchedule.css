@@ -75,8 +75,16 @@
   padding: 16px 20px;
   margin-bottom: 20px;
   display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.prescription-main-left {
+  display: flex;
   align-items: flex-start;
   gap: 14px;
+  flex: 1 1 55%;
 }
 
 .prescription-icon {
@@ -132,6 +140,85 @@
   font-size: 0.88rem;
   color: var(--med-slate);
   line-height: 1.5;
+}
+
+/* Limitations Aside Container (Right Column) */
+.prescription-limitations-aside {
+  flex: 0 1 45%;
+  min-width: 280px;
+  max-width: 520px;
+  background-color: #fefce8;
+  border: 1px solid #fef08a;
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.limitations-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.limitations-badge-icon {
+  font-size: 0.95rem;
+}
+
+.limitations-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #854d0e;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.limitations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 130px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.limitation-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #713f12;
+}
+
+.limitation-bullet {
+  font-weight: 900;
+  color: #d97706;
+  line-height: 1.3;
+}
+
+.limitation-text {
+  flex: 1;
+}
+
+.limitation-empty {
+  font-size: 0.8rem;
+  color: #854d0e;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+@media (max-width: 900px) {
+  .clinical-prescription-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .prescription-limitations-aside {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
 }
 
 /* ==========================================================================

@@ -284,6 +284,21 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated }) => {
   if (scheduleData && !isEditing) {
     const weeklySchedule = scheduleData.schedule || scheduleData;
 
+    // Trích xuất các lưu ý hạn chế vận động (limitation_type) từ các bài tập trong lịch trình
+    const rawLimitations = [];
+    Object.values(weeklySchedule).forEach(dayVal => {
+      const slots = Array.isArray(dayVal) ? dayVal : (dayVal ? [dayVal] : []);
+      slots.forEach(slot => {
+        (slot.exercises || []).forEach(ex => {
+          if (ex.limitation_type && typeof ex.limitation_type === 'string') {
+            const trimmed = ex.limitation_type.trim();
+            if (trimmed) rawLimitations.push(trimmed);
+          }
+        });
+      });
+    });
+    const uniqueLimitations = Array.from(new Set(rawLimitations));
+
     return (
       <div className="clinical-schedule-container">
         {/* Header */}
@@ -302,15 +317,38 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated }) => {
           </div>
         </div>
 
-        {/* Prescription Card */}
+        {/* Prescription Card with Limitations Panel */}
         <div className="clinical-prescription-card">
-          <span className="prescription-icon">🩺</span>
-          <div className="prescription-content">
-            <div className="prescription-header-row">
-              <h4>{prescription.title}</h4>
-              <span className={`prescription-level-pill ${prescription.pillClass}`}>{levelStr}</span>
+          <div className="prescription-main-left">
+            <span className="prescription-icon">🩺</span>
+            <div className="prescription-content">
+              <div className="prescription-header-row">
+                <h4>{prescription.title}</h4>
+                <span className={`prescription-level-pill ${prescription.pillClass}`}>{levelStr}</span>
+              </div>
+              <p>{prescription.desc}</p>
             </div>
-            <p>{prescription.desc}</p>
+          </div>
+
+          <div className="prescription-limitations-aside">
+            <div className="limitations-header">
+              <span className="limitations-badge-icon">⚠️</span>
+              <span className="limitations-title">Lưu ý & Hạn chế vận động</span>
+            </div>
+            {uniqueLimitations.length > 0 ? (
+              <div className="limitations-list">
+                {uniqueLimitations.map((limitText, idx) => (
+                  <div key={idx} className="limitation-item">
+                    <span className="limitation-bullet">•</span>
+                    <span className="limitation-text">{limitText}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="limitation-empty">
+                Tuân thủ đúng kỹ thuật và khởi động tối thiểu 5–10 phút trước mỗi buổi tập.
+              </div>
+            )}
           </div>
         </div>
 
