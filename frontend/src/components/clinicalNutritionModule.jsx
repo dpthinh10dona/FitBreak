@@ -313,20 +313,57 @@ const ClinicalNutritionModule = () => {
       )}
 
       {/* 5. RESULTS DISPLAY */}
-      {!loading && resultData && (
-        <div className="clinical-diet-results">
-          {/* Doctor Nutrition Rationale */}
-          {resultData.nutrition_note && (
+      {!loading && resultData && (() => {
+        // Trích xuất các lưu ý hạn chế thực phẩm (limitation_type)
+        const rawLimits = [];
+        if (Array.isArray(resultData.limitation_notes)) {
+          rawLimits.push(...resultData.limitation_notes);
+        }
+        (resultData.meals || []).forEach(m => {
+          if (m.limitation_type && typeof m.limitation_type === 'string') {
+            const trimmed = m.limitation_type.trim();
+            if (trimmed && !rawLimits.includes(trimmed)) {
+              rawLimits.push(trimmed);
+            }
+          }
+        });
+        const uniqueDietLimitations = Array.from(new Set(rawLimits));
+
+        return (
+          <div className="clinical-diet-results">
+            {/* Doctor Nutrition Rationale & Medical Limitations Aside */}
             <div className="clinical-rationale-card">
-              <span className="clinical-rationale-icon">💡</span>
-              <div className="clinical-rationale-body">
-                <h4>Phân tích Y khoa & Lý do chỉ định thực đơn:</h4>
-                <p>{resultData.nutrition_note}</p>
+              <div className="clinical-rationale-main">
+                <span className="clinical-rationale-icon">💡</span>
+                <div className="clinical-rationale-body">
+                  <h4>Phân tích Y khoa & Lý do chỉ định thực đơn:</h4>
+                  <p>{resultData.nutrition_note || "Thực đơn được thiết kế tối ưu hóa năng lượng và cân bằng lượng vi chất dinh dưỡng theo thể trạng."}</p>
+                </div>
+              </div>
+
+              <div className="clinical-rationale-limitations-aside">
+                <div className="rationale-limitations-header">
+                  <span className="rationale-limitations-icon">⚠️</span>
+                  <span className="rationale-limitations-title">Chú ý Y tế & Hạn chế dinh dưỡng</span>
+                </div>
+                {uniqueDietLimitations.length > 0 ? (
+                  <div className="rationale-limitations-list">
+                    {uniqueDietLimitations.map((limitText, idx) => (
+                      <div key={idx} className="rationale-limitation-item">
+                        <span className="rationale-limitation-bullet">•</span>
+                        <span className="rationale-limitation-text">{limitText}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rationale-limitation-empty">
+                    Định lượng chuẩn dựa trên nguyên liệu cơ bản. Điều chỉnh mức gia vị và dầu mỡ theo chỉ dẫn của bác sĩ điều trị.
+                  </div>
+                )}
               </div>
             </div>
-          )}
 
-          {/* Daily Macros Overview */}
+            {/* Daily Macros Overview */}
           <div className="clinical-macro-overview">
             <div className="clinical-macro-box">
               <div className="macro-box-number">{(resultData.total_calories || 0).toLocaleString()}</div>
@@ -416,7 +453,8 @@ const ClinicalNutritionModule = () => {
             </button>
           </div>
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 };
