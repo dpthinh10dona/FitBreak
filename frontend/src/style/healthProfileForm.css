@@ -1,0 +1,91 @@
+/*
+ * Local, framework-free styles for HealthProfileForm.
+ * The selectors are scoped below .health-profile-form so legacy utility-like
+ * class names cannot leak into the rest of the application.
+ */
+.health-profile-form { width: 100%; max-width: 768px; margin: 0 auto; padding: 24px; min-height: 100vh; color: var(--text-primary); }
+.health-profile-form .bg-white { background: #fff; }
+.health-profile-form .bg-slate-50 { background: #f8fafc; }
+.health-profile-form .bg-slate-100 { background: #f1f5f9; }
+.health-profile-form .bg-slate-800 { background: #1e293b; }
+.health-profile-form .bg-sky-100 { background: var(--accent-primary-light); }
+.health-profile-form .bg-sky-600 { background: var(--accent-primary); }
+.health-profile-form .bg-emerald-50 { background: #ecfdf5; }
+.health-profile-form .bg-emerald-100 { background: #d1fae5; }
+.health-profile-form .bg-emerald-600 { background: #059669; }
+.health-profile-form .bg-rose-50\/70, .health-profile-form .bg-rose-50\/80, .health-profile-form .bg-rose-50\/50 { background: #fff1f2; }
+.health-profile-form .bg-rose-100 { background: #ffe4e6; }
+.health-profile-form .bg-amber-50, .health-profile-form .bg-amber-50\/80 { background: #fffbeb; }
+.health-profile-form .bg-amber-100 { background: #fef3c7; }
+.health-profile-form .border { border: 1px solid var(--border-subtle); }
+.health-profile-form .border-t { border-top: 1px solid var(--border-subtle); }
+.health-profile-form .border-b { border-bottom: 1px solid var(--border-subtle); }
+.health-profile-form .border-slate-100, .health-profile-form .border-slate-200, .health-profile-form .border-slate-200\/90, .health-profile-form .border-slate-200\/80, .health-profile-form .border-slate-200\/60 { border-color: var(--border-subtle); }
+.health-profile-form .border-slate-300 { border-color: var(--border-medium); }
+.health-profile-form .border-emerald-200, .health-profile-form .border-emerald-300 { border-color: #a7f3d0; }
+.health-profile-form .border-rose-100, .health-profile-form .border-rose-200\/70, .health-profile-form .border-rose-300 { border-color: #fecdd3; }
+.health-profile-form .border-amber-100, .health-profile-form .border-amber-200, .health-profile-form .border-amber-300 { border-color: #fde68a; }
+.health-profile-form .rounded-lg { border-radius: 8px; }
+.health-profile-form .rounded-xl { border-radius: 12px; }
+.health-profile-form .rounded-2xl { border-radius: 16px; }
+.health-profile-form .rounded-full { border-radius: 999px; }
+.health-profile-form .overflow-hidden { overflow: hidden; }
+.health-profile-form .overflow-y-auto { overflow-y: auto; }
+.health-profile-form .shadow-sm { box-shadow: var(--shadow-sm); }
+.health-profile-form .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(15,23,42,.25); }
+.health-profile-form .flex { display: flex; }
+.health-profile-form .inline-block { display: inline-block; }
+.health-profile-form .grid { display: grid; }
+.health-profile-form .grid-cols-1 { grid-template-columns: 1fr; }
+.health-profile-form .flex-col { flex-direction: column; }
+.health-profile-form .flex-wrap { flex-wrap: wrap; }
+.health-profile-form .items-center { align-items: center; }
+.health-profile-form .items-start { align-items: flex-start; }
+.health-profile-form .justify-center { justify-content: center; }
+.health-profile-form .justify-between { justify-content: space-between; }
+.health-profile-form .justify-end { justify-content: flex-end; }
+.health-profile-form .gap-1\.5 { gap: 6px; } .health-profile-form .gap-2 { gap: 8px; }
+.health-profile-form .gap-2\.5 { gap: 10px; } .health-profile-form .gap-3 { gap: 12px; } .health-profile-form .gap-4 { gap: 16px; }
+.health-profile-form .p-1 { padding: 4px; } .health-profile-form .p-2 { padding: 8px; } .health-profile-form .p-3 { padding: 12px; }
+.health-profile-form .p-3\.5 { padding: 14px; } .health-profile-form .p-4 { padding: 16px; } .health-profile-form .p-5 { padding: 20px; } .health-profile-form .p-6 { padding: 24px; }
+.health-profile-form .px-2 { padding-left: 8px; padding-right: 8px; } .health-profile-form .px-3 { padding-left: 12px; padding-right: 12px; }
+.health-profile-form .px-3\.5 { padding-left: 14px; padding-right: 14px; } .health-profile-form .px-4 { padding-left: 16px; padding-right: 16px; }
+.health-profile-form .px-5 { padding-left: 20px; padding-right: 20px; } .health-profile-form .px-6 { padding-left: 24px; padding-right: 24px; }
+.health-profile-form .py-0\.5 { padding-top: 2px; padding-bottom: 2px; } .health-profile-form .py-1 { padding-top: 4px; padding-bottom: 4px; }
+.health-profile-form .py-2\.5 { padding-top: 10px; padding-bottom: 10px; }
+.health-profile-form .mt-0\.5 { margin-top: 2px; } .health-profile-form .mt-1 { margin-top: 4px; } .health-profile-form .mt-3 { margin-top: 12px; }
+.health-profile-form .mt-4 { margin-top: 16px; } .health-profile-form .mt-6 { margin-top: 24px; }
+.health-profile-form .mb-1 { margin-bottom: 4px; } .health-profile-form .mb-1\.5 { margin-bottom: 6px; } .health-profile-form .mb-2 { margin-bottom: 8px; } .health-profile-form .mb-3 { margin-bottom: 12px; }
+.health-profile-form .pt-2 { padding-top: 8px; } .health-profile-form .pt-4 { padding-top: 16px; }
+.health-profile-form .w-full { width: 100%; } .health-profile-form .w-10 { width: 40px; } .health-profile-form .h-10 { height: 40px; }
+.health-profile-form .w-3\.5, .health-profile-form .h-3\.5 { width: 14px; height: 14px; }
+.health-profile-form .w-4, .health-profile-form .h-4 { width: 16px; height: 16px; }
+.health-profile-form .w-5, .health-profile-form .h-5 { width: 20px; height: 20px; }
+.health-profile-form .w-6, .health-profile-form .h-6 { width: 24px; height: 24px; }
+.health-profile-form .max-w-lg { max-width: 512px; } .health-profile-form .max-h-\[70vh\] { max-height: 70vh; }
+.health-profile-form .text-xs { font-size: 12px; } .health-profile-form .text-sm { font-size: 14px; } .health-profile-form .text-base { font-size: 16px; }
+.health-profile-form .text-xl { font-size: 20px; } .health-profile-form .text-2xl { font-size: 24px; }
+.health-profile-form .font-medium { font-weight: 500; } .health-profile-form .font-semibold { font-weight: 600; }
+.health-profile-form .font-bold { font-weight: 700; } .health-profile-form .font-extrabold { font-weight: 800; } .health-profile-form .font-black { font-weight: 900; }
+.health-profile-form .uppercase { text-transform: uppercase; } .health-profile-form .tracking-wider { letter-spacing: .05em; }
+.health-profile-form .text-white { color: #fff; } .health-profile-form .text-slate-900 { color: #0f172a; } .health-profile-form .text-slate-800 { color: #1e293b; }
+.health-profile-form .text-slate-700 { color: #334155; } .health-profile-form .text-slate-600 { color: #475569; } .health-profile-form .text-slate-500 { color: #64748b; } .health-profile-form .text-slate-400 { color: #94a3b8; }
+.health-profile-form .text-sky-600, .health-profile-form .text-sky-700 { color: var(--accent-primary); }
+.health-profile-form .text-emerald-600, .health-profile-form .text-emerald-700, .health-profile-form .text-emerald-800, .health-profile-form .text-emerald-900 { color: #047857; }
+.health-profile-form .text-rose-500, .health-profile-form .text-rose-600, .health-profile-form .text-rose-800, .health-profile-form .text-rose-900 { color: #be123c; }
+.health-profile-form .text-amber-600, .health-profile-form .text-amber-700, .health-profile-form .text-amber-900, .health-profile-form .text-amber-950 { color: #92400e; }
+.health-profile-form input, .health-profile-form select, .health-profile-form textarea { background: #fff; border: 1px solid var(--border-subtle); }
+.health-profile-form input:focus, .health-profile-form select:focus, .health-profile-form textarea:focus { outline: none; border-color: var(--accent-primary); box-shadow: 0 0 0 3px rgba(2,132,199,.14); }
+.health-profile-form button:hover:not(:disabled) { filter: brightness(.94); transform: translateY(-1px); }
+.health-profile-form button:disabled { opacity: .5; cursor: not-allowed; }
+.health-profile-form .fixed { position: fixed; } .health-profile-form .inset-0 { inset: 0; } .health-profile-form .z-50 { z-index: 50; }
+.health-profile-form .bg-slate-900\/60 { background: rgba(15,23,42,.6); }
+.health-profile-form .shrink-0 { flex-shrink: 0; } .health-profile-form .cursor-pointer { cursor: pointer; } .health-profile-form .cursor-not-allowed { cursor: not-allowed; }
+@media (min-width: 640px) {
+  .health-profile-form .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .health-profile-form .sm\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .health-profile-form .sm\:flex-row { flex-direction: row; }
+  .health-profile-form .sm\:w-auto { width: auto; }
+  .health-profile-form .sm\:text-sm { font-size: 14px; }
+}
+@media (max-width: 639px) { .health-profile-form { padding: 16px; } }

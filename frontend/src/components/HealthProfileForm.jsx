@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   ShieldAlert,
   AlertTriangle,
@@ -10,6 +10,7 @@ import {
   Sparkles,
   Info,
 } from 'lucide-react';
+import '../style/healthProfileForm.css';
 
 // Danh sách các tùy chọn bệnh lý nền
 const MEDICAL_CONDITION_OPTIONS = [
@@ -254,7 +255,7 @@ const HealthProfileForm = ({ onProfileSaved, apiBaseUrl = '' }) => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-4 sm:p-6 bg-slate-50 min-h-screen">
+    <div className="health-profile-form max-w-3xl mx-auto p-4 sm:p-6 bg-slate-50 min-h-screen">
       {/* Card Form */}
       <div className="bg-white border border-slate-200/90 rounded-2xl shadow-sm overflow-hidden">
         {/* Header */}

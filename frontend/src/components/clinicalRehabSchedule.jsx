@@ -73,7 +73,7 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated }) => {
     try {
       const saved = localStorage.getItem('selectedTimeSlots');
       return saved ? new Set(JSON.parse(saved)) : new Set();
-    } catch (e) {
+    } catch {
       return new Set();
     }
   });
@@ -157,7 +157,6 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated }) => {
     days.forEach((day) => {
       const minutesList = slotsByDay[day].sort((a, b) => a - b);
       if (minutesList.length > 0) {
-        let totalContinuousMinutes = 0;
         let maxSessionMinutes = 0;
         let currentRun = 30;
 
@@ -170,7 +169,7 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated }) => {
           }
         }
         maxSessionMinutes = Math.max(maxSessionMinutes, currentRun);
-        totalContinuousMinutes = minutesList.length * 30;
+        const totalContinuousMinutes = minutesList.length * 30;
 
         timetable[day] = {
           available_minutes: totalContinuousMinutes,
@@ -210,6 +209,9 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated }) => {
           body: JSON.stringify({
             timetable,
             level: userProfile?.level_of_physical_activity || 'medium',
+            height_cm: userProfile?.height,
+            weight_kg: userProfile?.weight,
+            age: userProfile?.age,
           }),
         });
       } catch (netErr) {
@@ -233,6 +235,10 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated }) => {
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.detail || 'Không thể tạo thời khóa biểu phục hồi!');
+      }
+
+      if (data.allow_ai_generation === false) {
+        throw new Error(data.reasons?.join(' ') || 'Safety Guardrail đã chặn yêu cầu.');
       }
 
       const scheduleToStore = data.schedule || data;

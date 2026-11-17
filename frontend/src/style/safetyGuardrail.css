@@ -48,6 +48,11 @@
   justify-content: center;
   flex-shrink: 0;
 }
+.safety-icon { width: 24px; height: 24px; }
+.safety-action-icon, .safety-heading-icon, .safety-disclaimer-icon { width: 16px; height: 16px; flex-shrink: 0; }
+.safety-heading-icon { color: #f59e0b; }
+.safety-disclaimer-icon { color: #64748b; margin-top: 2px; }
+.safety-refresh-icon { width: 14px; height: 14px; opacity: .7; margin-left: 4px; }
 
 .safety-icon-medical {
   background-color: #ffe4e6;
