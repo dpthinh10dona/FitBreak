@@ -3,6 +3,7 @@ from app.schemas.foodSuggestResponse import FoodSuggestResponse
 from app.schemas.foodSuggestRequest import FoodSuggestRequest
 from app.core.rate_limiter import RateLimiter
 from app.services.rag_service import process_rag_pipeline
+from app.services.safety_guardrail import UserHealthInput, safety_guardrail
 from app.core.exceptions import (
         AIModelOfflineException,
         InvalidResponseError,
@@ -19,9 +20,31 @@ router = APIRouter()
     response_model=FoodSuggestResponse,
     dependencies=[Depends(RateLimiter(times=5, seconds=60, scope="food-suggest"))],
 )
+@router.post("/api/suggest-meal", response_model=FoodSuggestResponse)
 async def food_suggest(req: FoodSuggestRequest):
     try:
         user_info = req.model_dump()
+        health_fields = (req.height_cm, req.weight_kg, req.age, req.free_minutes_per_week)
+        if all(value is not None for value in health_fields):
+            guardrail = safety_guardrail(UserHealthInput(
+                height_cm=req.height_cm,
+                weight_kg=req.weight_kg,
+                age=req.age,
+                goal=req.aim,
+                target_calories=req.calories_need,
+                budget_vnd=req.daily_budget,
+                allergies=[item.strip() for item in (req.allergen or "").replace(",", ";").split(";") if item.strip()],
+                medical_conditions=req.medical_conditions,
+                user_notes=req.user_notes,
+                free_minutes_per_week=req.free_minutes_per_week,
+            ))
+            if not guardrail.allow_ai_generation:
+                blocked = guardrail.model_dump()
+                return FoodSuggestResponse(
+                    success=False,
+                    result={"guardrail": blocked, **blocked},
+                    error=guardrail.status,
+                )
         result = await process_rag_pipeline(user_info)
         return FoodSuggestResponse(success=True, result=result)
     except Exception as e:

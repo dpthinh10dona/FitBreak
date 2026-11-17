@@ -2,12 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.schemas.schedule import schedule
 from app.core.token_authorization import tokenAuthorization, token_authorization
 from app.services.schedule_service import schedule_maker
+from app.services.safety_guardrail import UserHealthInput, safety_guardrail
 
 router = APIRouter()
 
 @router.post("/schedule-maker")
 @router.post("/schedule/generate")
 @router.post("/generate")
+@router.post("/api/schedule")
 async def scheduleMaker(inp: dict,
                         token: tokenAuthorization = Depends(token_authorization)):
     try:
@@ -64,6 +66,38 @@ async def scheduleMaker(inp: dict,
             "level_of_physical_activity": level_of_physical_activity,
             "aim": goal
         }
+
+        def _number(*values, default):
+            for value in values:
+                if value is not None:
+                    try:
+                        return float(value)
+                    except (TypeError, ValueError):
+                        continue
+            return default
+
+        total_free_minutes = 0
+        for slots in timetable_data.values() if isinstance(timetable_data, dict) else []:
+            if isinstance(slots, dict):
+                total_free_minutes += int(slots.get("available_minutes") or slots.get("max_session_minutes") or 0)
+            elif isinstance(slots, list):
+                total_free_minutes += sum(int(slot or 0) for slot in slots)
+
+        guardrail = safety_guardrail(UserHealthInput(
+            height_cm=_number(inp.get("height_cm"), stat.get("height"), default=170),
+            weight_kg=_number(inp.get("weight_kg"), stat.get("weight"), default=60),
+            age=int(_number(inp.get("age"), stat.get("age"), default=19)),
+            goal=str(stat.get("goal") or inp.get("goal") or inp.get("aim") or "duy_tri"),
+            target_calories=_number(inp.get("target_calories"), stat.get("tdee"), default=2000),
+            budget_vnd=_number(inp.get("budget_vnd"), inp.get("daily_budget"), default=80000),
+            allergies=inp.get("allergies") or [],
+            medical_conditions=inp.get("medical_conditions") or stat.get("medical_conditions") or [],
+            user_notes=str(inp.get("user_notes") or stat.get("user_notes") or ""),
+            free_minutes_per_week=int(inp.get("free_minutes_per_week") or total_free_minutes),
+        ))
+        if not guardrail.allow_ai_generation:
+            blocked = guardrail.model_dump()
+            return {"success": False, "guardrail": blocked, **blocked}
 
         result = await schedule_maker(user_info)
         return result

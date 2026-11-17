@@ -109,12 +109,18 @@ const ClinicalNutritionModule = () => {
         diet_type: formData.diet_type || 'Không kiêng',
         allergen: formData.allergen || null,
         food_recommendation: profile?.food_recommendation || null,
+        height_cm: Number(profile?.height) || null,
+        weight_kg: Number(profile?.weight) || null,
+        age: Number(profile?.age) || null,
+        free_minutes_per_week: Number(profile?.free_minutes_per_week) || 180,
+        medical_conditions: profile?.medical_conditions || [],
+        user_notes: profile?.user_notes || '',
       };
 
       if (isRefresh && resultData?.meals) {
         payload.exclude_dishes = resultData.meals.map(m => {
           let name = m.name || m.dish_name || '';
-          return name.replace(/\s*\(x[\d\.]+\s*phần\)/i, '').trim();
+          return name.replace(/\s*\(x[\d.]+\s*phần\)/i, '').trim();
         });
       }
 
@@ -130,6 +136,10 @@ const ClinicalNutritionModule = () => {
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.detail || 'Lỗi phân tích thực đơn y khoa!');
+      }
+
+      if (data.success === false && data.result?.guardrail) {
+        throw new Error(data.result.guardrail.reasons?.join(' ') || data.error);
       }
 
       setResultData(data.result || data);
