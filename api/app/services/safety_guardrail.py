@@ -271,6 +271,139 @@ def safety_guardrail(user_input: UserHealthInput) -> GuardrailResult:
     )
 
 
+class MealsSufficiencyResult(BaseModel):
+    """Schema kết quả kiểm tra độ đầy đủ của danh sách món ăn sau lọc (Post-filter)."""
+
+    status: Literal["PASS", "INSUFFICIENT_DATA"]
+    allow_ai_generation: bool = Field(..., description="True chỉ khi status == 'PASS'")
+    valid_items_count: int = Field(..., description="Số lượng món ăn hợp lệ đếm được")
+    reasons: List[str] = Field(default_factory=list, description="Danh sách lý do chi tiết bằng tiếng Việt")
+    suggestion: str = Field(default="", description="Gợi ý hành động khắc phục cho người dùng")
+
+
+def check_filtered_meals_sufficiency(
+    filtered_df: pd.DataFrame,
+    target_calories: float,
+    daily_budget_vnd: float,
+    min_required_items: int = 3,
+) -> MealsSufficiencyResult:
+    """Kiểm tra tính đầy đủ của dữ liệu món ăn sau bước lọc Pandas (Post-filter Data Sufficiency Check).
+
+    Chặn gọi LLM Llama 3.2 1B khi dữ liệu còn lại không đủ số lượng tối thiểu,
+    không đủ ngân sách hoặc không thể đáp ứng mức calo mục tiêu (chống hallucination).
+
+    Args:
+        filtered_df: DataFrame món ăn sau bộ lọc dị ứng và chế độ ăn.
+                     Chứa các cột: id, ten_mon (hoặc name), calories, price_vnd (hoặc cost_vnd).
+        target_calories: Mức calo mục tiêu 1 ngày của người dùng (kcal).
+        daily_budget_vnd: Ngân sách ăn uống tối đa 1 ngày của người dùng (VNĐ).
+        min_required_items: Số lượng món tối thiểu cho 3 bữa (mặc định 3).
+
+    Returns:
+        MealsSufficiencyResult (status, allow_ai_generation, valid_items_count, reasons, suggestion).
+    """
+    reasons: List[str] = []
+    default_suggestion = (
+        "Bạn có thể thử tăng ngân sách ngày hoặc điều chỉnh lại danh sách thực phẩm loại trừ để mở rộng lựa chọn."
+    )
+
+    # 1. Kiểm tra an toàn DataFrame rỗng hoặc thiếu số lượng tối thiểu
+    if filtered_df is None or filtered_df.empty:
+        return MealsSufficiencyResult(
+            status="INSUFFICIENT_DATA",
+            allow_ai_generation=False,
+            valid_items_count=0,
+            reasons=[
+                f"Kho dữ liệu đã xác minh chỉ còn 0 món phù hợp sau khi loại trừ dị ứng/chế độ ăn, "
+                f"không đủ tối thiểu {min_required_items} món để lập thực đơn 3 bữa."
+            ],
+            suggestion=default_suggestion,
+        )
+
+    # Chuẩn hóa & làm sạch DataFrame: loại bỏ NaN ở các cột cần kiểm tra
+    df_clean = filtered_df.copy()
+
+    # Nhận diện cột giá linh hoạt
+    price_col = None
+    for col in ["price_vnd", "cost_vnd", "price", "cost"]:
+        if col in df_clean.columns:
+            price_col = col
+            break
+
+    # Nhận diện cột calo linh hoạt
+    cal_col = "calories" if "calories" in df_clean.columns else None
+
+    # Làm sạch các giá trị không hợp lệ hoặc NaN
+    if price_col:
+        df_clean[price_col] = pd.to_numeric(df_clean[price_col], errors="coerce").fillna(float("inf"))
+    if cal_col:
+        df_clean[cal_col] = pd.to_numeric(df_clean[cal_col], errors="coerce").fillna(0.0)
+
+    valid_items_count = len(df_clean)
+
+    # Logic 1: len(filtered_df) < min_required_items
+    if valid_items_count < min_required_items:
+        reasons.append(
+            f"Kho dữ liệu đã xác minh chỉ còn {valid_items_count} món phù hợp sau khi loại trừ dị ứng/chế độ ăn, "
+            f"không đủ tối thiểu {min_required_items} món để lập thực đơn 3 bữa."
+        )
+        return MealsSufficiencyResult(
+            status="INSUFFICIENT_DATA",
+            allow_ai_generation=False,
+            valid_items_count=valid_items_count,
+            reasons=reasons,
+            suggestion=default_suggestion,
+        )
+
+    # Logic 2: Kiểm tra khả năng đáp ứng Ngân sách (price_vnd)
+    if price_col and daily_budget_vnd > 0:
+        # Lấy 3 món có giá rẻ nhất trong filtered_df
+        cheapest_3 = df_clean.nsmallest(min_required_items, price_col)
+        total_cheapest_price = float(cheapest_3[price_col].sum())
+
+        if total_cheapest_price > daily_budget_vnd:
+            reasons.append(
+                f"Ngân sách hiện tại không đủ để kết hợp 3 bữa ăn tối thiểu từ các món hợp lệ "
+                f"(chi phí thấp nhất cần {total_cheapest_price:,.0f} VNĐ cho 3 món rẻ nhất, "
+                f"vượt ngân sách {daily_budget_vnd:,.0f} VNĐ/ngày)."
+            )
+
+    # Logic 3: Kiểm tra khả năng đáp ứng Calo (calories)
+    if cal_col and target_calories > 0:
+        # Lấy 3 món có calo cao nhất trong filtered_df
+        top_3_cal = df_clean.nlargest(min_required_items, cal_col)
+        total_max_calories = float(top_3_cal[cal_col].sum())
+        calorie_threshold = target_calories * 0.80  # Hụt quá 20%
+
+        if total_max_calories < calorie_threshold:
+            reasons.append(
+                f"Các món ăn còn lại sau bộ lọc không đủ mức năng lượng cần thiết cho mục tiêu của bạn "
+                f"(tổng calo 3 món cao nhất chỉ đạt {total_max_calories:.0f} kcal, "
+                f"hụt quá 20% so với mục tiêu {target_calories:.0f} kcal/ngày)."
+            )
+
+    # NẾU CÓ BẤT KỲ ĐIỀU KIỆN KHÔNG THỎA MÃN -> INSUFFICIENT_DATA
+    if reasons:
+        return MealsSufficiencyResult(
+            status="INSUFFICIENT_DATA",
+            allow_ai_generation=False,
+            valid_items_count=valid_items_count,
+            reasons=reasons,
+            suggestion=default_suggestion,
+        )
+
+    # THỎA MÃN TẤT CẢ ĐIỀU KIỆN -> PASS
+    return MealsSufficiencyResult(
+        status="PASS",
+        allow_ai_generation=True,
+        valid_items_count=valid_items_count,
+        reasons=[
+            f"Dữ liệu món ăn đầy đủ ({valid_items_count} món khả dụng), đáp ứng tốt calo mục tiêu và ngân sách."
+        ],
+        suggestion="Dữ liệu hợp lệ, sẵn sàng để mô hình AI xây dựng thực đơn tối ưu.",
+    )
+
+
 def check_meal_data_sufficiency(
     filtered_foods_df: pd.DataFrame,
     target_calories: float,
@@ -592,24 +725,60 @@ if __name__ == "__main__":
     print("\n--- TEST CASE MEAL 1: Chỉ còn 2 món (Kỳ vọng: INSUFFICIENT_DATA) ---")
     print(json.dumps(res_meal_insufficient, indent=2, ensure_ascii=False))
 
-    # Ca 2: DataFrame có 10 món hợp lệ -> PASS
-    df_ten_foods = pd.DataFrame([
-        {"id": 1, "ten_mon": "Phở bò chín", "calories": 450, "price_vnd": 40000, "meal_type": "breakfast"},
-        {"id": 2, "ten_mon": "Bánh mì ốp la", "calories": 380, "price_vnd": 25000, "meal_type": "breakfast"},
-        {"id": 3, "ten_mon": "Cơm tấm sườn", "calories": 620, "price_vnd": 45000, "meal_type": "lunch"},
-        {"id": 4, "ten_mon": "Ức gà áp chảo", "calories": 480, "price_vnd": 35000, "meal_type": "lunch"},
-        {"id": 5, "ten_mon": "Bún chả Hà Nội", "calories": 550, "price_vnd": 40000, "meal_type": "lunch"},
-        {"id": 6, "ten_mon": "Cá thu sốt cà", "calories": 420, "price_vnd": 35000, "meal_type": "dinner"},
-        {"id": 7, "ten_mon": "Bò xào lúc lắc", "calories": 520, "price_vnd": 50000, "meal_type": "dinner"},
-        {"id": 8, "ten_mon": "Canh chua cá lóc", "calories": 300, "price_vnd": 30000, "meal_type": "dinner"},
-        {"id": 9, "ten_mon": "Trứng chiên thịt băm", "calories": 350, "price_vnd": 25000, "meal_type": "dinner"},
-        {"id": 10, "ten_mon": "Tôm rim mặn ngọt", "calories": 390, "price_vnd": 40000, "meal_type": "dinner"},
+    # 7. Test Case chuyên biệt cho check_filtered_meals_sufficiency
+    print("\n" + "=" * 80)
+    print("TEST CASES CHUYÊN BIỆT CHO check_filtered_meals_sufficiency (3 KỊCH BẢN)")
+    print("=" * 80)
+
+    # Kịch bản 1: Còn 2 món -> INSUFFICIENT_DATA (Thiếu số lượng tối thiểu cho 3 bữa)
+    df_scenario_1 = pd.DataFrame([
+        {"id": 1, "ten_mon": "Phở bò", "calories": 450, "price_vnd": 40000},
+        {"id": 2, "ten_mon": "Bánh mì ốp la", "calories": 350, "price_vnd": 25000},
     ])
-    res_meal_pass = check_meal_data_sufficiency(
-        filtered_foods_df=df_ten_foods,
+    res_sc1 = check_filtered_meals_sufficiency(
+        filtered_df=df_scenario_1,
+        target_calories=2000,
+        daily_budget_vnd=100000,
+        min_required_items=3,
+    )
+    print("\n--- KỊCH BẢN 1: Còn 2 món (< 3 món) ---")
+    print(json.dumps(res_sc1.model_dump(), indent=2, ensure_ascii=False))
+
+    # Kịch bản 2: Còn 5 món nhưng tổng 3 món rẻ nhất vượt ngân sách ngày -> INSUFFICIENT_DATA
+    df_scenario_2 = pd.DataFrame([
+        {"id": 1, "ten_mon": "Bò bít tết hảo hạng", "calories": 700, "price_vnd": 75000},
+        {"id": 2, "ten_mon": "Cá hồi áp chảo sốt bơ", "calories": 650, "price_vnd": 85000},
+        {"id": 3, "ten_mon": "Sườn cừu nướng thảo mộc", "calories": 800, "price_vnd": 95000},
+        {"id": 4, "ten_mon": "Gà nướng phô mai cao cấp", "calories": 750, "price_vnd": 70000},
+        {"id": 5, "ten_mon": "Tôm hùm sốt bơ tỏi", "calories": 600, "price_vnd": 110000},
+    ])
+    # 3 món rẻ nhất: 70k + 75k + 85k = 230k > ngân sách 150k
+    res_sc2 = check_filtered_meals_sufficiency(
+        filtered_df=df_scenario_2,
+        target_calories=2000,
+        daily_budget_vnd=150000,
+        min_required_items=3,
+    )
+    print("\n--- KỊCH BẢN 2: Còn 5 món nhưng tổng giá 3 món rẻ nhất vượt ngân sách ---")
+    print(json.dumps(res_sc2.model_dump(), indent=2, ensure_ascii=False))
+
+    # Kịch bản 3: Còn 5 món thỏa mãn đầy đủ số lượng, calo và ngân sách -> PASS
+    df_scenario_3 = pd.DataFrame([
+        {"id": 1, "ten_mon": "Phở bò chín", "calories": 480, "price_vnd": 40000},
+        {"id": 2, "ten_mon": "Cơm sườn bì chả", "calories": 680, "price_vnd": 45000},
+        {"id": 3, "ten_mon": "Ức gà xào nấm", "calories": 520, "price_vnd": 35000},
+        {"id": 4, "ten_mon": "Cá thu kho tộ", "calories": 490, "price_vnd": 35000},
+        {"id": 5, "ten_mon": "Bún chả thịt nướng", "calories": 580, "price_vnd": 40000},
+    ])
+    # 3 món rẻ nhất: 35k + 35k + 40k = 110k <= ngân sách 130k
+    # 3 món calo cao nhất: 680 + 580 + 520 = 1780 kcal >= 2000 * 0.8 = 1600 kcal
+    res_sc3 = check_filtered_meals_sufficiency(
+        filtered_df=df_scenario_3,
         target_calories=2000,
         daily_budget_vnd=130000,
+        min_required_items=3,
     )
-    print("\n--- TEST CASE MEAL 2: Có 10 món hợp lệ (Kỳ vọng: PASS) ---")
-    print(json.dumps(res_meal_pass, indent=2, ensure_ascii=False))
+    print("\n--- KỊCH BẢN 3: Còn 5 món thỏa mãn đầy đủ (PASS) ---")
+    print(json.dumps(res_sc3.model_dump(), indent=2, ensure_ascii=False))
+
 
