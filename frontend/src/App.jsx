@@ -1,21 +1,32 @@
 import { useState, useEffect } from 'react';
 import { API_BASE_URL } from './config';
-import Header from './components/header';
 import PatientHeader from './components/patientHeader';
 import ProfileBanner from './components/profileBanner';
 import LogIn from "./components/logIn";
 import SignUp from "./components/signUp";
 import UpdateProfile from './components/updateProfile';
 import CreateProfile from "./components/createProfile";
-import FoodSuggest from "./components/foodSuggest";
 import ClinicalNutritionModule from "./components/clinicalNutritionModule";
-import TimeSelector from "./components/timeSelector";
 import ClinicalRehabSchedule from "./components/clinicalRehabSchedule";
 import JoinTeam from "./components/joinTeam";
 import TaskBoard from "./components/taskBoard";
 import Shop from './components/shop';
 import TelehealthDoctorChatbot from './components/telehealthDoctorChatbot';
 import './App.css';
+
+const getScheduleKey = (u) => (u?.email ? `workoutSchedule_${u.email}` : null);
+
+const loadScheduleForUser = (u) => {
+  const key = getScheduleKey(u);
+  if (!key) return null;
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : null;
+  } catch (e) {
+    console.error("Lỗi parse lịch tập:", e);
+    return null;
+  }
+};
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState('login');
@@ -28,20 +39,6 @@ function App() {
   const handleAvatarUpdated = () => {
     setAvatarVersion((prev) => prev + 1);
   };
-  const getScheduleKey = (u) => (u?.email ? `workoutSchedule_${u.email}` : null);
-
-  const loadScheduleForUser = (u) => {
-    const key = getScheduleKey(u);
-    if (!key) return null;
-    try {
-      const saved = localStorage.getItem(key);
-      return saved ? JSON.parse(saved) : null;
-    } catch (e) {
-      console.error("Lá»—i parse lá»‹ch táº­p:", e);
-      return null;
-    }
-  };
-
   const fetchUserProfileByEmail = async (email, token) => {
     if (!email || !token) return null;
     try {
@@ -199,9 +196,13 @@ function App() {
     }
   };
 
-  const handleUpdateProfileSuccess = (updatedData) => {
+  const handleUpdateProfileSuccess = async (updatedData) => {
+    const token = localStorage.getItem('token') || localStorage.getItem('access_token');
+    const email = user?.email || updatedData?.email;
+    const refreshedProfile = await fetchUserProfileByEmail(email, token);
+    const newProfileInfo = refreshedProfile || updatedData?.profile || updatedData?.user || updatedData || {};
+
     setUser((prevUser) => {
-      const newProfileInfo = updatedData?.user || updatedData;
       const newUserState = { ...prevUser, ...newProfileInfo };
       localStorage.setItem('user', JSON.stringify(newUserState));
       return newUserState;

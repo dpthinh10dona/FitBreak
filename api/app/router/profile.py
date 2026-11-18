@@ -169,14 +169,21 @@ async def updateProfile(request: Request, data: updateProfile,
             "level_of_physical_activity": phys_level
         }
 
-        # Kiểm tra xem hồ sơ đã có food_recommendation từ medical checkup chưa, nếu chưa thì cập nhật theo BMI mới
+        # Giữ khuyến nghị chuyên môn từ lần khám nếu đã có; chỉ tạo khuyến nghị
+        # BMI cơ bản cho hồ sơ chưa từng được đánh giá y tế.
         current_prof = token.client.table("profiles").select("food_recommendation").eq("id", token.user_id).execute()
         has_existing_rec = current_prof.data and current_prof.data[0].get("food_recommendation")
         if not has_existing_rec:
-            update_payload["food_recommendation"] = _generate_diet_recommendation_from_bmi(data.weight, data.height)
+            update_payload["food_recommendation"] = _generate_diet_recommendation_from_bmi(
+                data.weight, data.height
+            )
 
-        token.client.table("profiles").update(update_payload).eq("id", token.user_id).execute()
-        return {"message": "Cập nhật profile thành công"}
+        response = token.client.table("profiles").update(update_payload).eq("id", token.user_id).execute()
+        saved_profile = response.data[0] if response.data else update_payload
+        return {
+            "message": "Cập nhật profile thành công",
+            "profile": saved_profile,
+        }
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 

@@ -1,11 +1,15 @@
 from math import ceil
 
 def calculateBMI(weight: float, height: int):
+    if height <= 0 or weight <= 0:
+        raise ValueError("Chiều cao và cân nặng phải lớn hơn 0")
     heightInMeter = height / 100
     bmi = weight / (heightInMeter ** 2)
     return round(bmi, 1)
 
 def calculateBMR(weight: float, height: int, age: int, gender: bool):
+    if not 12 <= age <= 65:
+        raise ValueError("Tuổi phải nằm trong khoảng 12 đến 65")
     bmr = None
     if gender:
         bmr = (10 * weight) + (6.25 * height) - (5 * age) + 5
@@ -24,7 +28,10 @@ def calculateTDEE(bmr: int, activity_frequency: int):
         r = 1.2
     elif activity_frequency == 2:
         r = 1.375
-    else: r = 1.725
+    elif activity_frequency == 3:
+        r = 1.725
+    else:
+        raise ValueError("Tần suất vận động phải từ 1 đến 3")
 
     tdee = bmr * r
     result = ceil(tdee)
@@ -40,7 +47,10 @@ def calculateProtein(weight: float, activity_frequency: int):
         r = 0.8
     elif activity_frequency == 2:
         r = 1.2
-    else: r = 1.6
+    elif activity_frequency == 3:
+        r = 1.6
+    else:
+        raise ValueError("Tần suất vận động phải từ 1 đến 3")
 
     protein_need = r * weight
     protein_need = ceil(protein_need)
