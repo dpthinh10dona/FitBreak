@@ -16,6 +16,8 @@ const UpdateProfile = ({ user, onUpdateProfileSuccess }) => {
 
   useEffect(() => {
     if (user) {
+      // Đồng bộ form khi parent nhận snapshot profile mới từ Supabase.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         name: user.name || '',
         age: user.age ? String(user.age) : '',
@@ -28,21 +30,9 @@ const UpdateProfile = ({ user, onUpdateProfileSuccess }) => {
     }
   }, [user]);
 
-  const [medicalData, setMedicalData] = useState({
-    sys: '',
-    dia: '',
-    glycemic_index: '',
-    time: 0, // 0: Lúc đói, 1: Trước bữa ăn, 2: Ngẫu nhiên
-    spo2_index: '',
-  });
-
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  const [medicalResult, setMedicalResult] = useState(null);
-  const [medicalLoading, setMedicalLoading] = useState(false);
-  const [medicalError, setMedicalError] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -52,25 +42,47 @@ const UpdateProfile = ({ user, onUpdateProfileSuccess }) => {
     });
   };
 
-  const handleMedicalInputChange = (e) => {
-    const { name, value } = e.target;
-    setMedicalData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  const validateProfile = () => {
+    const age = Number(formData.age);
+    const height = Number(formData.height);
+    const weight = Number(formData.weight);
+    const activityFrequency = Number(formData.activity_frequency);
 
-  const handleTimeSelect = (val) => {
-    setMedicalData((prev) => ({
-      ...prev,
-      time: val,
-    }));
+    if (!formData.name.trim()) return 'Tên hiển thị không được để trống.';
+    if (!Number.isFinite(age) || age < 12 || age > 65) {
+      return 'Tuổi phải nằm trong khoảng 12 đến 65.';
+    }
+    if (!Number.isFinite(height) || height < 100 || height > 230) {
+      return 'Chiều cao phải nằm trong khoảng 100 đến 230 cm.';
+    }
+    if (!Number.isFinite(weight) || weight < 30 || weight > 200) {
+      return 'Cân nặng phải nằm trong khoảng 30 đến 200 kg.';
+    }
+    if (![1, 2, 3].includes(activityFrequency)) {
+      return 'Vui lòng chọn tần suất vận động hợp lệ.';
+    }
+
+    const bmi = weight / ((height / 100) ** 2);
+    if (bmi < 16) {
+      return `BMI ${bmi.toFixed(1)} quá thấp (dưới 16). Vui lòng kiểm tra lại số liệu hoặc tham khảo nhân viên y tế.`;
+    }
+    if (bmi >= 35) {
+      return `BMI ${bmi.toFixed(1)} quá cao (từ 35 trở lên). Vui lòng kiểm tra lại số liệu hoặc tham khảo nhân viên y tế.`;
+    }
+    return null;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setSuccessMsg(null);
+
+    const validationError = validateProfile();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setLoading(true);
 
     const payload = {
@@ -96,65 +108,20 @@ const UpdateProfile = ({ user, onUpdateProfileSuccess }) => {
 
       if (!response.ok) {
         if (Array.isArray(data.detail)) {
-          throw new Error(data.detail[0].msg || 'Dữ liệu nhập vào không hợp lệ!');
+          const messages = data.detail.map((item) => item.msg).filter(Boolean);
+          throw new Error(messages.join(' ') || 'Dữ liệu nhập vào không hợp lệ!');
         }
         throw new Error(data.detail || data.message || 'Cập nhật thông tin thất bại!');
       }
 
       setSuccessMsg('Cập nhật hồ sơ thành công!');
-      onUpdateProfileSuccess(payload);
+      if (onUpdateProfileSuccess) {
+        await onUpdateProfileSuccess(data.profile || payload);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleMedicalCheckup = async () => {
-    setMedicalError(null);
-    setMedicalLoading(true);
-
-    const payload = {
-      weight: formData.weight ? Number(formData.weight) : null,
-      height: formData.height ? Number(formData.height) : null,
-      sys: medicalData.sys ? Number(medicalData.sys) : null,
-      dia: medicalData.dia ? Number(medicalData.dia) : null,
-      time: medicalData.glycemic_index ? Number(medicalData.time) : null,
-      glycemic_index: medicalData.glycemic_index ? Number(medicalData.glycemic_index) : null,
-      spo2_index: medicalData.spo2_index ? Number(medicalData.spo2_index) : null,
-    };
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/profiles/medical-checkup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.detail || 'Không thể phân tích chỉ số y tế');
-      }
-
-      setMedicalResult(data.result);
-    } catch (err) {
-      setMedicalError(err.message);
-    } finally {
-      setMedicalLoading(false);
-    }
-  };
-
-  const getBadgeClass = (level) => {
-    switch (level) {
-      case 'good': return 'med-badge-good';
-      case 'warning': return 'med-badge-warning';
-      case 'danger': return 'med-badge-danger';
-      case 'critical': return 'med-badge-critical';
-      default: return '';
     }
   };
 
@@ -201,6 +168,8 @@ const UpdateProfile = ({ user, onUpdateProfileSuccess }) => {
                   value={formData.age}
                   onChange={handleInputChange}
                   placeholder="Tuổi của bạn"
+                  min="12"
+                  max="65"
                   required
                 />
               </div>
@@ -227,6 +196,9 @@ const UpdateProfile = ({ user, onUpdateProfileSuccess }) => {
                   value={formData.height}
                   onChange={handleInputChange}
                   placeholder="Ví dụ: 175"
+                  min="100"
+                  max="230"
+                  required
                 />
               </div>
             </div>
@@ -240,6 +212,10 @@ const UpdateProfile = ({ user, onUpdateProfileSuccess }) => {
                   value={formData.weight}
                   onChange={handleInputChange}
                   placeholder="Ví dụ: 68"
+                  min="30"
+                  max="200"
+                  step="0.1"
+                  required
                 />
               </div>
 
@@ -286,7 +262,7 @@ const UpdateProfile = ({ user, onUpdateProfileSuccess }) => {
       {/* MEDICAL CHECKUP SECTION (CLINICAL MEDTECH INTEGRATION) */}
       <ClinicalVitalCheckup 
         user={user} 
-        onCheckupSuccess={(result) => {
+        onCheckupSuccess={() => {
           if (onUpdateProfileSuccess) {
             onUpdateProfileSuccess();
           }
