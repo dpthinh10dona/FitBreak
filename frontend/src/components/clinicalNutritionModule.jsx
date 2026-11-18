@@ -104,6 +104,9 @@ const ClinicalNutritionModule = () => {
 
     try {
       const token = localStorage.getItem('token');
+      const activityMinutesByFrequency = { 1: 60, 2: 120, 3: 180 };
+      const profileFreeMinutes = Number(profile?.free_minutes_per_week);
+      const derivedFreeMinutes = activityMinutesByFrequency[Number(profile?.activity_frequency)];
       const payload = {
         calories_need: Number(formData.calories_need || profile?.tdee || 2000),
         protein_need: Number(formData.protein_need || profile?.protein || 75),
@@ -115,8 +118,12 @@ const ClinicalNutritionModule = () => {
         height_cm: Number(profile?.height) || null,
         weight_kg: Number(profile?.weight) || null,
         age: Number(profile?.age) || null,
-        free_minutes_per_week: Number(profile?.free_minutes_per_week) || 180,
-        medical_conditions: profile?.medical_conditions || [],
+        free_minutes_per_week: Number.isFinite(profileFreeMinutes) && profileFreeMinutes >= 0
+          ? profileFreeMinutes
+          : (derivedFreeMinutes ?? null),
+        medical_conditions: Array.isArray(profile?.medical_conditions)
+          ? profile.medical_conditions
+          : (profile?.medical_conditions ? [String(profile.medical_conditions)] : []),
         user_notes: profile?.user_notes || '',
       };
 
