@@ -101,5 +101,7 @@ async def scheduleMaker(inp: dict,
 
         result = await schedule_maker(user_info)
         return result
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Không thể tạo lịch tập")

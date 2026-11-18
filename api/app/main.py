@@ -1,9 +1,12 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import JSONResponse
 from app.core.exceptions import AIModelOfflineException
 from app.core.ollama_client import chat as check_ollama
 from app.core.rate_limiter import RateLimitMiddleware
+from app.core.security import ALLOWED_HOSTS, ALLOWED_ORIGINS, IS_PRODUCTION, SecurityMiddleware
 from app.router import auth_route, exercise, profile, foodSuggest, team, raid, schedule, stats, shop, chatbot
 
 @asynccontextmanager
@@ -17,16 +20,29 @@ async def lifespan(app: FastAPI):
         print(f"[WARN] Không thể kiểm tra Ollama lúc khởi động: {e}")
     yield
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    lifespan=lifespan,
+    docs_url=None if IS_PRODUCTION else "/docs",
+    redoc_url=None if IS_PRODUCTION else "/redoc",
+    openapi_url=None if IS_PRODUCTION else "/openapi.json",
+)
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
+app.add_middleware(SecurityMiddleware)
 app.add_middleware(RateLimitMiddleware, max_requests=100, window_seconds=60)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"https?://.*",
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-CSRF-Token"],
 )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    # Do not expose stack traces, SQL errors, provider errors or versions.
+    return JSONResponse(status_code=500, content={"detail": "Hệ thống gặp lỗi nội bộ. Vui lòng thử lại sau."})
 
 app.include_router(auth_route.router, tags=["Auth Routers"])
 app.include_router(profile.router, tags=["Create Profile Routers"])

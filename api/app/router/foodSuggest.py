@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.schemas.foodSuggestResponse import FoodSuggestResponse
 from app.schemas.foodSuggestRequest import FoodSuggestRequest
 from app.core.rate_limiter import RateLimiter
+from app.core.token_authorization import token_authorization, tokenAuthorization
 from app.services.rag_service import process_rag_pipeline
 from app.services.safety_guardrail import (
     DEFAULT_DISCLAIMER,
@@ -25,7 +26,10 @@ router = APIRouter()
     dependencies=[Depends(RateLimiter(times=5, seconds=60, scope="food-suggest"))],
 )
 @router.post("/api/suggest-meal", response_model=FoodSuggestResponse)
-async def food_suggest(req: FoodSuggestRequest):
+async def food_suggest(
+    req: FoodSuggestRequest,
+    token: tokenAuthorization = Depends(token_authorization),
+):
     try:
         user_info = req.model_dump()
         required_health_fields = {
@@ -85,8 +89,10 @@ async def food_suggest(req: FoodSuggestRequest):
                 error=result.get("status", "INSUFFICIENT_DATA"),
             )
         return FoodSuggestResponse(success=True, result=result)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=400, detail="Không thể tạo thực đơn từ dữ liệu đã cung cấp")
     # except AIModelOfflineException as e:
     #     raise HTTPException(status_code=503, detail=f"Ollama offline: {e}")
     # except ModelNotFoundError as e:

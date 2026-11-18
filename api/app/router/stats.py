@@ -13,5 +13,7 @@ async def getStats(token: tokenAuthorization = Depends(token_authorization)):
             raise HTTPException(status_code=404, detail="Stats record not found")
 
         return stat
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Không thể tải thống kê")
