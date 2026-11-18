@@ -20,8 +20,10 @@ async def joinTeam(data: joinTeam,
         }).eq("user_id", token.user_id).execute()
 
         return {"message" : "Join team successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Không thể tham gia đội")
 
 @router.get("/get-team")
 async def getTeam(token: tokenAuthorization = Depends(token_authorization)):
@@ -42,5 +44,7 @@ async def getTeam(token: tokenAuthorization = Depends(token_authorization)):
 
         return profiles_response.data
 
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Không thể tải thông tin đội")

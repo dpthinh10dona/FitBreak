@@ -102,7 +102,7 @@ const SignUp = ({ onSignUpSuccess, onGoToLogIn }) => {
             </div>
 
             <div className="signup-form-group">
-              <label htmlFor="password" className="signup-form-label">Mật khẩu (Tối thiểu 6 ký tự)</label>
+              <label htmlFor="password" className="signup-form-label">Mật khẩu (ít nhất 12 ký tự, gồm hoa, thường, số và ký tự đặc biệt)</label>
               <input 
                 type="password" 
                 id="password" 
@@ -110,6 +110,9 @@ const SignUp = ({ onSignUpSuccess, onGoToLogIn }) => {
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={handleChange}
+                minLength="12"
+                maxLength="256"
+                autoComplete="new-password"
                 required
               />
             </div>

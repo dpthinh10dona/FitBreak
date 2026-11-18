@@ -1,5 +1,6 @@
 import asyncio
 import math
+import os
 import time
 from collections import defaultdict
 from typing import Dict, List, Optional
@@ -13,13 +14,14 @@ def get_client_ip(request: Request) -> str:
     Lấy IP thực tế của client, hỗ trợ trường hợp chạy qua Reverse Proxy hoặc Docker container.
     """
     # X-Forwarded-For: <client>, <proxy1>, <proxy2>
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    if os.getenv("TRUST_PROXY_HEADERS", "false").lower() == "true":
+        forwarded = request.headers.get("x-forwarded-for")
+        if forwarded:
+            return forwarded.split(",")[0].strip()
 
-    real_ip = request.headers.get("x-real-ip")
-    if real_ip:
-        return real_ip.strip()
+        real_ip = request.headers.get("x-real-ip")
+        if real_ip:
+            return real_ip.strip()
 
     if request.client and request.client.host:
         return request.client.host

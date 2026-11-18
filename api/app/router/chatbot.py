@@ -1,10 +1,12 @@
 import json
+import os
+import uuid
 from pathlib import Path
 from datetime import date
 from collections import defaultdict
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from app.core.database import supabase
-from app.core.token_authorization import token_authorization, tokenAuthorization
+from app.core.token_authorization import require_admin, token_authorization, tokenAuthorization
 from app.schemas.chatbot import ChatBotRequest, ChatBotResponse, ProfileUpdateProposal, ConfirmProposalRequest
 from app.services.chatbot_agent import analyze_and_chat
 from app.services.clinical_rag import get_medical_knowledge_stats, ingest_new_medical_document
@@ -162,7 +164,9 @@ async def confirm_profile_update(
 
 
 @router.get("/knowledge-stats")
-async def get_knowledge_statistics():
+async def get_knowledge_statistics(
+    auth_data: tokenAuthorization = Depends(require_admin),
+):
     """Lấy thống kê kho tài liệu và các chunk RAG hiện có của Bác sĩ FitBreak."""
     return get_medical_knowledge_stats()
 
@@ -170,25 +174,43 @@ async def get_knowledge_statistics():
 @router.post("/ingest-document")
 async def ingest_medical_document(
     file: UploadFile = File(...),
-    auth_data: tokenAuthorization = Depends(token_authorization)
+    auth_data: tokenAuthorization = Depends(require_admin)
 ):
     """
     Nạp tài liệu y khoa mới (.docx, .pdf, .md, .txt) vào kho tri thức RAG.
     Hệ thống sẽ tự động Document Parsing -> Chunking -> Cập nhật chỉ mục tìm kiếm.
     """
-    if not auth_data.user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User unauthorized")
-
-    filename = file.filename
+    filename = Path(file.filename or "upload").name
     ext = Path(filename).suffix.lower()
-    if ext not in [".docx", ".pdf", ".md", ".txt"]:
+    allowed_types = {
+        ".pdf": {"application/pdf"},
+        ".docx": {"application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/zip"},
+        ".md": {"text/markdown", "text/plain", "application/octet-stream"},
+        ".txt": {"text/plain", "application/octet-stream"},
+    }
+    if ext not in allowed_types or file.content_type not in allowed_types[ext]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Định dạng '{ext}' không được hỗ trợ. Chỉ hỗ trợ .docx, .pdf, .md, .txt"
+            detail="Định dạng hoặc MIME type của tài liệu không được hỗ trợ."
         )
 
-    save_path = DEFAULT_KNOWLEDGE_DIR / filename
-    content = await file.read()
+    max_upload_bytes = int(os.getenv("MAX_UPLOAD_BYTES", str(8 * 1024 * 1024)))
+    content = await file.read(max_upload_bytes + 1)
+    if len(content) > max_upload_bytes:
+        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Tài liệu vượt quá dung lượng cho phép.")
+
+    if ext == ".pdf" and not content.startswith(b"%PDF-"):
+        raise HTTPException(status_code=400, detail="Nội dung file không phải PDF hợp lệ.")
+    if ext == ".docx" and not content.startswith(b"PK\x03\x04"):
+        raise HTTPException(status_code=400, detail="Nội dung file không phải DOCX hợp lệ.")
+    if ext in {".md", ".txt"}:
+        try:
+            content.decode("utf-8")
+        except UnicodeDecodeError:
+            raise HTTPException(status_code=400, detail="Tài liệu văn bản phải sử dụng UTF-8.")
+
+    DEFAULT_KNOWLEDGE_DIR.mkdir(parents=True, exist_ok=True)
+    save_path = DEFAULT_KNOWLEDGE_DIR / f"{uuid.uuid4().hex}{ext}"
     with open(save_path, "wb") as f:
         f.write(content)
 
@@ -196,11 +218,12 @@ async def ingest_medical_document(
         res = ingest_new_medical_document(save_path)
         return {
             "success": True,
-            "message": f"Đã nạp và phân mảnh thành công tài liệu: {filename}",
+            "message": "Đã nạp và phân mảnh thành công tài liệu y khoa.",
             "details": res
         }
-    except Exception as exc:
+    except Exception:
+        save_path.unlink(missing_ok=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Lỗi khi xử lý nạp tài liệu: {str(exc)}"
+            detail="Không thể xử lý tài liệu được tải lên."
         )

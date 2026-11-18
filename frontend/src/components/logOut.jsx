@@ -9,8 +9,8 @@ const LogOut = ({ onLogoutSuccess }) => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/logout`, { 
-        method: 'GET',
+      const response = await fetch(`${API_BASE_URL}/logout`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -34,9 +34,9 @@ const LogOut = ({ onLogoutSuccess }) => {
 
   return (
     <button
-      type="button" 
-      className="log-out-btn" 
-      onClick={handleLogout} 
+      type="button"
+      className="log-out-btn"
+      onClick={handleLogout}
       disabled={loading}
       title="Log out of your session"
     >

@@ -102,7 +102,7 @@ async def createProfile(request: Request, data: createProfile,
         team_response = token.client.table("stats").select("team").order("team", desc=True).limit(1).execute()
         if team_response.data is None:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Khong tim thay data")
-        
+
         max_current_team = team_response.data[0]['team'] if team_response.data else 0
         max_new_team = max_current_team + 1
 
@@ -138,8 +138,10 @@ async def createProfile(request: Request, data: createProfile,
         }).execute()
 
         return {"message": "Tạo profile thành công"}
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Không thể tạo hồ sơ")
 
 @router.post("/profiles/update-profile")
 async def updateProfile(request: Request, data: updateProfile,
@@ -184,17 +186,23 @@ async def updateProfile(request: Request, data: updateProfile,
             "message": "Cập nhật profile thành công",
             "profile": saved_profile,
         }
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Không thể cập nhật hồ sơ")
 
 @router.get("/profiles/get-profile-by-email/{email}")
 async def getProfileByEmail(email: str, token: tokenAuthorization = Depends(token_authorization)):
     try:
-        response = token.client.table("profiles").select("*").eq("email", email).execute()
+        if email.strip().lower() != token.user_email.strip().lower():
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Không có quyền truy cập hồ sơ này")
+        response = token.client.table("profiles").select("*").eq("id", token.user_id).execute()
         if response.data and len(response.data) > 0:
             return response.data[0]
         return None
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception:
         return None
 
 @router.post("/profiles/medical-checkup")
@@ -246,5 +254,7 @@ async def analyze_medical_checkup(data: MedicalCheckupRequest, token: tokenAutho
             print(f"[WARN] Không thể cập nhật thông tin y tế vào profiles: {save_err}")
 
         return {"success": True, "result": result}
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Không thể xử lý dữ liệu khám sức khỏe")

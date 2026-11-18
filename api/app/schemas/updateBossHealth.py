@@ -1,5 +1,5 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class updateBossHealth(BaseModel):
-    team : int
-    damage : int
+    team: int = Field(..., ge=1)
+    damage: int = Field(..., ge=0, le=1000)

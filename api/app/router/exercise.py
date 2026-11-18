@@ -33,10 +33,30 @@ async def exercisesLog(request: Request, data: exerciseLog,
         # Chỉ cộng coins và trừ máu Boss nếu bài tập này có thưởng (> 0 coins)
         # Giúp ngăn chặn việc lạm dụng reset / tạo lại lịch để farm vô hạn coins và boss damage
         if data.reward_coins > 0:
-            final_coins = current_coins + data.reward_coins
+            day_start = data.completed_at.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+            existing = (
+                token.client.table("exercise_logs")
+                .select("exercise_id")
+                .eq("user_id", token.user_id)
+                .eq("exercise_id", data.exercise_id)
+                .gte("completed_at", day_start)
+                .limit(1)
+                .execute()
+            )
+            if existing.data:
+                raise HTTPException(status_code=409, detail="Bài tập này đã được ghi nhận thưởng trong ngày.")
+
+            server_reward = min(data.reward_coins, 10)
+            final_coins = current_coins + server_reward
             token.client.table("stats").update({
                 "coins": final_coins
             }).eq("user_id", token.user_id).execute()
+            token.client.table("exercise_logs").insert({
+                "user_id": token.user_id,
+                "exercise_id": data.exercise_id,
+                "completed_at": data.completed_at.isoformat(),
+                "coins": server_reward,
+            }).execute()
 
             # ---- Trừ máu boss dựa trên team + damage của user ----
             team = stat.get("team")
@@ -52,5 +72,5 @@ async def exercisesLog(request: Request, data: exerciseLog,
         }
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Không thể ghi nhận bài tập.")

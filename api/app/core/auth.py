@@ -55,7 +55,10 @@ def get_current_user(request: Request, credentials: HTTPAuthorizationCredentials
     #     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
     # except jwt.InvalidSignatureError:
     #     raise HTTPException(status_code=401, detail="Invalid token signature. Clear local storage and re-login.")
-    except Exception as e:
-        # Printing the exact exception to server logs
-        # print("Auth Exception:", str(e))
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Could not validate user: {str(e)}")
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token không hợp lệ hoặc đã hết hạn",
+        )

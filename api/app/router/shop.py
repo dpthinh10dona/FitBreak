@@ -109,6 +109,8 @@ async def get_all_items(
         owned_names = set()
 
         if user_id:
+            if user_id != token.user_id:
+                raise HTTPException(status_code=403, detail="Không có quyền truy cập tài nguyên này")
             user_res = token.client.table("user").select("background, skin, shirt, hair, weapon, inventory").eq("user_id", user_id).execute()
             if user_res.data:
                 u_data = user_res.data[0]
@@ -127,13 +129,17 @@ async def get_all_items(
             item["is_owned"] = (item_name in owned_names) or item["is_equipped"] or (item_price == 0)
 
         return items
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Không thể tải danh sách vật phẩm")
 
 
 @router.get("/user/equipped-avatar/{user_id}")
 async def get_user_equipped_avatar(user_id: str, token: tokenAuthorization = Depends(token_authorization)):
     try:
+        if user_id != token.user_id:
+            raise HTTPException(status_code=403, detail="Không có quyền truy cập tài nguyên này")
         user_res = token.client.table("user").select("*").eq("user_id", user_id).execute()
         user_data = user_res.data[0] if user_res.data else {}
 
@@ -151,7 +157,9 @@ async def get_user_equipped_avatar(user_id: str, token: tokenAuthorization = Dep
             "hair": get_supabase_image_url(token.client, AVATAR_EQUIP_MAP.get(hair_name, hair_name)),
             "weapon": get_supabase_image_url(token.client, AVATAR_EQUIP_MAP.get(weapon_name, weapon_name)),
         }
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception:
         return {
             "head": None,
             "background": None,
@@ -165,6 +173,8 @@ async def get_user_equipped_avatar(user_id: str, token: tokenAuthorization = Dep
 @router.post("/purchase")
 async def purchase(request: PurchaseRequest, token: tokenAuthorization = Depends(token_authorization)):
     try:
+        if request.user_id != token.user_id:
+            raise HTTPException(status_code=403, detail="Không có quyền mua vật phẩm cho tài khoản khác")
         res = await purchase_item(request.user_id, request.item_id, token)
 
         if isinstance(res, dict) and res.get("success"):
@@ -196,14 +206,17 @@ async def purchase(request: PurchaseRequest, token: tokenAuthorization = Depends
                 print(f"Lỗi cập nhật kho đồ/trang bị: {e}")
 
         return res
-    except Exception as e:
-        print(f"Lỗi mua hàng Backend: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Không thể xử lý giao dịch mua hàng")
 
 
 @router.post("/equip")
 async def equip_item(request: EquipRequest, token: tokenAuthorization = Depends(token_authorization)):
     try:
+        if request.user_id != token.user_id:
+            raise HTTPException(status_code=403, detail="Không có quyền thay đổi trang bị của tài khoản khác")
         item_res = token.client.table("item").select("*").eq("item_id", request.item_id).execute()
         if not item_res.data:
             raise HTTPException(status_code=404, detail="Không tìm thấy vật phẩm")
@@ -228,5 +241,7 @@ async def equip_item(request: EquipRequest, token: tokenAuthorization = Depends(
             "message": f"Đã trang bị {item_name}",
             "damage": new_damage,
         }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Không thể thay đổi trang bị")
