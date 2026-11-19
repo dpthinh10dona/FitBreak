@@ -23,6 +23,20 @@ ALLOWED_ORIGINS = csv_env(
     "http://localhost:5173,http://127.0.0.1:5173",
 )
 ALLOWED_HOSTS = csv_env("ALLOWED_HOSTS", "localhost,127.0.0.1,testserver")
+
+# Render cung cấp hostname public qua biến này. Tự thêm hostname giúp service
+# không tự chặn chính domain của nó bằng TrustedHostMiddleware khi biến
+# ALLOWED_HOSTS chưa được cấu hình trên dashboard.
+render_hostname = os.getenv("RENDER_EXTERNAL_HOSTNAME", "").strip().lower()
+if render_hostname and render_hostname not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(render_hostname)
+
+# Cho phép khai báo URL frontend production bằng một biến riêng, dễ cấu hình
+# trên Render và tránh phải dùng wildcard CORS khi gửi cookie xác thực.
+frontend_url = os.getenv("FRONTEND_URL", "").strip().rstrip("/")
+if frontend_url and frontend_url not in ALLOWED_ORIGINS:
+    ALLOWED_ORIGINS.append(frontend_url)
+
 MAX_REQUEST_BYTES = int(os.getenv("MAX_REQUEST_BYTES", str(10 * 1024 * 1024)))
 
 
