@@ -1,49 +1,88 @@
-# FITBREAK FRONTEND REDESIGN & REFACTORING LOG (ANTI-AI SLOP AUDIT)
-Date: 2026-11-15
-Status: COMPLETED & VERIFIED (Production Build Passes)
-Auditor & Architect: Principal Product Designer & Frontend Architect
-
-## 1. MỤC TIÊU & TIÊU CHUẨN ĐÃ ÁP DỤNG (DESIGN PRINCIPLES)
-- **Loại bỏ hoàn toàn cảm giác "AI Slop" / "Vibe code công nghiệp"**:
-  1. **Hệ màu 60 - 30 - 10 tự nhiên (Clinical Blue Atmosphere)**:
-     - 60% Nền trung tính y tế: Xanh dương nhạt êm dịu (`#F0F7FC` Medical Slate Blue) kết hợp ánh sáng lan tỏa nhẹ, giúp dịu mắt và đậm chất phòng khám / y học thể thao kỹ thuật số.
-     - 30% Bề mặt phụ (`#FFFFFF`) kết hợp **Hairline borders** (`1px #E2E8F0` / Slate 200).
-     - 10% Màu nhấn sắc nét: **Clinical Medical Sky Blue (`#0284C7`)** và **Ocean Slate (`#0369A1`)**.
-  2. **Hairline Precision vs. Box-shadow nặng nề**:
-     - Triệt tiêu các hiệu ứng phát sáng mờ ảo (glowing neon blobs / colored glow shadows). Thay thế bằng đổ bóng vật lý tinh tế (`--shadow-xs`, `--shadow-sm`) và đường viền phân tách mảnh dứt khoát.
-  3. **Editorial Typography & Visual Hierarchy**:
-     - Tiêu đề H1, H2, H3 với `letter-spacing` âm nhẹ (`-0.03em` đến `-0.04em`), phân cấp rõ ràng theo trọng số font-weight và zinc scale (`#18181B` / `#52525B` / `#71717A`).
-     - Đoạn văn tuân thủ nghiêm ngặt chuẩn `max-width: 65ch` để tối ưu hóa trải nghiệm đọc.
-  4. **Loại bỏ Emoji nhồi nhét & Từ ngữ quảng cáo sáo rỗng (Buzzword Clichés)**:
-     - Gỡ bỏ emoji nhồi nhét vô hồn ở tất cả thanh menu điều hướng, tiêu đề form dinh dưỡng, mục tiêu thể chất, Pomodoro timer và widget bác sĩ.
-     - Viết lại toàn bộ micro-copy điềm tĩnh, chuẩn mực y học vận động và thực tế đời sống.
-  5. **Micro-interactions & Chuyển động vật lý**:
-     - Sử dụng đường cong gia tốc tự nhiên (`cubic-bezier(0.16, 1, 0.3, 1)`), phản hồi tương tác mượt mà trong `180ms - 260ms`.
+# FITBREAK FRONTEND REDESIGN & INTERACTIVE ONBOARDING TOUR LOG
+Date: 2026-11-19
+Status: COMPLETED (First Draft Released & Verified)
+Author: Senior Frontend Developer
 
 ---
 
-## 2. CHI TIẾT CÁC FILE ĐÃ ĐƯỢC ĐIỀU CHỈNH
-
-| STT | File | Nội dung thay đổi | Trạng thái |
-|---|---|---|---|
-| 1 | `frontend/src/index.css` | Tái cấu trúc Design Tokens: 60-30-10, Off-white canvas `#F9F8F6`, Hairline borders, Editorial Typography, xóa sạch radial-gradient neon và shadow-glow blobs. | Đã hoàn thành |
-| 2 | `frontend/src/style/medtech-theme.css` | Chuyển toàn bộ palette y tế sang Teal & Steel, phân tầng WCAG AAA, triệt tiêu box-shadow ảo. | Đã hoàn thành |
-| 3 | `frontend/src/App.css` | Header điều hướng thanh lịch, phân bổ khoảng thở (negative space), bỏ hiệu ứng nút bóng tròn kiểu SaaS. | Đã hoàn thành |
-| 4 | `frontend/src/components/patientHeader.jsx` & `patientHeader.css` | Gỡ bỏ toàn bộ emoji nhồi nhét ở Navigation menu (`📋`, `🩺`, `🥗`, `🗓️`, `👥`, `🛡️`), chuẩn hóa Brand logo `FB`, thẻ chỉ số BMI, TDEE, hình thể theo phong cách Editorial. | Đã hoàn thành |
-| 5 | `frontend/src/style/profileBanner.css` | Thiết kế lại avatar box, rank badge, stat pills tinh gọn, xóa bỏ viền dày và gradient lòe loẹt. | Đã hoàn thành |
-| 6 | `frontend/src/components/taskBoard.jsx` & `taskBoard.css` | Viết lại Pomodoro thể chất, loại bỏ emoji (`🔥`, `⏰`, `⚔️`), căn chỉnh nhịp điệu typography, bố cục task list tối giản với hairline cards. | Đã hoàn thành |
-| 7 | `frontend/src/components/clinicalNutritionModule.jsx` & `clinicalDiet.css` | Gỡ bỏ icon emoji ở các ô ngân sách, mục tiêu, chế độ ăn và dị ứng; phân chia tỷ lệ vi chất Macro rõ ràng, trung thực. | Đã hoàn thành |
-| 8 | `frontend/src/components/telehealthDoctorChatbot.jsx` & `telehealthChatbot.css` | Widget tư vấn bác sĩ tối giản, chuyên nghiệp, không hiệu ứng nảy rẻ tiền, bong bóng chat trung tính, tinh tế. | Đã hoàn thành |
-| 9 | `frontend/src/style/clinicalSchedule.css` | Điều chỉnh header card, ghi chú chỉ định y tế với hairline border và nhịp điệu thị giác thanh thoát; bổ sung khu vực hiển thị limitation_type cho bài tập. | Đã hoàn thành |
-| 10 | `frontend/src/style/logIn.css` | Tinh chỉnh giao diện xác thực editorial, kiểu chữ chắc chắn, micro-copy điềm tĩnh. | Đã hoàn thành |
-| 11 | `api/app/services/prompt_builder.py` & `rag_service.py` | Cập nhật cơ chế prompt cho phép scale portion_multiplier 0.x - 1.x, tự động scale khối lượng thành phần nguyên liệu và trả về limitation_type từ thực phẩm. | Đã hoàn thành |
-| 12 | `frontend/src/components/clinicalNutritionModule.jsx` & `clinicalDiet.css` | Tận dụng khoảng trống bên phải của ô Phân tích Y khoa để hiển thị Chú ý Y tế & Hạn chế dinh dưỡng (limitation_type). | Đã hoàn thành |
+## 1. MỤC TIÊU & THAY ĐỔI TRỌNG TÂM (CORE REQUIREMENTS)
+- **Loại bỏ form popup gò bó khi vừa đăng nhập/đăng ký**: Thay vì ép người dùng điền thông tin ngay từ đầu một cách đột ngột, hệ thống chuyển sang quy trình **Interactive Onboarding Tour (Website Guided Tour)** dẫn dắt người dùng qua từng trang một cách trực quan, rõ ràng và mượt mà.
+- **Tự động kích hoạt khi mới vào**: Nếu người dùng lần đầu vào app (hoặc vừa đăng ký), hệ thống sẽ bật modal Tour dẫn dắt từ trang này sang trang khác.
+- **Có nút mở lại bất cứ lúc nào**: Bổ sung nút **"Hướng dẫn"** (`.patient-tour-pill-btn`) ngay cạnh avatar trên Header để người dùng có thể xem lại lộ trình bất cứ khi nào cần.
+- **Thay đổi Tab theo từng bước (Interactive Tour Navigation)**: Khi người dùng bấm "Tiếp tục" qua từng bước, ứng dụng tự động switch tab tương ứng dưới nền để người dùng nhìn thấy trực tiếp giao diện thực tế.
 
 ---
 
-## 3. KIỂM THỬ XUẤT CODE (BUILD VERIFICATION)
-- Đã chạy lệnh build môi trường production:
+## 2. CHI TIẾT CÁC BƯỚC HƯỚNG DẪN (5-STEP TOUR WORKFLOW)
+
+### Tổng quan trang bìa (Bước 0 - Overview)
+- **Mục tiêu**: Giới thiệu giao diện FitBreak kết hợp giữa **phục hồi thể chất y khoa** và **gamification chiến đấu Raid Boss**.
+- **Cách xem**:
+  1. **Thanh Header & Vitals**: Hiển thị chỉ số thể trạng BMI, cấp độ hoạt động và số dư Coins tích lũy.
+  2. **Banner Nhân vật & Boss Raid**: Trực quan hóa thanh máu Boss (Raid Boss Hắc Long), cấp độ và sát thương chiến đấu của nhân vật.
+  3. **Bảng Vận Động & Pomodoro**: Đồng hồ đếm giờ làm việc - nghỉ giải lao cùng danh sách bài tập giãn cơ hôm nay.
+
+### Bước 1: Thiết lập Hồ sơ Sức khỏe (`tab: profile`)
+- **Tự động chuyển tab**: Hệ thống chuyển người dùng sang tab **"Hồ Sơ Y Tế"** (`activeTab: profile`).
+- **Nội dung hướng dẫn**:
+  - Hướng dẫn nhập chiều cao, cân nặng để tính BMI chuẩn WHO.
+  - Chọn mục tiêu: Giảm cân, Tăng cơ hoặc Duy trì sức khỏe.
+  - Tick chọn tình trạng sức khỏe / bệnh lý nền để AI tự động lọc thực đơn và bài tập an toàn.
+
+### Bước 2: Lập Lịch Trình Vận Động (`tab: schedule`)
+- **Tự động chuyển tab**: Hệ thống chuyển người dùng sang tab **"Lịch Trình Vận Động"** (`activeTab: schedule`).
+- **Nội dung hướng dẫn**:
+  - Hướng dẫn chọn các khung giờ rảnh 30 phút trong tuần.
+  - Bấm sinh lịch tập AI để sắp xếp các bài tập phục hồi chức năng và cardio.
+  - Quan sát cột **Chú ý Y tế & Hạn chế vận động (Limitation Type)** ở ô bên phải để nắm rõ chống chỉ định.
+
+### Bước 3: Gợi Ý Thực Đơn Dinh Dưỡng (`tab: food`)
+- **Tự động chuyển tab**: Chuyển sang tab **"Dinh Dưỡng Lâm Sàng"** (`activeTab: food`).
+- **Nội dung hướng dẫn**:
+  - Nhập ngân sách ăn uống trong ngày và chọn dị ứng thực phẩm.
+  - Nhận thực đơn 3 bữa sáng - trưa - tối tính toán calo và protein chi tiết.
+  - Đọc phần Phân tích Y khoa và nguồn trích dẫn dữ liệu ở dưới mỗi món.
+
+### Bước 4: Tham Gia Nhóm Rèn Luyện (`tab: team`)
+- **Tự động chuyển tab**: Chuyển sang tab **"Nhóm Rèn Luyện"** (`activeTab: team`).
+- **Nội dung hướng dẫn**:
+  - Hướng dẫn tạo hoặc nhập mã tham gia nhóm cùng bạn bè.
+  - Đánh Boss tập thể: Mỗi lần tập xong trừ máu trực tiếp cho Boss của cả đội.
+  - Theo dõi bảng xếp hạng cống hiến.
+
+### Bước 5: Cửa Hàng Vật Phẩm & Phần Thưởng (`tab: shop`)
+- **Tự động chuyển tab**: Chuyển sang tab **"Vật Phẩm Hỗ Trợ"** (`activeTab: shop`).
+- **Nội dung hướng dẫn**:
+  - Dùng Coins nhận được từ việc tập luyện và đánh Boss để mua trang phục, vũ khí.
+  - Tăng chỉ số sức mạnh nhân vật (Damage/STR) và thay đổi ngoại hình Avatar.
+
+---
+
+## 3. CÁC FILE ĐƯỢC TẠO VÀ CẬP NHẬT
+
+1. **`frontend/src/components/onboardingTour.jsx` (MỚI)**:
+   - Quản lý state 6 bước (0 -> 5).
+   - Sync realtime với `activeTab` thông qua prop `onNavigateTab(tabId)`.
+   - Có thanh tiến trình (progress bar + step dots) cho phép click nhảy trực tiếp tới bước bất kỳ.
+   - Lưu trạng thái hoàn tất vào `localStorage.setItem('fitbreak_tour_completed', 'true')`.
+
+2. **`frontend/src/style/onboardingTour.css` (MỚI)**:
+   - Thiết kế theo chuẩn **MedTech Clinical Theme (Anti-AI Slop)**.
+   - Nền backdrop blur mờ ảo nhẹ (`rgba(15, 23, 42, 0.65)`), hairline borders `1px solid #e2e8f0`, màu nhấn `Clinical Blue #0284c7`.
+   - Nút điều hướng rõ ràng: Quay lại, Tiếp theo, Bỏ qua, Hoàn tất & Bắt đầu.
+
+3. **`frontend/src/components/patientHeader.jsx` & `frontend/src/style/patientHeader.css`**:
+   - Thêm nút **"Hướng dẫn"** (`.patient-tour-pill-btn`) kèm icon `HelpCircle` để người dùng có thể mở lại tour bất cứ khi nào muốn.
+
+4. **`frontend/src/App.jsx`**:
+   - Thay thế việc ép bật popup tạo profile ngay khi vào bằng việc kích hoạt `OnboardingTour` nếu người dùng chưa hoàn thành tour.
+   - Tích hợp state `showOnboardingTour` và hàm điều hướng tab.
+
+---
+
+## 4. KIỂM THỬ XUẤT CODE (BUILD VERIFICATION)
+- Đã chạy lệnh build:
   ```bash
-  cd frontend && npm run build
+  cd frontend && npx vite build --emptyOutDir=false
   ```
-- Kết quả: **Thành công 100% (0 errors, 0 warnings)**, Vite đóng gói sạch sẽ toàn bộ modules và assets (`dist/assets/index-CdGVdCSP.css` và `dist/assets/index-DpfvfBc3.js`).
+- Kết quả: **Thành công 100% (0 errors, 0 warnings)**, Vite đóng gói sạch sẽ toàn bộ modules và assets (`dist/assets/index-DuNIYiXQ.css` và `dist/assets/index-D4BRes6h.js`).
