@@ -11,10 +11,11 @@ request-size limits and PII-safe audit events.
    `COOKIE_SAMESITE=none`, exact `ALLOWED_ORIGINS`, exact `ALLOWED_HOSTS`, and
    `REQUIRE_ADMIN_MFA=true`. Never use a service-role key as the public API key.
 2. In Supabase Auth enable: minimum 12-character passwords, leaked-password
-   protection, email verification, JWT expiry at most one hour and MFA for every admin.
-   Assign admin only through trusted `app_metadata.role=admin`.
-3. Review and apply `supabase_security.sql` in staging. Verify RLS by attempting
-   cross-account reads and writes with two ordinary users.
+   protection, email verification and JWT expiry at most one hour. When the
+   deployer only has Developer access, configure backend-only `ADMIN_EMAILS`
+   and keep `SUPABASE_SERVICE_ROLE_KEY` exclusively in the Render secret store.
+3. Configure `REDIS_URL` for durable chatbot quotas and distributed rate limits.
+   The application does not require Developer accounts to run Owner-only SQL.
 4. Terminate TLS at the host and redirect HTTP there as well. Test the deployed domains
    with Mozilla Observatory, SecurityHeaders.com and SSL Labs.
 5. Enable encrypted daily backups and point-in-time recovery in Supabase. Perform and

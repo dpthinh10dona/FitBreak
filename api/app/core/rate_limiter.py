@@ -2,11 +2,19 @@ import asyncio
 import math
 import os
 import time
+import logging
 from collections import defaultdict
 from typing import Dict, List, Optional
 from fastapi import HTTPException, Request, status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
+
+try:
+    from redis.asyncio import Redis
+except ImportError:  # pragma: no cover - dependency is required in production
+    Redis = None
+
+logger = logging.getLogger(__name__)
 
 
 def get_client_ip(request: Request) -> str:
@@ -38,6 +46,26 @@ class SlidingWindowLimiter:
         self._records: Dict[str, List[float]] = defaultdict(list)
         self._lock = asyncio.Lock()
         self._last_cleanup = time.time()
+        redis_url = os.getenv("REDIS_URL", "").strip()
+        self._redis = Redis.from_url(redis_url, decode_responses=True) if redis_url and Redis else None
+
+    _REDIS_SCRIPT = """
+local key = KEYS[1]
+local now = tonumber(ARGV[1])
+local window_start = tonumber(ARGV[2])
+local limit = tonumber(ARGV[3])
+local ttl = tonumber(ARGV[4])
+local member = ARGV[5]
+redis.call('ZREMRANGEBYSCORE', key, '-inf', window_start)
+local count = redis.call('ZCARD', key)
+if count >= limit then
+  local oldest = redis.call('ZRANGE', key, 0, 0, 'WITHSCORES')
+  return {0, oldest[2] or now}
+end
+redis.call('ZADD', key, now, member)
+redis.call('EXPIRE', key, ttl)
+return {1, now}
+"""
 
     async def is_allowed(self, key: str, max_requests: int, window_seconds: int) -> tuple[bool, int]:
         """
@@ -46,6 +74,26 @@ class SlidingWindowLimiter:
         """
         now = time.time()
         window_start = now - window_seconds
+
+        if self._redis is not None:
+            try:
+                member = f"{now:.6f}:{id(asyncio.current_task())}"
+                allowed, oldest = await self._redis.eval(
+                    self._REDIS_SCRIPT,
+                    1,
+                    f"fitbreak:rate-limit:{key}",
+                    now,
+                    window_start,
+                    max_requests,
+                    window_seconds + 1,
+                    member,
+                )
+                if int(allowed) == 1:
+                    return True, 0
+                retry_after = max(1, math.ceil(window_seconds - (now - float(oldest))))
+                return False, retry_after
+            except Exception as exc:
+                logger.warning("Redis rate limiter unavailable; using process-local fallback: %s", exc)
 
         async with self._lock:
             # Dọn dẹp định kỳ mỗi 5 phút để tránh rò rỉ bộ nhớ

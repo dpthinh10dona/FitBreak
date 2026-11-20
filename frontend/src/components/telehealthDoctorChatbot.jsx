@@ -80,6 +80,9 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
     };
 
     fetchQuota();
+  // The token/key helpers intentionally read the latest localStorage snapshot;
+  // quota synchronization should rerun only when the authenticated user changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const formatClinicalMessage = (content) => {

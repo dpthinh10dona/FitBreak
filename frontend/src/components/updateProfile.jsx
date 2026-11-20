@@ -17,7 +17,6 @@ const UpdateProfile = ({ user, onUpdateProfileSuccess }) => {
   useEffect(() => {
     if (user) {
       // Đồng bộ form khi parent nhận snapshot profile mới từ Supabase.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         name: user.name || '',
         age: user.age ? String(user.age) : '',

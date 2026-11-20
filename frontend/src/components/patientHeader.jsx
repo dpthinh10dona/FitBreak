@@ -1,6 +1,7 @@
 import React from 'react';
 import LogOut from './logOut';
 import CoinIcon from './CoinIcon';
+import { HelpCircle } from 'lucide-react';
 import '../style/patientHeader.css';
 
 /**
@@ -12,7 +13,8 @@ const PatientHeader = ({
   user,
   activeTab,
   onSelectTab,
-  onLogout
+  onLogout,
+  onOpenTour
 }) => {
   const name = user?.name || "Bệnh nhân / Người dùng";
   const email = user?.email || "Chưa cập nhật email";
@@ -98,6 +100,18 @@ const PatientHeader = ({
 
         {/* User Status & Log Out */}
         <div className="patient-actions">
+          {onOpenTour && (
+            <button
+              type="button"
+              className="patient-tour-pill-btn"
+              onClick={onOpenTour}
+              title="Xem lại hướng dẫn lộ trình 5 bước"
+            >
+              <HelpCircle size={15} />
+              <span>Hướng dẫn</span>
+            </button>
+          )}
+
           <div className="patient-profile-pill" title={`Điểm thưởng sức khỏe: ${coins}`}>
             <CoinIcon size={16} />
             <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#b45309' }}>

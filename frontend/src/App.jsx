@@ -12,6 +12,7 @@ import JoinTeam from "./components/joinTeam";
 import TaskBoard from "./components/taskBoard";
 import Shop from './components/shop';
 import TelehealthDoctorChatbot from './components/telehealthDoctorChatbot';
+import OnboardingTour from './components/onboardingTour';
 import './App.css';
 
 const getScheduleKey = (u) => (u?.email ? `workoutSchedule_${u.email}` : null);
@@ -33,6 +34,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('tasks');
   const [user, setUser] = useState(null);
   const [showCreateProfileModal, setShowCreateProfileModal] = useState(false);
+  const [showOnboardingTour, setShowOnboardingTour] = useState(false);
   const [workoutSchedule, setWorkoutSchedule] = useState(null);
   const [avatarVersion, setAvatarVersion] = useState(0);
 
@@ -145,7 +147,10 @@ function App() {
           localStorage.setItem('user', JSON.stringify(fullUserData));
           setCurrentScreen('main');
 
-          if (!profile) setShowCreateProfileModal(true);
+          const hasCompletedTour = localStorage.getItem('fitbreak_tour_completed');
+          if (!hasCompletedTour) {
+            setShowOnboardingTour(true);
+          }
         }
       }
     };
@@ -168,7 +173,7 @@ function App() {
 
     if (isSignUp) {
       if (userObj) setUser(userObj);
-      setShowCreateProfileModal(true);
+      setShowOnboardingTour(true);
       return;
     }
 
@@ -189,10 +194,9 @@ function App() {
     setUser(fullUserData);
     localStorage.setItem('user', JSON.stringify(fullUserData));
 
-    if (!profile) {
-      setShowCreateProfileModal(true);
-    } else {
-      setShowCreateProfileModal(false);
+    const hasCompletedTour = localStorage.getItem('fitbreak_tour_completed');
+    if (!hasCompletedTour) {
+      setShowOnboardingTour(true);
     }
   };
 
@@ -266,6 +270,7 @@ function App() {
           onLogout={handleLogout} 
           activeTab={activeTab} 
           onSelectTab={setActiveTab} 
+          onOpenTour={() => setShowOnboardingTour(true)}
         />
         
         <ProfileBanner 
@@ -311,6 +316,13 @@ function App() {
             onCreateProfileSuccess={handleCreateProfileSuccess}
           />
         )}
+
+        <OnboardingTour
+          isOpen={showOnboardingTour}
+          onClose={() => setShowOnboardingTour(false)}
+          onNavigateTab={(tabId) => setActiveTab(tabId)}
+          activeTab={activeTab}
+        />
 
         <TelehealthDoctorChatbot 
           user={user} 

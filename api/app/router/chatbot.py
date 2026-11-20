@@ -1,15 +1,16 @@
-import json
 import os
 import uuid
+import tempfile
 from pathlib import Path
 from datetime import date
-from collections import defaultdict
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from app.core.database import supabase
 from app.core.token_authorization import require_admin, token_authorization, tokenAuthorization
 from app.schemas.chatbot import ChatBotRequest, ChatBotResponse, ProfileUpdateProposal, ConfirmProposalRequest
 from app.services.chatbot_agent import analyze_and_chat
 from app.services.clinical_rag import get_medical_knowledge_stats, ingest_new_medical_document
+from app.services.medical_storage import persist_medical_document
+from app.services.runtime_store import daily_chatbot_quota
 try:
     from app.services.knowledge_ingestor import DEFAULT_KNOWLEDGE_DIR
 except Exception:
@@ -17,42 +18,7 @@ except Exception:
 
 router = APIRouter(prefix="/chatbot", tags=["AI Health ChatBot"])
 
-# Bộ đếm số câu hỏi trong ngày theo user_id: {date_str: {user_id: count}}
-# Tối đa 3 câu hỏi / ngày, lưu trữ file JSON bền vững để không bị mất khi restart server / re-login
 DAILY_LIMIT = 3
-USAGE_FILE = Path(__file__).resolve().parents[1] / "core" / "dataset" / "chatbot_daily_usage.json"
-user_daily_questions = defaultdict(lambda: defaultdict(int))
-
-def _load_persisted_usage():
-    if USAGE_FILE.exists():
-        try:
-            with open(USAGE_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                for d_str, u_map in data.items():
-                    for u_id, cnt in u_map.items():
-                        user_daily_questions[d_str][u_id] = cnt
-        except Exception:
-            pass
-
-def _save_persisted_usage():
-    try:
-        data = {d_str: dict(u_map) for d_str, u_map in user_daily_questions.items()}
-        with open(USAGE_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-    except Exception:
-        pass
-
-# Khởi tạo dữ liệu đã lưu
-_load_persisted_usage()
-
-def _get_daily_count(user_id: str) -> int:
-    today_str = date.today().isoformat()
-    return user_daily_questions[today_str][user_id]
-
-def _increment_daily_count(user_id: str):
-    today_str = date.today().isoformat()
-    user_daily_questions[today_str][user_id] += 1
-    _save_persisted_usage()
 
 @router.get("/quota")
 async def get_chatbot_quota(
@@ -63,7 +29,7 @@ async def get_chatbot_quota(
     if not user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User unauthorized")
 
-    count = _get_daily_count(user_id)
+    count = await daily_chatbot_quota.get(user_id)
     remaining = max(0, DAILY_LIMIT - count)
     return {
         "daily_limit": DAILY_LIMIT,
@@ -90,7 +56,7 @@ async def ask_health_chatbot(
         )
 
     # 2. Ràng buộc số lượng câu hỏi trong ngày: Tối đa 3 câu/ngày
-    current_count = _get_daily_count(user_id)
+    current_count = await daily_chatbot_quota.get(user_id)
     if current_count >= DAILY_LIMIT:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -109,8 +75,8 @@ async def ask_health_chatbot(
     )
 
     # Tăng lượt đếm câu hỏi hôm nay
-    _increment_daily_count(user_id)
-    remaining = DAILY_LIMIT - _get_daily_count(user_id)
+    current_count = await daily_chatbot_quota.increment(user_id)
+    remaining = max(0, DAILY_LIMIT - current_count)
 
     # 5. Xây dựng đề xuất cập nhật nếu AI phát hiện thông tin mới
     proposal = None
@@ -209,20 +175,21 @@ async def ingest_medical_document(
         except UnicodeDecodeError:
             raise HTTPException(status_code=400, detail="Tài liệu văn bản phải sử dụng UTF-8.")
 
-    DEFAULT_KNOWLEDGE_DIR.mkdir(parents=True, exist_ok=True)
-    save_path = DEFAULT_KNOWLEDGE_DIR / f"{uuid.uuid4().hex}{ext}"
-    with open(save_path, "wb") as f:
-        f.write(content)
-
+    object_name = f"uploads/{uuid.uuid4().hex}{ext}"
     try:
-        res = ingest_new_medical_document(save_path)
+        stored_remotely = persist_medical_document(object_name, content, file.content_type)
+        with tempfile.TemporaryDirectory(prefix="fitbreak-ingest-") as temp_dir:
+            save_path = Path(temp_dir) / filename
+            save_path.write_bytes(content)
+            res = ingest_new_medical_document(save_path)
         return {
             "success": True,
             "message": "Đã nạp và phân mảnh thành công tài liệu y khoa.",
-            "details": res
+            "storage_object": object_name if stored_remotely else None,
+            "storage_persisted": stored_remotely,
+            "details": res,
         }
     except Exception:
-        save_path.unlink(missing_ok=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Không thể xử lý tài liệu được tải lên."

@@ -25,5 +25,5 @@ COPY . .
 EXPOSE 8000
 
 # Khởi chạy server FastAPI
-CMD ["uvicorn", "api.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn api.app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
 
