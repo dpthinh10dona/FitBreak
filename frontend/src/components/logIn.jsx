@@ -2,7 +2,7 @@ import { API_BASE_URL } from '../config';
 import { useState } from 'react';
 import "../style/logIn.css";
 
-const LogIn = ({ onLoginSuccess, onGoToSignUp }) => {
+const LogIn = ({ onLoginSuccess, onGoToSignUp, notice = '' }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -87,6 +87,7 @@ const LogIn = ({ onLoginSuccess, onGoToSignUp }) => {
           </div>
 
           <form className="login-form" onSubmit={handleSubmit}>
+            {notice && <div className="login-success-alert">✅ {notice}</div>}
             {error && <div className="login-error-alert">⚠️ {error}</div>}
             
             <div className="login-form-group">

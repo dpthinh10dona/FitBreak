@@ -229,10 +229,89 @@ def validate_user_information(user_information: dict) -> None:
 def format_meal_summary(response: str, df_pool: pd.DataFrame, user_information: dict) -> dict:
       meal_plan = parse_llm_meal_response(response)
 
-      # 1. Bữa sáng
+      # 1. Lấy thông tin món gốc
       bf = meal_plan.meals.breakfast
-      bf_mult = max(0.5, min(float(getattr(bf, "portion_multiplier", 1.0) or 1.0), 3.0))
       bf_info = get_dish_info(bf.dish_name, df_pool)
+      bf_mult = max(0.5, min(float(getattr(bf, "portion_multiplier", 1.0) or 1.0), 3.0))
+
+      lu = meal_plan.meals.lunch
+      lu_main = get_dish_info(getattr(lu, "target_dish_name", lu.main_dish), df_pool)
+      lu_mult = max(0.5, min(float(getattr(lu, "portion_multiplier", 1.0) or 1.0), 3.0))
+      lu_rice_grams = getattr(lu, "rice_grams", 0) or 0
+
+      dn = meal_plan.meals.dinner
+      dn_main = get_dish_info(getattr(dn, "target_dish_name", dn.main_dish), df_pool)
+      dn_mult = max(0.5, min(float(getattr(dn, "portion_multiplier", 1.0) or 1.0), 3.0))
+      dn_rice_grams = getattr(dn, "rice_grams", 0) or 0
+
+      # HẬU KIỂM & TỰ ĐỘNG CÂN ĐỐI NGÂN SÁCH (POST-CHECK BUDGET RESCALE)
+      daily_budget = float(get_user_value(user_information, "daily_budget", 0))
+      target_calories = float(get_user_value(user_information, "calories_need", 0))
+
+      def calc_cost(b_m, l_m, d_m, l_r, d_r):
+            return (
+                  bf_info["price"] * b_m
+                  + lu_main["price"] * l_m + (l_r / 100) * RICE_NUTRIENTS_PER_100G["price"]
+                  + dn_main["price"] * d_m + (d_r / 100) * RICE_NUTRIENTS_PER_100G["price"]
+            )
+
+      initial_cost = calc_cost(bf_mult, lu_mult, dn_mult, lu_rice_grams, dn_rice_grams)
+
+      # Nếu chi phí thực tế vượt ngân sách cho phép, tự động điều chỉnh tỷ lệ
+      if daily_budget > 0 and initial_cost > daily_budget:
+            # Bước 1: Giảm các hệ số portion_multiplier đang bị nhân cao > 1.0 về 1.0
+            for _ in range(25):
+                  curr_cost = calc_cost(bf_mult, lu_mult, dn_mult, lu_rice_grams, dn_rice_grams)
+                  if curr_cost <= daily_budget:
+                        break
+                  # Giảm dần hệ số món có multiplier lớn nhất
+                  max_mult = max(bf_mult, lu_mult, dn_mult)
+                  if max_mult > 1.0:
+                        if bf_mult == max_mult:
+                              bf_mult = round(max(1.0, bf_mult - 0.05), 2)
+                        elif lu_mult == max_mult:
+                              lu_mult = round(max(1.0, lu_mult - 0.05), 2)
+                        else:
+                              dn_mult = round(max(1.0, dn_mult - 0.05), 2)
+                  else:
+                        # Nếu các món đã về 1.0 mà vẫn vượt nhẹ thì giảm tiếp xuống 0.85 - 0.9
+                        if lu_mult >= dn_mult and lu_mult > 0.8:
+                              lu_mult = round(lu_mult - 0.05, 2)
+                        elif dn_mult > 0.8:
+                              dn_mult = round(dn_mult - 0.05, 2)
+                        elif bf_mult > 0.8:
+                              bf_mult = round(bf_mult - 0.05, 2)
+                        else:
+                              break
+
+            # Bước 2: Bù lại năng lượng bị hụt bằng cơm trắng (giá rẻ, chỉ 2,000đ/100g)
+            # nếu món đó là món xào/món mặn và người dùng cần thêm calo
+            def calc_calories(b_m, l_m, d_m, l_r, d_r):
+                  return (
+                        bf_info["calories"] * b_m
+                        + lu_main["calories"] * l_m + (l_r / 100) * RICE_NUTRIENTS_PER_100G["calories"]
+                        + dn_main["calories"] * d_m + (d_r / 100) * RICE_NUTRIENTS_PER_100G["calories"]
+                  )
+
+            curr_cals = calc_calories(bf_mult, lu_mult, dn_mult, lu_rice_grams, dn_rice_grams)
+            curr_cost = calc_cost(bf_mult, lu_mult, dn_mult, lu_rice_grams, dn_rice_grams)
+
+            # Nếu calo bị hụt dưới 85% TDEE và ngân sách còn dư để thêm 50g-100g cơm
+            if target_calories > 0 and curr_cals < target_calories * 0.90:
+                  cal_deficit = (target_calories * 0.92) - curr_cals
+                  needed_rice_grams = int((cal_deficit / RICE_NUTRIENTS_PER_100G["calories"]) * 100)
+                  needed_rice_grams = min(needed_rice_grams, 150) # Tối đa bù thêm 150g cơm
+
+                  rice_cost_add = (needed_rice_grams / 100) * RICE_NUTRIENTS_PER_100G["price"]
+                  if curr_cost + rice_cost_add <= daily_budget:
+                        # Ưu tiên cộng vào bữa có ít cơm hơn
+                        if lu_rice_grams <= dn_rice_grams and lu_rice_grams < 250:
+                              lu_rice_grams = min(250, lu_rice_grams + needed_rice_grams)
+                        elif dn_rice_grams < 250:
+                              dn_rice_grams = min(250, dn_rice_grams + needed_rice_grams)
+
+      # 2. Tính toán vi chất dinh dưỡng cuối cùng cho từng bữa
+      # Bữa sáng
       bf_cal = bf_info["calories"] * bf_mult
       bf_pro = bf_info["protein"] * bf_mult
       bf_carb = bf_info["carbs"] * bf_mult
@@ -243,21 +322,18 @@ def format_meal_summary(response: str, df_pool: pd.DataFrame, user_information: 
       if abs(bf_mult - 1.0) >= 0.05:
             bf_name_display = f'{bf_info["real_name"]} (x{bf_mult:.1f} phần)'
 
-      # 2. Bữa trưa
-      lu = meal_plan.meals.lunch
-      lu_mult = max(0.5, min(float(getattr(lu, "portion_multiplier", 1.0) or 1.0), 3.0))
-      lu_main = get_dish_info(getattr(lu, "target_dish_name", lu.main_dish), df_pool)
+      # Bữa trưa
       lu_dish_cal = lu_main["calories"] * lu_mult
       lu_dish_pro = lu_main["protein"] * lu_mult
       lu_dish_carb = lu_main["carbs"] * lu_mult
       lu_dish_fat = lu_main["fat"] * lu_mult
       lu_dish_cost = lu_main["price"] * lu_mult
 
-      lu_rice_cal = (lu.rice_grams / 100) * RICE_NUTRIENTS_PER_100G["calories"]
-      lu_rice_pro = (lu.rice_grams / 100) * RICE_NUTRIENTS_PER_100G["protein"]
-      lu_rice_carb = (lu.rice_grams / 100) * RICE_NUTRIENTS_PER_100G["carbs"]
-      lu_rice_fat = (lu.rice_grams / 100) * RICE_NUTRIENTS_PER_100G["fat"]
-      lu_rice_cost = (lu.rice_grams / 100) * RICE_NUTRIENTS_PER_100G["price"]
+      lu_rice_cal = (lu_rice_grams / 100) * RICE_NUTRIENTS_PER_100G["calories"]
+      lu_rice_pro = (lu_rice_grams / 100) * RICE_NUTRIENTS_PER_100G["protein"]
+      lu_rice_carb = (lu_rice_grams / 100) * RICE_NUTRIENTS_PER_100G["carbs"]
+      lu_rice_fat = (lu_rice_grams / 100) * RICE_NUTRIENTS_PER_100G["fat"]
+      lu_rice_cost = (lu_rice_grams / 100) * RICE_NUTRIENTS_PER_100G["price"]
 
       lu_total_cal = lu_dish_cal + lu_rice_cal
       lu_total_pro = lu_dish_pro + lu_rice_pro
@@ -268,24 +344,21 @@ def format_meal_summary(response: str, df_pool: pd.DataFrame, user_information: 
       lu_name_display = lu_main["real_name"]
       if abs(lu_mult - 1.0) >= 0.05:
             lu_name_display = f'{lu_main["real_name"]} (x{lu_mult:.1f} phần)'
-      if lu.rice_grams > 0:
-            lu_name_display += f' + {lu.rice_grams}g cơm'
+      if lu_rice_grams > 0:
+            lu_name_display += f' + {lu_rice_grams}g cơm'
 
-      # 3. Bữa tối
-      dn = meal_plan.meals.dinner
-      dn_mult = max(0.5, min(float(getattr(dn, "portion_multiplier", 1.0) or 1.0), 3.0))
-      dn_main = get_dish_info(getattr(dn, "target_dish_name", dn.main_dish), df_pool)
+      # Bữa tối
       dn_dish_cal = dn_main["calories"] * dn_mult
       dn_dish_pro = dn_main["protein"] * dn_mult
       dn_dish_carb = dn_main["carbs"] * dn_mult
       dn_dish_fat = dn_main["fat"] * dn_mult
       dn_dish_cost = dn_main["price"] * dn_mult
 
-      dn_rice_cal = (dn.rice_grams / 100) * RICE_NUTRIENTS_PER_100G["calories"]
-      dn_rice_pro = (dn.rice_grams / 100) * RICE_NUTRIENTS_PER_100G["protein"]
-      dn_rice_carb = (dn.rice_grams / 100) * RICE_NUTRIENTS_PER_100G["carbs"]
-      dn_rice_fat = (dn.rice_grams / 100) * RICE_NUTRIENTS_PER_100G["fat"]
-      dn_rice_cost = (dn.rice_grams / 100) * RICE_NUTRIENTS_PER_100G["price"]
+      dn_rice_cal = (dn_rice_grams / 100) * RICE_NUTRIENTS_PER_100G["calories"]
+      dn_rice_pro = (dn_rice_grams / 100) * RICE_NUTRIENTS_PER_100G["protein"]
+      dn_rice_carb = (dn_rice_grams / 100) * RICE_NUTRIENTS_PER_100G["carbs"]
+      dn_rice_fat = (dn_rice_grams / 100) * RICE_NUTRIENTS_PER_100G["fat"]
+      dn_rice_cost = (dn_rice_grams / 100) * RICE_NUTRIENTS_PER_100G["price"]
 
       dn_total_cal = dn_dish_cal + dn_rice_cal
       dn_total_pro = dn_dish_pro + dn_rice_pro
@@ -296,8 +369,8 @@ def format_meal_summary(response: str, df_pool: pd.DataFrame, user_information: 
       dn_name_display = dn_main["real_name"]
       if abs(dn_mult - 1.0) >= 0.05:
             dn_name_display = f'{dn_main["real_name"]} (x{dn_mult:.1f} phần)'
-      if dn.rice_grams > 0:
-            dn_name_display += f' + {dn.rice_grams}g cơm'
+      if dn_rice_grams > 0:
+            dn_name_display += f' + {dn_rice_grams}g cơm'
 
       # Tổng kết
       total_cal = bf_cal + lu_total_cal + dn_total_cal
@@ -343,9 +416,9 @@ def format_meal_summary(response: str, df_pool: pd.DataFrame, user_information: 
                         "type": "Bữa trưa",
                         "time": "12:00",
                         "name": lu_name_display,
-                        "desc": f"Món chính x{lu_mult:.1f} + {lu.rice_grams}g cơm" if lu.rice_grams > 0 else f"Khẩu phần: x{lu_mult:.1f}",
+                        "desc": f"Món chính x{lu_mult:.1f} + {lu_rice_grams}g cơm" if lu_rice_grams > 0 else f"Khẩu phần: x{lu_mult:.1f}",
                         "portion_multiplier": round(lu_mult, 2),
-                        "rice_grams": lu.rice_grams,
+                        "rice_grams": lu_rice_grams,
                         "kcal": round(lu_total_cal),
                         "cost": round(lu_total_cost),
                         "protein": round(lu_total_pro, 1),
@@ -359,9 +432,9 @@ def format_meal_summary(response: str, df_pool: pd.DataFrame, user_information: 
                         "type": "Bữa tối",
                         "time": "19:00",
                         "name": dn_name_display,
-                        "desc": f"Món chính x{dn_mult:.1f} + {dn.rice_grams}g cơm" if dn.rice_grams > 0 else f"Khẩu phần: x{dn_mult:.1f}",
+                        "desc": f"Món chính x{dn_mult:.1f} + {dn_rice_grams}g cơm" if dn_rice_grams > 0 else f"Khẩu phần: x{dn_mult:.1f}",
                         "portion_multiplier": round(dn_mult, 2),
-                        "rice_grams": dn.rice_grams,
+                        "rice_grams": dn_rice_grams,
                         "kcal": round(dn_total_cal),
                         "cost": round(dn_total_cost),
                         "protein": round(dn_total_pro, 1),

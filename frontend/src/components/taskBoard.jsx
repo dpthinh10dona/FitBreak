@@ -43,11 +43,9 @@ const markExerciseCompletedToday = (exerciseId) => {
 };
 
 
-const formatDayTimeRanges = (day) => {
+const formatDayTimeRanges = (day, selectedTimeSlots = []) => {
   try {
-    const saved = localStorage.getItem('selectedTimeSlots');
-    if (!saved) return '';
-    const slotsArray = JSON.parse(saved);
+    const slotsArray = selectedTimeSlots;
     const dayPrefix = `${day}-`;
     const daySlots = slotsArray.filter(s => s.startsWith(dayPrefix));
     if (daySlots.length === 0) return '';
@@ -90,7 +88,7 @@ const formatDayTimeRanges = (day) => {
   }
 };
 
-const TaskBoard = ({ scheduleData, onUpdateCoins, onUpdateSchedule }) => {
+const TaskBoard = ({ scheduleData, onUpdateCoins, onUpdateSchedule, selectedTimeSlots = [] }) => {
   const [todaySchedule, setTodaySchedule] = useState([]);
   const [todayName, setTodayName] = useState('');
   const [removingTasks, setRemovingTasks] = useState({});
@@ -354,7 +352,7 @@ const TaskBoard = ({ scheduleData, onUpdateCoins, onUpdateSchedule }) => {
                     <h3>Phân nhóm: <span className="highlight-type">{(slot.day_type || '').replace('_', ' ').toUpperCase()}</span></h3>
                   </div>
                   {(() => {
-                    const timeRange = formatDayTimeRanges(todayName);
+                    const timeRange = formatDayTimeRanges(todayName, selectedTimeSlots);
                     return timeRange ? (
                       <span className="block-time-badge">{timeRange}</span>
                     ) : (

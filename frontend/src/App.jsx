@@ -29,6 +29,14 @@ const loadScheduleForUser = (u) => {
   }
 };
 
+const loadLegacySelectedSlots = () => {
+  try {
+    return JSON.parse(localStorage.getItem('selectedTimeSlots') || '[]');
+  } catch {
+    return [];
+  }
+};
+
 function App() {
   const [currentScreen, setCurrentScreen] = useState('login');
   const [activeTab, setActiveTab] = useState('tasks');
@@ -36,6 +44,8 @@ function App() {
   const [showCreateProfileModal, setShowCreateProfileModal] = useState(false);
   const [showOnboardingTour, setShowOnboardingTour] = useState(false);
   const [workoutSchedule, setWorkoutSchedule] = useState(null);
+  const [selectedTimeSlots, setSelectedTimeSlots] = useState([]);
+  const [authNotice, setAuthNotice] = useState('');
   const [avatarVersion, setAvatarVersion] = useState(0);
 
   const handleAvatarUpdated = () => {
@@ -58,7 +68,7 @@ function App() {
         localStorage.removeItem('user');
         setUser(null);
         setCurrentScreen('login');
-        return null;
+        return undefined;
       }
 
       if (response.ok) {
@@ -92,6 +102,64 @@ function App() {
     }
   };
 
+  const saveScheduleToServer = async (schedule, slots, tokenOverride) => {
+    const token = tokenOverride || localStorage.getItem('token') || localStorage.getItem('access_token');
+    if (!token) return false;
+    const response = await fetch(`${API_BASE_URL}/user-schedules/me`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        workout_schedule: schedule || {},
+        selected_time_slots: Array.isArray(slots) ? slots : [],
+      }),
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.detail || 'Không thể lưu lịch tập');
+    }
+    return true;
+  };
+
+  const loadScheduleFromServer = async (token, userObj) => {
+    if (!token) return { schedule: null, slots: [] };
+    try {
+      const response = await fetch(`${API_BASE_URL}/user-schedules/me`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error('Không thể tải lịch tập');
+      const data = await response.json();
+      let schedule = data.workout_schedule;
+      let slots = data.selected_time_slots || [];
+
+      if (!schedule || Object.keys(schedule).length === 0) {
+        const legacySchedule = loadScheduleForUser(userObj);
+        const legacySlots = loadLegacySelectedSlots();
+        if (legacySchedule) {
+          schedule = legacySchedule;
+          slots = legacySlots;
+          await saveScheduleToServer(schedule, slots, token);
+          const legacyKey = getScheduleKey(userObj);
+          if (legacyKey) localStorage.removeItem(legacyKey);
+          localStorage.removeItem('workoutSchedule');
+          localStorage.removeItem('selectedTimeSlots');
+        }
+      }
+      return {
+        schedule: schedule && Object.keys(schedule).length > 0 ? schedule : null,
+        slots,
+      };
+    } catch (error) {
+      console.error('Lỗi đồng bộ lịch tập:', error);
+      return {
+        schedule: loadScheduleForUser(userObj),
+        slots: loadLegacySelectedSlots(),
+      };
+    }
+  };
+
   useEffect(() => {
     const checkUserStatus = async () => {
       localStorage.removeItem('workoutSchedule');
@@ -117,22 +185,16 @@ function App() {
             localStorage.setItem('access_token', token);
           }
 
-          setWorkoutSchedule(loadScheduleForUser(parsedUser));
-
-          const [profile, stats] = await Promise.all([
+          const [profile, stats, savedSchedule] = await Promise.all([
             fetchUserProfileByEmail(parsedUser.email, token),
-            fetchUserStats(token)
+            fetchUserStats(token),
+            loadScheduleFromServer(token, parsedUser),
           ]);
+          if (profile === undefined) return;
 
           // Nếu token đã hết hạn hoặc không hợp lệ -> đưa về trang đăng nhập
-          if (!profile && !stats) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('user');
-            setUser(null);
-            setCurrentScreen('login');
-            return;
-          }
+          setWorkoutSchedule(savedSchedule.schedule);
+          setSelectedTimeSlots(savedSchedule.slots);
 
           const fullUserData = { 
             ...parsedUser, 
@@ -146,9 +208,10 @@ function App() {
           setUser(fullUserData);
           localStorage.setItem('user', JSON.stringify(fullUserData));
           setCurrentScreen('main');
+          setShowCreateProfileModal(!profile);
 
           const hasCompletedTour = localStorage.getItem('fitbreak_tour_completed');
-          if (!hasCompletedTour) {
+          if (profile && !hasCompletedTour) {
             setShowOnboardingTour(true);
           }
         }
@@ -156,6 +219,8 @@ function App() {
     };
 
     checkUserStatus();
+  // Khởi tạo phiên một lần; các hàm đồng bộ chỉ dùng token/user đã đọc tại thời điểm mount.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleAuthSuccess = async (data, isSignUp = false) => {
@@ -167,13 +232,19 @@ function App() {
       localStorage.setItem('access_token', token);
     }
 
-    setWorkoutSchedule(isSignUp ? null : loadScheduleForUser(userObj));
-
-    setCurrentScreen('main');
-
     if (isSignUp) {
-      if (userObj) setUser(userObj);
-      setShowOnboardingTour(true);
+      if (!token) {
+        setAuthNotice(data?.message || 'Đăng ký thành công. Vui lòng xác nhận email rồi đăng nhập.');
+        setCurrentScreen('login');
+        return;
+      }
+      const signedUpUser = { ...userObj, token, access_token: token, hasProfile: false };
+      setUser(signedUpUser);
+      localStorage.setItem('user', JSON.stringify(signedUpUser));
+      setWorkoutSchedule(null);
+      setSelectedTimeSlots([]);
+      setCurrentScreen('main');
+      setShowCreateProfileModal(true);
       return;
     }
 
@@ -181,6 +252,8 @@ function App() {
       fetchUserProfileByEmail(userObj?.email, token),
       fetchUserStats(token)
     ]);
+    if (profile === undefined) return;
+    const savedSchedule = await loadScheduleFromServer(token, userObj);
 
     const fullUserData = {
       ...userObj,
@@ -193,9 +266,13 @@ function App() {
 
     setUser(fullUserData);
     localStorage.setItem('user', JSON.stringify(fullUserData));
+    setWorkoutSchedule(savedSchedule.schedule);
+    setSelectedTimeSlots(savedSchedule.slots);
+    setCurrentScreen('main');
+    setShowCreateProfileModal(!profile);
 
     const hasCompletedTour = localStorage.getItem('fitbreak_tour_completed');
-    if (!hasCompletedTour) {
+    if (profile && !hasCompletedTour) {
       setShowOnboardingTour(true);
     }
   };
@@ -213,11 +290,17 @@ function App() {
     });
   };
 
-  const handleCreateProfileSuccess = (data) => {
-    const updatedUser = { ...user, ...(data?.user || {}), hasProfile: true };
+  const handleCreateProfileSuccess = async (data) => {
+    const token = localStorage.getItem('token') || localStorage.getItem('access_token');
+    const [profile, stats] = await Promise.all([
+      fetchUserProfileByEmail(user?.email, token),
+      fetchUserStats(token),
+    ]);
+    const updatedUser = { ...user, ...(data?.user || {}), ...profile, ...stats, hasProfile: true };
     setUser(updatedUser);
     localStorage.setItem('user', JSON.stringify(updatedUser));
     setShowCreateProfileModal(false);
+    if (!localStorage.getItem('fitbreak_tour_completed')) setShowOnboardingTour(true);
   };
 
   const handleUpdateCoins = (newCoins) => {
@@ -240,16 +323,19 @@ function App() {
     });
   };
 
-  const handleUpdateSchedule = (newSchedule) => {
+  const handleUpdateSchedule = async (newSchedule) => {
     setWorkoutSchedule(newSchedule);
-    const key = getScheduleKey(user);
-    if (key) localStorage.setItem(key, JSON.stringify(newSchedule));
+    try {
+      await saveScheduleToServer(newSchedule, selectedTimeSlots);
+    } catch (error) {
+      console.error('Lỗi lưu thay đổi lịch:', error);
+    }
   };
 
-  const handleScheduleGenerated = (newSchedule) => {
+  const handleScheduleGenerated = async (newSchedule, slots = selectedTimeSlots) => {
     setWorkoutSchedule(newSchedule);
-    const key = getScheduleKey(user);
-    if (key) localStorage.setItem(key, JSON.stringify(newSchedule));
+    setSelectedTimeSlots(slots);
+    await saveScheduleToServer(newSchedule, slots);
     setActiveTab('schedule');
   };
 
@@ -258,6 +344,7 @@ function App() {
     localStorage.removeItem('access_token');
     localStorage.removeItem('user');
     setWorkoutSchedule(null);
+    setSelectedTimeSlots([]);
     setUser(null);
     setCurrentScreen('login');
   };
@@ -287,16 +374,18 @@ function App() {
               scheduleData={workoutSchedule} 
               onUpdateCoins={handleUpdateCoins}
               onUpdateSchedule={handleUpdateSchedule}
+              selectedTimeSlots={selectedTimeSlots}
             />
           )}
           {activeTab === 'profile' && (
             <UpdateProfile user={user} onUpdateProfileSuccess={handleUpdateProfileSuccess} />
           )}
-          {activeTab === 'food' && <ClinicalNutritionModule />}
+          {activeTab === 'food' && <ClinicalNutritionModule user={user} />}
           {activeTab === 'schedule' && (
             <ClinicalRehabSchedule 
               scheduleData={workoutSchedule} 
               onScheduleGenerated={handleScheduleGenerated} 
+              initialSelectedTimeSlots={selectedTimeSlots}
             />
           )}
           {activeTab === 'team' && <JoinTeam />}
@@ -355,6 +444,7 @@ function App() {
     <LogIn 
       onLoginSuccess={handleAuthSuccess} 
       onGoToSignUp={() => setCurrentScreen('signup')} 
+      notice={authNotice}
     />
   );
 }
