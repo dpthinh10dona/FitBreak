@@ -10,7 +10,7 @@ request-size limits and PII-safe audit events.
 1. Set `APP_ENV=production`, `FORCE_HTTPS=true`, `COOKIE_SECURE=true`,
    `COOKIE_SAMESITE=none`, exact `ALLOWED_ORIGINS`, exact `ALLOWED_HOSTS`, and
    `REQUIRE_ADMIN_MFA=true`. Never use a service-role key as the public API key.
-2. In Supabase Auth enable: minimum 12-character passwords, leaked-password
+2. In Supabase Auth enable: minimum 8-character passwords, leaked-password
    protection, email verification and JWT expiry at most one hour. When the
    deployer only has Developer access, configure backend-only `ADMIN_EMAILS`
    and keep `SUPABASE_SERVICE_ROLE_KEY` exclusively in the Render secret store.
