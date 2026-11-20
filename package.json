@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "FitBreak",
   "scripts": {
-    "build": "echo 'Building project completed successfully.'",
+    "build": "npm --prefix frontend ci && npm --prefix frontend run build",
     "dev": "concurrently \"npm run dev:api\" \"npm run dev:frontend\"",
     "dev:api": "uvicorn api.app.main:app --reload --port 8000",
-    "dev:frontend": "live-server frontend/src/components --port=5500 --no-browser",
+    "dev:frontend": "npm --prefix frontend run dev",
     "start": "uvicorn api.app.main:app --host 0.0.0.0 --port 8000"
   },
   "devDependencies": {

@@ -175,7 +175,7 @@ export default function OnboardingTour({ isOpen, onClose, onNavigateTab, activeT
         onNavigateTab(stepData.tab);
       }
     }
-  }, [currentStepIndex, isOpen]);
+  }, [currentStepIndex, isOpen, onNavigateTab]);
 
   if (!isOpen) return null;
 

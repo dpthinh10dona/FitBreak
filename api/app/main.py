@@ -1,27 +1,14 @@
-from contextlib import asynccontextmanager
+import os
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
-from app.core.exceptions import AIModelOfflineException
 from app.core.ollama_client import chat as check_ollama
 from app.core.rate_limiter import RateLimitMiddleware
 from app.core.security import ALLOWED_HOSTS, ALLOWED_ORIGINS, IS_PRODUCTION, SecurityMiddleware
 from app.router import auth_route, exercise, profile, foodSuggest, team, raid, schedule, stats, shop, chatbot
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    try:
-        await check_ollama()
-        print("[OK] Ollama connection OK")
-    except AIModelOfflineException as e:
-        print(f"[WARN] Ollama chưa sẵn sàng: {e}")
-    except Exception as e:
-        print(f"[WARN] Không thể kiểm tra Ollama lúc khởi động: {e}")
-    yield
-
 app = FastAPI(
-    lifespan=lifespan,
     docs_url=None if IS_PRODUCTION else "/docs",
     redoc_url=None if IS_PRODUCTION else "/redoc",
     openapi_url=None if IS_PRODUCTION else "/openapi.json",
@@ -72,11 +59,26 @@ async def lightweight_health():
 
 @app.get("/api/health", tags=["Health"])
 async def health_check():
+    """Deep AI-provider check. Do not use this endpoint as the host liveness probe."""
     try:
         await check_ollama()
-        return {"status": "ok", "ollama": "connected"}
-    except Exception as e:
-        return {"status": "degraded", "ollama": str(e)}
+        return {"status": "ok", "ai_provider": "connected"}
+    except Exception:
+        return JSONResponse(
+            status_code=503,
+            content={"status": "degraded", "ai_provider": "unavailable"},
+        )
+
+
+@app.get("/ready", tags=["Health"])
+async def readiness_check():
+    missing = [name for name in ("SUPABASE_URL", "SUPABASE_KEY") if not os.getenv(name)]
+    if missing:
+        return JSONResponse(
+            status_code=503,
+            content={"status": "not_ready", "missing_configuration": missing},
+        )
+    return {"status": "ready"}
 
 @app.get("/")
 async def root():
