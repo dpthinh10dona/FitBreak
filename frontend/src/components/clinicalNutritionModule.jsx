@@ -10,7 +10,7 @@ import '../style/clinicalDiet.css';
  * - Kiểm soát ngân sách, lọc kiêng cữ dị ứng y khoa nghiêm ngặt.
  * - Trực quan hóa 3 bữa ăn (Sáng, Trưa, Tối) với thanh Macro vi chất, hệ số khẩu phần và phân tích lâm sàng từ AI.
  */
-const ClinicalNutritionModule = () => {
+const ClinicalNutritionModule = ({ user }) => {
   const [formData, setFormData] = useState({
     calories_need: '',
     protein_need: '',
@@ -20,7 +20,7 @@ const ClinicalNutritionModule = () => {
     allergen: ''
   });
 
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile] = useState(user || null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [resultData, setResultData] = useState(null);
@@ -30,7 +30,7 @@ const ClinicalNutritionModule = () => {
     const fetchUserProfile = async () => {
       try {
         const token = localStorage.getItem('token');
-        const userObj = JSON.parse(localStorage.getItem('user') || '{}');
+        const userObj = user || JSON.parse(localStorage.getItem('user') || '{}');
         const email = userObj?.email;
 
         let data = null;
@@ -44,7 +44,7 @@ const ClinicalNutritionModule = () => {
         }
 
         if (data) {
-          setProfile(data);
+          setProfile((current) => ({ ...current, ...data }));
           let mappedGoal = 'Duy trì';
           if (data.goal) {
             const goalLower = data.goal.toLowerCase();
@@ -66,7 +66,7 @@ const ClinicalNutritionModule = () => {
     };
 
     fetchUserProfile();
-  }, []);
+  }, [user]);
 
   const allergenOptions = [
     { id: 'đậu', label: 'Đậu phộng / Đậu nành' },

@@ -118,6 +118,13 @@
   border: 1px solid var(--border-medium);
   overflow: hidden;
   box-shadow: var(--shadow-md);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.time-grid * {
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .grid-header {

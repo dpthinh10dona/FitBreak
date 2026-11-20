@@ -69,15 +69,8 @@ const formatDayTimeRanges = (slotsArray, day) => {
  * Lịch trình vận động, bài tập trị liệu & phục hồi thể lực cá nhân hóa theo mức:
  * 'light' (nhẹ nhàng, phục hồi), 'medium' (vừa phải), 'heavy' (chuyên sâu).
  */
-const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated }) => {
-  const [selectedSlots, setSelectedSlots] = useState(() => {
-    try {
-      const saved = localStorage.getItem('selectedTimeSlots');
-      return saved ? new Set(JSON.parse(saved)) : new Set();
-    } catch {
-      return new Set();
-    }
-  });
+const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated, initialSelectedTimeSlots = [] }) => {
+  const [selectedSlots, setSelectedSlots] = useState(() => new Set(initialSelectedTimeSlots));
 
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [isSelecting, setIsSelecting] = useState(true);
@@ -86,6 +79,10 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated }) => {
   const [guardrailData, setGuardrailData] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    setSelectedSlots(new Set(initialSelectedTimeSlots));
+  }, [initialSelectedTimeSlots]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -111,7 +108,8 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated }) => {
 
   const getSlotKey = (day, hour, isHalf) => `${day}-${hour}-${isHalf ? '30' : '00'}`;
 
-  const handleMouseDown = (key) => {
+  const handleMouseDown = (event, key) => {
+    event.preventDefault();
     setIsMouseDown(true);
     const newSelected = new Set(selectedSlots);
     if (newSelected.has(key)) {
@@ -246,10 +244,8 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated }) => {
       }
 
       const scheduleToStore = data.schedule || data;
-      localStorage.setItem('workoutSchedule', JSON.stringify(scheduleToStore));
-      localStorage.setItem('selectedTimeSlots', JSON.stringify(Array.from(selectedSlots)));
       if (onScheduleGenerated) {
-        onScheduleGenerated(scheduleToStore);
+        await onScheduleGenerated(scheduleToStore, Array.from(selectedSlots));
       }
       setIsEditing(false);
     } catch (err) {
@@ -484,7 +480,11 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated }) => {
 
       {/* Grid Selector */}
       <div className="clinical-time-grid-wrapper">
-        <div className="clinical-grid-table">
+        <div
+          className="clinical-grid-table"
+          onSelectStart={(event) => event.preventDefault()}
+          onDragStart={(event) => event.preventDefault()}
+        >
           <div style={{ padding: '8px', fontWeight: 800, fontSize: '0.78rem', color: '#64748b', textAlign: 'center' }}>
             GIỜ
           </div>
@@ -506,7 +506,7 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated }) => {
                   <div
                     key={k1}
                     className={`time-slot-cell ${isSelected ? 'selected' : ''}`}
-                    onMouseDown={() => handleMouseDown(k1)}
+                    onMouseDown={(event) => handleMouseDown(event, k1)}
                     onMouseEnter={() => handleMouseEnter(k1)}
                     title={`${dayNamesVi[day]} ${hour}:00 - ${hour}:30`}
                   />

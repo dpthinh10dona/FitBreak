@@ -384,6 +384,8 @@
   padding: 24px;
   box-shadow: var(--med-shadow-sm);
   overflow-x: auto;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .btn-clinical-reschedule {
@@ -435,6 +437,13 @@
   border: 1px solid var(--med-border-light);
   border-radius: var(--med-radius-sm);
   overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.clinical-grid-table * {
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .time-slot-cell {

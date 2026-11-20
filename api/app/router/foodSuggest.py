@@ -32,11 +32,50 @@ async def food_suggest(
 ):
     try:
         user_info = req.model_dump()
+
+        # Không phụ thuộc hoàn toàn vào payload của frontend. Component có thể
+        # được submit trước khi request tải profile hoàn tất, trong khi hồ sơ
+        # Supabase thực tế đã có đủ dữ liệu.
+        profile_response = (
+            token.client.table("profiles")
+            .select("height, weight, age, activity_frequency")
+            .eq("id", token.user_id)
+            .execute()
+        )
+        profile = profile_response.data[0] if profile_response.data else {}
+        activity_minutes = {1: 60, 2: 120, 3: 180}
+
+        height_cm = req.height_cm if req.height_cm is not None else profile.get("height")
+        weight_kg = req.weight_kg if req.weight_kg is not None else profile.get("weight")
+        age = req.age if req.age is not None else profile.get("age")
+        free_minutes = req.free_minutes_per_week
+        if free_minutes is None:
+            free_minutes = profile.get("free_minutes_per_week")
+        if free_minutes is None:
+            try:
+                free_minutes = activity_minutes.get(int(profile.get("activity_frequency")))
+            except (TypeError, ValueError):
+                free_minutes = None
+
+        medical_conditions = req.medical_conditions or profile.get("medical_conditions") or []
+        if not isinstance(medical_conditions, list):
+            medical_conditions = [str(medical_conditions)]
+        user_notes = req.user_notes or profile.get("user_notes") or ""
+
+        user_info.update({
+            "height_cm": height_cm,
+            "weight_kg": weight_kg,
+            "age": age,
+            "free_minutes_per_week": free_minutes,
+            "medical_conditions": medical_conditions,
+            "user_notes": user_notes,
+        })
+
         required_health_fields = {
-            "height_cm": req.height_cm,
-            "weight_kg": req.weight_kg,
-            "age": req.age,
-            "free_minutes_per_week": req.free_minutes_per_week,
+            "chiều cao": height_cm,
+            "cân nặng": weight_kg,
+            "tuổi": age,
+            "thời gian vận động mỗi tuần": free_minutes,
         }
         missing_fields = [
             field_name
@@ -63,16 +102,16 @@ async def food_suggest(
             )
 
         guardrail = safety_guardrail(UserHealthInput(
-            height_cm=req.height_cm,
-            weight_kg=req.weight_kg,
-            age=req.age,
+            height_cm=height_cm,
+            weight_kg=weight_kg,
+            age=age,
             goal=req.aim,
             target_calories=req.calories_need,
             budget_vnd=req.daily_budget,
             allergies=[item.strip() for item in (req.allergen or "").replace(",", ";").split(";") if item.strip()],
-            medical_conditions=req.medical_conditions,
-            user_notes=req.user_notes,
-            free_minutes_per_week=req.free_minutes_per_week,
+            medical_conditions=medical_conditions,
+            user_notes=user_notes,
+            free_minutes_per_week=free_minutes,
         ))
         if not guardrail.allow_ai_generation:
             blocked = guardrail.model_dump()

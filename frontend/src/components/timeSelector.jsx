@@ -64,20 +64,17 @@ const formatDayTimeRanges = (slotsArray, day) => {
   return intervals.map(([s, e]) => `${fmt(s)} - ${fmt(e)}`).join(', ');
 };
 
-const TimeSelector = ({ scheduleData, onScheduleGenerated }) => {
-  const [selectedSlots, setSelectedSlots] = useState(() => {
-    try {
-      const saved = localStorage.getItem('selectedTimeSlots');
-      return saved ? new Set(JSON.parse(saved)) : new Set();
-    } catch (e) {
-      return new Set();
-    }
-  });
+const TimeSelector = ({ scheduleData, onScheduleGenerated, initialSelectedTimeSlots = [] }) => {
+  const [selectedSlots, setSelectedSlots] = useState(() => new Set(initialSelectedTimeSlots));
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [isSelecting, setIsSelecting] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [userProfile, setUserProfile] = useState(null);
+
+  useEffect(() => {
+    setSelectedSlots(new Set(initialSelectedTimeSlots));
+  }, [initialSelectedTimeSlots]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -106,7 +103,8 @@ const TimeSelector = ({ scheduleData, onScheduleGenerated }) => {
 
   const getSlotKey = (day, hour, isHalf) => `${day}-${hour}-${isHalf ? '30' : '00'}`;
 
-  const handleMouseDown = (key) => {
+  const handleMouseDown = (event, key) => {
+    event.preventDefault();
     setIsMouseDown(true);
     const currentlySelected = selectedSlots.has(key);
     setIsSelecting(!currentlySelected);
@@ -171,11 +169,8 @@ const TimeSelector = ({ scheduleData, onScheduleGenerated }) => {
         throw new Error(data.detail || 'Lỗi khi tạo lịch tập luyện');
       }
 
-      localStorage.setItem('workoutSchedule', JSON.stringify(data));
-      localStorage.setItem('selectedTimeSlots', JSON.stringify(Array.from(selectedSlots)));
-
       if (onScheduleGenerated) {
-        onScheduleGenerated(data);
+        await onScheduleGenerated(data, Array.from(selectedSlots));
       }
       setIsEditing(false);
     } catch (err) {
@@ -390,7 +385,11 @@ const TimeSelector = ({ scheduleData, onScheduleGenerated }) => {
       </div>
 
       <div className="time-grid-wrapper">
-        <div className="time-grid">
+        <div
+          className="time-grid"
+          onSelectStart={(event) => event.preventDefault()}
+          onDragStart={(event) => event.preventDefault()}
+        >
           <div className="grid-header time-col-header">Giờ</div>
           {days.map((day) => (
             <div key={day} className="grid-header day-col-header">{day}</div>
@@ -411,14 +410,14 @@ const TimeSelector = ({ scheduleData, onScheduleGenerated }) => {
                 <Fragment key={`slots-${day}-${hour}`}>
                   <div
                     className={`time-slot full-hour ${selectedSlots.has(getSlotKey(day, hour, false)) ? 'selected' : ''}`}
-                    onMouseDown={() => handleMouseDown(getSlotKey(day, hour, false))}
+                    onMouseDown={(event) => handleMouseDown(event, getSlotKey(day, hour, false))}
                     onMouseEnter={() => handleMouseEnter(getSlotKey(day, hour, false))}
                     title={`${day} ${hour}:00 - ${hour}:30`}
                   ></div>
                   {hour !== 21 && (
                     <div
                       className={`time-slot half-hour ${selectedSlots.has(getSlotKey(day, hour, true)) ? 'selected' : ''}`}
-                      onMouseDown={() => handleMouseDown(getSlotKey(day, hour, true))}
+                      onMouseDown={(event) => handleMouseDown(event, getSlotKey(day, hour, true))}
                       onMouseEnter={() => handleMouseEnter(getSlotKey(day, hour, true))}
                       title={`${day} ${hour}:30 - ${hour + 1}:00`}
                     ></div>

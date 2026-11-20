@@ -74,7 +74,11 @@ Author: Senior Frontend Developer
 3. **`frontend/src/components/patientHeader.jsx` & `frontend/src/style/patientHeader.css`**:
    - Thêm nút **"Hướng dẫn"** (`.patient-tour-pill-btn`) kèm icon `HelpCircle` để người dùng có thể mở lại tour bất cứ khi nào muốn.
 
-4. **`frontend/src/App.jsx`**:
+4. **`frontend/src/components/signUp.jsx` & `frontend/src/style/signUp.css`**:
+   - Đồng bộ hoàn toàn 100% giao diện và nội dung cột trái (Hero Banner, Badge `🛡️ NỀN TẢNG Y TẾ & PHỤC HỒI THỂ LỰC`, Logo `FitBreak Health`, Tagline, 3 thẻ tính năng nổi bật) với trang Đăng nhập (`logIn.jsx`).
+   - Chuẩn hóa layout container `max-width: 1080px`, khoảng cách `gap: 64px`, font typography, card form 440px và hairline borders đồng nhất.
+
+5. **`frontend/src/App.jsx`**:
    - Thay thế việc ép bật popup tạo profile ngay khi vào bằng việc kích hoạt `OnboardingTour` nếu người dùng chưa hoàn thành tour.
    - Tích hợp state `showOnboardingTour` và hàm điều hướng tab.
 

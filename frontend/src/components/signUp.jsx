@@ -54,27 +54,27 @@ const SignUp = ({ onSignUpSuccess, onGoToLogIn }) => {
       <div className="signup-fitbreak-content-wrapper">
         <div className="signup-fitbreak-logo-section">
           <div className="signup-badge-hero">
-            <span>🩺</span>
-            <span>KHỞI TẠO HỒ SƠ Y TẾ FITBREAK</span>
+            <span>🛡️</span>
+            <span>NỀN TẢNG Y TẾ & PHỤC HỒI THỂ LỰC</span>
           </div>
           <h1 className="signup-fitbreak-logo">
-            FitBreak <span className="signup-logo-accent">MedTech</span>
+            FitBreak <span className="signup-logo-accent">Health</span>
           </h1>
           <p className="signup-hero-tagline">
-            Đăng ký để xây dựng lộ trình phục hồi thể chất, giám sát chỉ số sinh hiệu và nhận chế độ dinh dưỡng tối ưu từ chuyên gia y tế.
+            Giải pháp theo dõi chỉ số sinh hiệu, lịch trình vận động thể chất khoa học và hỗ trợ dinh dưỡng chuẩn y khoa được cá nhân hóa bởi AI.
           </p>
           <div className="signup-features-list">
             <div className="signup-feature-item">
-              <span className="signup-feature-icon">📊</span>
-              <span>Đo lường tự động chỉ số BMI & TDEE khoa học</span>
+              <span className="signup-feature-icon">🩺</span>
+              <span>Theo dõi chỉ số sinh hiệu (BMI, Huyết áp, SpO2, Đường huyết)</span>
             </div>
             <div className="signup-feature-item">
-              <span className="signup-feature-icon">📅</span>
-              <span>Lịch trình vận động phục hồi 7 ngày thông minh</span>
+              <span className="signup-feature-icon">🥗</span>
+              <span>Đề xuất thực đơn dinh dưỡng lâm sàng theo bệnh lý</span>
             </div>
             <div className="signup-feature-item">
-              <span className="signup-feature-icon">🔒</span>
-              <span>Bảo mật dữ liệu sức khỏe chuẩn tiêu chuẩn lâm sàng</span>
+              <span className="signup-feature-icon">🤖</span>
+              <span>Bác sĩ AI Telehealth tư vấn trực tuyến 24/7</span>
             </div>
           </div>
         </div>

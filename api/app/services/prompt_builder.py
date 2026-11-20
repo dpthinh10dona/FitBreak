@@ -83,14 +83,20 @@ Lập kế hoạch thực đơn gồm 3 bữa đáp ứng hoàn hảo các tiêu
 2. ĐA DẠNG MÓN ĂN (BẮT BUỘC KHÔNG TRÙNG LẶP):
    - 3 món ăn cho 3 bữa (Sáng, Trưa, Tối) **BẮT BUỘC PHẢI KHÁC NHAU HOÀN TOÀN**, tuyệt đối không lặp lại cùng một món trong ngày.
 3. CƠ CHẾ ĐIỀU CHỈNH HỆ SỐ KHẨU PHẦN (`portion_multiplier`) & CƠM TRẮNG (`rice_grams`):
-   - `portion_multiplier`: ĐƯỢC PHÉP nhân số lượng/khẩu phần thành phần món ăn lên `1.x` (VD: 1.1, 1.2, 1.3, 1.5, 2.0) hoặc giảm xuống `0.x` (VD: 0.6, 0.7, 0.8, 0.9) trong khoảng từ 0.5 đến 2.5 (mặc định là 1.0) để cân chỉnh chính xác năng lượng và vi chất phù hợp với lượng đồ ăn người dùng cần nạp mỗi ngày.
+   - `portion_multiplier`: ĐƯỢC PHÉP nhân số lượng/khẩu phần thành phần món ăn lên `1.x` hoặc giảm xuống `0.x` trong khoảng từ 0.6 đến 2.0 (mặc định 1.0) để cân chỉnh năng lượng và vi chất.
+   - **QUY TẮC BẢO VỆ NGÂN SÁCH KHI NHÂN KHẨU PHẦN**:
+     * Khi nhân `portion_multiplier > 1.0`, giá tiền món ăn sẽ TĂNG LÊN tương ứng (VD: món 45,000đ x 1.5 = 67,500đ).
+     * Do đó, TUYỆT ĐỐI KHÔNG nhân `portion_multiplier > 1.0` cho các món đĩa xào đắt tiền (>= 40,000đ) ở cả 2 bữa trưa và tối nếu ngân sách eo hẹp (<= 130,000đ).
+     * Để bù calo rẻ tiền, hãy dùng cơm trắng (`rice_grams` 100g - 250g, chỉ 2,000đ - 5,000đ) hoặc ưu tiên chọn các món cơm/bún trọn gói có sẵn calo cao và giá tiết kiệm.
    - `rice_grams`: Số nguyên từ 0 đến 300 (cho bữa trưa và tối) để bổ sung năng lượng sạch vừa vặn TDEE.
-   - **LƯU Ý QUAN TRỌNG VỀ CƠM**: Nếu món ăn đã là "Cơm suất", "Cơm gà", "Cơm bụi", "Cơm bình dân", "Phở", "Bún", "Miến", "Mỳ", "Bánh canh", "Bánh mỳ" (đã có sẵn tinh bột và năng lượng từ 500-1100 kcal), hãy đặt `rice_grams: 0` để tránh bị thừa calo quá mức. Chỉ thêm `rice_grams > 0` khi chọn các món xào, món mặn ăn kèm (như thịt xào, sườn xào, rau xào).
-4. TUÂN THỦ NGÂN SÁCH (HỆ THỐNG BACKEND SẼ TỰ ĐỘNG TÍNH TOÁN LẠI CHI PHÍ CHÍNH XÁC):
-   - Tổng chi phí thực tế (Chi phí 3 món [sau nhân hệ số] + Tiền cơm) PHẢI <= {daily_budget:,} VNĐ.
-   - Bạn có thể ghi nhẩm tính hoặc để giá trị 0 ở trường `estimated_total_cost`, backend sẽ tự động tính toán tổng số tiền thực tế chuẩn xác 100%.
+   - **LƯU Ý VỀ CƠM**: Nếu món ăn đã là "Cơm suất", "Cơm gà", "Cơm bụi", "Cơm bình dân", "Phở", "Bún", "Miến", "Mỳ", "Bánh canh", "Bánh mỳ" (đã có sẵn tinh bột và năng lượng từ 500-1100 kcal), hãy đặt `rice_grams: 0` để tránh thừa calo. Chỉ thêm `rice_grams > 0` khi chọn các món xào, món mặn ăn kèm (thịt xào, cá kho, rau xào).
+4. QUY TẮC NGÂN SÁCH NGHIÊM NGẶT (BUDGET CEILING HARD CONSTRAINT):
+   - Tổng chi phí thực tế (Tiền món sáng x mult + Tiền món trưa x mult + Tiền cơm trưa + Tiền món tối x mult + Tiền cơm tối) **BẮT BUỘC PHẢI <= {daily_budget:,} VNĐ**.
+   - Với người dùng học sinh, sinh viên có ngân sách tiết kiệm (<= 130,000đ/ngày):
+     * BẮT BUỘC ưu tiên ít nhất 1 bữa chọn các món cơm bình dân / cơm suất / cơm bụi / bún mọc / xôi / bánh mỳ (giá 15k - 35k) để giữ tổng chi phí trong tầm kiểm soát mà vẫn dồi dào calo và protein.
+     * CẤM chọn 2 bữa trưa và tối đều là các món đĩa xào bò/thịt đắt tiền (45,000đ - 50,000đ) rồi nhân hệ số cao khiến chi phí vượt {daily_budget:,} VNĐ.
 5. LỜI KHUYÊN Y TẾ & GIẢI THÍCH:
-   - Giải thích rõ tại `nutrition_note` lý do chọn món, cách cân bằng calo và cách hỗ trợ kiểm soát chỉ số sức khỏe của người dùng.
+   - Giải thích trung thực tại `nutrition_note` lý do chọn món, cách cân bằng calo và cách phân bổ chi phí 3 bữa tuân thủ nghiêm ngặt ngân sách {daily_budget:,} VNĐ.
 
 [CONSTRAINTS & RULES BẮT BUỘC]
 - TÊN MÓN ĂN (`dish_name`): BẮT BUỘC dùng chung khóa `dish_name` cho cả 3 bữa. Copy CHÍNH XÁC 100% từng ký tự từ [DANH SÁCH MÓN ĂN HỢP LỆ TRONG DATABASE]. Không tự sáng tác hay thêm bớt chữ.
