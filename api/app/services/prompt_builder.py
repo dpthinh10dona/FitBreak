@@ -77,13 +77,17 @@ Hồ sơ dinh dưỡng & sức khỏe của người dùng:
 
 [MISSION & INSTRUCTIONS]
 Lập kế hoạch thực đơn gồm 3 bữa đáp ứng hoàn hảo các tiêu chí:
-1. ĐỦ NĂNG LƯỢNG & MACRO:
-   - Tổng calo 3 bữa + cơm trắng tiệm cận sát TDEE {calories_need} kcal (sai số +- 5% đến 8%). KHÔNG ĐƯỢC THIẾU CALO.
+1. ĐỦ NĂNG LƯỢNG (TIỆM CẬN SÁT TDEE {calories_need} KCAL) & PROTEIN (>= {protein_need}G):
+   - **TỔNG CALO 3 BỮA PHẢI TIỆM CẬN TDEE {calories_need} kcal** (Mức chấp nhận: từ {int(calories_need * 0.90)} kcal đến {int(calories_need * 1.05)} kcal). TUYỆT ĐỐI KHÔNG ĐƯỢC THIẾU HỤT CALO TRẦM TRỌNG (ví dụ TDEE 2200 mà chỉ cho 1300 kcal là VI PHẠM Y KHOA NẶNG).
+   - Hãy tính toán tổng calo sơ bộ trước khi xuất:
+     * Bữa sáng: BẮT BUỘC chọn món sáng có calo tốt (từ ~400 kcal đến ~650 kcal) như Xôi xéo, Xôi lạc, Xôi đỗ xanh, Bánh cuốn, Phở bò, Bún bò giò, Bánh mỳ pate, Bánh mỳ chảo... KHÔNG ĐƯỢC CHỌN món sáng quá ít calo (< 300 kcal) nếu không nhân hệ số!
+     * Bữa trưa: Khoảng ~{l_cal_target} kcal (VD: Cơm suất 700 - 900 kcal, hoặc Món mặn + 150g-250g cơm).
+     * Bữa tối: Khoảng ~{d_cal_target} kcal (VD: Món xào + 150g-250g cơm, hoặc Cơm bình dân, Bún bò...).
    - Tổng Protein đạt hoặc vượt mức tối thiểu {protein_need} g.
 2. ĐA DẠNG MÓN ĂN (BẮT BUỘC KHÔNG TRÙNG LẶP):
    - 3 món ăn cho 3 bữa (Sáng, Trưa, Tối) **BẮT BUỘC PHẢI KHÁC NHAU HOÀN TOÀN**, tuyệt đối không lặp lại cùng một món trong ngày.
 3. CƠ CHẾ ĐIỀU CHỈNH HỆ SỐ KHẨU PHẦN (`portion_multiplier`) & CƠM TRẮNG (`rice_grams`):
-   - `portion_multiplier`: ĐƯỢC PHÉP nhân số lượng/khẩu phần thành phần món ăn lên `1.x` hoặc giảm xuống `0.x` trong khoảng từ 0.6 đến 2.0 (mặc định 1.0) để cân chỉnh năng lượng và vi chất.
+   - `portion_multiplier`: ĐƯỢC PHÉP nhân số lượng/khẩu phần thành phần món ăn lên `1.x` hoặc giảm xuống `0.x` trong khoảng từ 0.7 đến 2.0 (mặc định 1.0) để cân chỉnh năng lượng và vi chất.
    - **QUY TẮC BẢO VỆ NGÂN SÁCH KHI NHÂN KHẨU PHẦN**:
      * Khi nhân `portion_multiplier > 1.0`, giá tiền món ăn sẽ TĂNG LÊN tương ứng (VD: món 45,000đ x 1.5 = 67,500đ).
      * Do đó, TUYỆT ĐỐI KHÔNG nhân `portion_multiplier > 1.0` cho các món đĩa xào đắt tiền (>= 40,000đ) ở cả 2 bữa trưa và tối nếu ngân sách eo hẹp (<= 130,000đ).

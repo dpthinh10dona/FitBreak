@@ -244,7 +244,7 @@ def format_meal_summary(response: str, df_pool: pd.DataFrame, user_information: 
       dn_mult = max(0.5, min(float(getattr(dn, "portion_multiplier", 1.0) or 1.0), 3.0))
       dn_rice_grams = getattr(dn, "rice_grams", 0) or 0
 
-      # HẬU KIỂM & TỰ ĐỘNG CÂN ĐỐI NGÂN SÁCH (POST-CHECK BUDGET RESCALE)
+      # HẬU KIỂM & TỰ ĐỘNG CÂN ĐỐI CẢ NGÂN SÁCH VÀ NĂNG LƯỢNG TDEE (POST-CHECK DUAL OPTIMIZER)
       daily_budget = float(get_user_value(user_information, "daily_budget", 0))
       target_calories = float(get_user_value(user_information, "calories_need", 0))
 
@@ -255,16 +255,21 @@ def format_meal_summary(response: str, df_pool: pd.DataFrame, user_information: 
                   + dn_main["price"] * d_m + (d_r / 100) * RICE_NUTRIENTS_PER_100G["price"]
             )
 
+      def calc_calories(b_m, l_m, d_m, l_r, d_r):
+            return (
+                  bf_info["calories"] * b_m
+                  + lu_main["calories"] * l_m + (l_r / 100) * RICE_NUTRIENTS_PER_100G["calories"]
+                  + dn_main["calories"] * d_m + (d_r / 100) * RICE_NUTRIENTS_PER_100G["calories"]
+            )
+
       initial_cost = calc_cost(bf_mult, lu_mult, dn_mult, lu_rice_grams, dn_rice_grams)
 
-      # Nếu chi phí thực tế vượt ngân sách cho phép, tự động điều chỉnh tỷ lệ
+      # 1. Nếu chi phí vượt ngân sách cho phép -> hạ dần portion_multiplier
       if daily_budget > 0 and initial_cost > daily_budget:
-            # Bước 1: Giảm các hệ số portion_multiplier đang bị nhân cao > 1.0 về 1.0
             for _ in range(25):
                   curr_cost = calc_cost(bf_mult, lu_mult, dn_mult, lu_rice_grams, dn_rice_grams)
                   if curr_cost <= daily_budget:
                         break
-                  # Giảm dần hệ số món có multiplier lớn nhất
                   max_mult = max(bf_mult, lu_mult, dn_mult)
                   if max_mult > 1.0:
                         if bf_mult == max_mult:
@@ -274,7 +279,6 @@ def format_meal_summary(response: str, df_pool: pd.DataFrame, user_information: 
                         else:
                               dn_mult = round(max(1.0, dn_mult - 0.05), 2)
                   else:
-                        # Nếu các món đã về 1.0 mà vẫn vượt nhẹ thì giảm tiếp xuống 0.85 - 0.9
                         if lu_mult >= dn_mult and lu_mult > 0.8:
                               lu_mult = round(lu_mult - 0.05, 2)
                         elif dn_mult > 0.8:
@@ -284,31 +288,36 @@ def format_meal_summary(response: str, df_pool: pd.DataFrame, user_information: 
                         else:
                               break
 
-            # Bước 2: Bù lại năng lượng bị hụt bằng cơm trắng (giá rẻ, chỉ 2,000đ/100g)
-            # nếu món đó là món xào/món mặn và người dùng cần thêm calo
-            def calc_calories(b_m, l_m, d_m, l_r, d_r):
-                  return (
-                        bf_info["calories"] * b_m
-                        + lu_main["calories"] * l_m + (l_r / 100) * RICE_NUTRIENTS_PER_100G["calories"]
-                        + dn_main["calories"] * d_m + (d_r / 100) * RICE_NUTRIENTS_PER_100G["calories"]
-                  )
-
+      # 2. KIỂM SOÁT THIẾU HỤT CALO (CALORIE DEFICIT OPTIMIZATION):
+      # Nếu calo sau khi tính toán vẫn bị hụt so với TDEE (dưới 88% TDEE) và ngân sách vẫn còn dư:
+      if target_calories > 0:
             curr_cals = calc_calories(bf_mult, lu_mult, dn_mult, lu_rice_grams, dn_rice_grams)
             curr_cost = calc_cost(bf_mult, lu_mult, dn_mult, lu_rice_grams, dn_rice_grams)
 
-            # Nếu calo bị hụt dưới 85% TDEE và ngân sách còn dư để thêm 50g-100g cơm
-            if target_calories > 0 and curr_cals < target_calories * 0.90:
-                  cal_deficit = (target_calories * 0.92) - curr_cals
-                  needed_rice_grams = int((cal_deficit / RICE_NUTRIENTS_PER_100G["calories"]) * 100)
-                  needed_rice_grams = min(needed_rice_grams, 150) # Tối đa bù thêm 150g cơm
+            # A. Nếu món sáng có calo quá thấp (< 350 kcal, vd Bánh mỳ 178 kcal) và ngân sách còn rộng
+            if bf_info["calories"] * bf_mult < 350 and bf_mult < 1.8:
+                  cost_step = bf_info["price"] * 0.25
+                  if curr_cost + cost_step <= daily_budget:
+                        bf_mult = round(bf_mult + 0.3, 2)
+                        curr_cals = calc_calories(bf_mult, lu_mult, dn_mult, lu_rice_grams, dn_rice_grams)
+                        curr_cost = calc_cost(bf_mult, lu_mult, dn_mult, lu_rice_grams, dn_rice_grams)
 
-                  rice_cost_add = (needed_rice_grams / 100) * RICE_NUTRIENTS_PER_100G["price"]
-                  if curr_cost + rice_cost_add <= daily_budget:
-                        # Ưu tiên cộng vào bữa có ít cơm hơn
-                        if lu_rice_grams <= dn_rice_grams and lu_rice_grams < 250:
-                              lu_rice_grams = min(250, lu_rice_grams + needed_rice_grams)
-                        elif dn_rice_grams < 250:
-                              dn_rice_grams = min(250, dn_rice_grams + needed_rice_grams)
+            # B. Bù calo sạch bằng cơm trắng (chỉ 2,000đ/100g = 130 kcal)
+            for _ in range(10):
+                  curr_cals = calc_calories(bf_mult, lu_mult, dn_mult, lu_rice_grams, dn_rice_grams)
+                  curr_cost = calc_cost(bf_mult, lu_mult, dn_mult, lu_rice_grams, dn_rice_grams)
+                  if curr_cals >= target_calories * 0.90:
+                        break
+                  # Kiểm tra còn đủ 1,000đ để thêm 50g cơm không (50g = 65 kcal)
+                  if curr_cost + 1000 <= daily_budget:
+                        if dn_rice_grams <= lu_rice_grams and dn_rice_grams <= 250:
+                              dn_rice_grams += 50
+                        elif lu_rice_grams <= 250:
+                              lu_rice_grams += 50
+                        else:
+                              break
+                  else:
+                        break
 
       # 2. Tính toán vi chất dinh dưỡng cuối cùng cho từng bữa
       # Bữa sáng

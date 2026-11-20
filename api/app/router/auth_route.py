@@ -1,8 +1,13 @@
 import hashlib
+import logging
 import os
 import httpx
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from supabase_auth.errors import AuthApiError, AuthWeakPasswordError
+
+
+logger = logging.getLogger(__name__)
 
 try:
     from app.core.database import supabase
@@ -51,8 +56,37 @@ async def register(data: signUp, request: Request):
     except HTTPException:
         audit_event("auth.register", request, user_id=str(data.email), outcome="failure")
         raise
+    except AuthWeakPasswordError:
+        audit_event("auth.register", request, user_id=str(data.email), outcome="weak_password")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Mật khẩu chưa đáp ứng chính sách bảo mật của hệ thống.",
+        )
+    except AuthApiError as exc:
+        audit_event("auth.register", request, user_id=str(data.email), outcome="provider_rejected")
+        error_code = str(getattr(exc, "code", "") or "").lower()
+        error_message = str(exc).lower()
+        if "already" in error_message or "user_already_exists" in error_code:
+            detail = "Email này đã được đăng ký. Vui lòng đăng nhập hoặc sử dụng email khác."
+            response_status = status.HTTP_409_CONFLICT
+        elif "rate" in error_message or "over_email_send_rate_limit" in error_code:
+            detail = "Bạn đã đăng ký quá nhiều lần. Vui lòng đợi một lúc rồi thử lại."
+            response_status = status.HTTP_429_TOO_MANY_REQUESTS
+        elif "email" in error_message and "invalid" in error_message:
+            detail = "Địa chỉ email không hợp lệ hoặc không được nhà cung cấp chấp nhận."
+            response_status = status.HTTP_400_BAD_REQUEST
+        else:
+            detail = "Supabase từ chối đăng ký. Vui lòng kiểm tra email và chính sách mật khẩu."
+            response_status = status.HTTP_400_BAD_REQUEST
+        logger.warning(
+            "Supabase rejected registration: code=%s status=%s",
+            error_code,
+            getattr(exc, "status", None),
+        )
+        raise HTTPException(status_code=response_status, detail=detail)
     except Exception:
         audit_event("auth.register", request, user_id=str(data.email), outcome="failure")
+        logger.exception("Unexpected registration failure")
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Không thể đăng ký tài khoản. Vui lòng kiểm tra thông tin hoặc thử lại sau.")
 
 
