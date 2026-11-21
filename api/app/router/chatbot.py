@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from app.core.database import supabase
 from app.core.token_authorization import require_admin, token_authorization, tokenAuthorization
 from app.schemas.chatbot import ChatBotRequest, ChatBotResponse, ProfileUpdateProposal, ConfirmProposalRequest
-from app.services.chatbot_agent import analyze_and_chat
+from app.services.chatbot_agent import analyze_and_chat, is_health_related_message, out_of_scope_result
 from app.services.clinical_rag import get_medical_knowledge_stats, ingest_new_medical_document
 from app.services.medical_storage import persist_medical_document
 from app.services.runtime_store import daily_chatbot_quota
@@ -47,12 +47,13 @@ async def ask_health_chatbot(
     if not user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User unauthorized")
 
-    # 1. Ràng buộc giới hạn từ: < 100 từ
-    words = payload.message.strip().split()
-    if len(words) > 100:
+    # 1. Giới hạn trực tiếp theo độ dài chuỗi: tối đa 100 ký tự.
+    message = payload.message.strip()
+    character_count = len(message)
+    if character_count > 100:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Câu hỏi quá dài ({len(words)} từ). Giới hạn tối đa dưới 100 từ mỗi câu hỏi!"
+            detail=f"Câu hỏi quá dài ({character_count} ký tự). Giới hạn tối đa 100 ký tự mỗi câu hỏi."
         )
 
     # 2. Ràng buộc số lượng câu hỏi trong ngày: Tối đa 3 câu/ngày
@@ -63,13 +64,24 @@ async def ask_health_chatbot(
             detail="Bạn đã sử dụng hết 3 lượt tư vấn miễn phí hôm nay. Vui lòng quay lại vào ngày mai!"
         )
 
+    # Câu ngoài phạm vi được chặn trước Supabase profile, RAG và model; không trừ lượt hỏi.
+    if not is_health_related_message(message):
+        agent_output = out_of_scope_result()
+        return ChatBotResponse(
+            reply=agent_output["reply"],
+            remaining_questions_today=max(0, DAILY_LIMIT - current_count),
+            proposal=None,
+            status=agent_output["status"],
+            allow_ai_generation=False,
+        )
+
     # 3. Lấy profile hiện tại từ Supabase (dùng auth_data.client đã xác thực JWT)
     profile_res = auth_data.client.table("profiles").select("*").eq("id", user_id).execute()
     user_profile = profile_res.data[0] if (profile_res.data and len(profile_res.data) > 0) else {}
 
     # 4. Gửi qua AI Agent phân tích
     agent_output = await analyze_and_chat(
-        user_message=payload.message,
+        user_message=message,
         user_profile=user_profile,
         history=payload.history
     )

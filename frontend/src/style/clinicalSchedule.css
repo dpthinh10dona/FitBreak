@@ -356,6 +356,37 @@
   color: var(--med-muted);
 }
 
+.exercise-sources-card {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 18px;
+  padding: 12px 16px;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  background: #f8fbff;
+  color: #475569;
+  font-size: 0.82rem;
+}
+
+.exercise-sources-label {
+  color: #1e3a8a;
+  font-weight: 700;
+}
+
+.exercise-sources-value {
+  line-height: 1.5;
+}
+
+.task-source-clinical {
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
 .task-sets-clinical {
   font-weight: 700;
   color: var(--med-primary-dark);

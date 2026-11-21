@@ -15,18 +15,14 @@ const HealthChatbot = ({ user, onProfileUpdated }) => {
   const [remainingQuestions, setRemainingQuestions] = useState(3);
   const [activeProposal, setActiveProposal] = useState(null);
 
-  const getWordCount = (str) => {
-    return str.trim() ? str.trim().split(/\s+/).length : 0;
-  };
-
   const handleSendMessage = async (e) => {
     e.preventDefault();
     const trimmed = inputMessage.trim();
     if (!trimmed || loading) return;
 
-    const wordCount = getWordCount(trimmed);
-    if (wordCount > 100) {
-      alert(`Câu hỏi của bạn có ${wordCount} từ. Giới hạn tối đa dưới 100 từ mỗi câu!`);
+    const characterCount = trimmed.length;
+    if (characterCount > 100) {
+      alert(`Câu hỏi của bạn có ${characterCount} ký tự. Giới hạn tối đa là 100 ký tự mỗi câu!`);
       return;
     }
 
@@ -125,7 +121,7 @@ const HealthChatbot = ({ user, onProfileUpdated }) => {
     setActiveProposal(null);
   };
 
-  const currentWords = getWordCount(inputMessage);
+  const currentCharacters = inputMessage.length;
 
   return (
     <div className="health-chatbot-widget">
@@ -206,8 +202,8 @@ const HealthChatbot = ({ user, onProfileUpdated }) => {
           <form className="chatbot-footer" onSubmit={handleSendMessage}>
             <div className="chatbot-limit-info">
               <span>Còn lại: <strong>{remainingQuestions}/3</strong> câu hỏi hôm nay</span>
-              <span className={currentWords > 100 ? 'warning' : ''}>
-                {currentWords}/100 từ
+              <span className={currentCharacters > 100 ? 'warning' : ''}>
+                {currentCharacters}/100 ký tự
               </span>
             </div>
             <div className="chatbot-input-row">
@@ -217,12 +213,13 @@ const HealthChatbot = ({ user, onProfileUpdated }) => {
                 placeholder="Nhập triệu chứng, bệnh lý..."
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
+                maxLength={100}
                 disabled={loading || remainingQuestions <= 0}
               />
               <button 
                 type="submit" 
                 className="chatbot-send-btn"
-                disabled={loading || !inputMessage.trim() || currentWords > 100 || remainingQuestions <= 0}
+                disabled={loading || !inputMessage.trim() || currentCharacters > 100 || remainingQuestions <= 0}
               >
                 Gửi
               </button>

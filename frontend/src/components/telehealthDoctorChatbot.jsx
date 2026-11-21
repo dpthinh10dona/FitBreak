@@ -6,7 +6,7 @@ import '../style/telehealthChatbot.css';
  * TelehealthDoctorChatbot Component (MedTech Standard)
  * Cửa sổ Bác sĩ Trực tuyến phong cách Telemedicine:
  * - Giao diện nền trắng lâm sàng, tông Medical Blue tạo sự tin cậy và thư thái.
- * - Hạn chế tối đa dưới 100 từ / câu và tối đa 3 câu hỏi / ngày.
+ * - Hạn chế tối đa 100 ký tự / câu và tối đa 3 câu hỏi / ngày.
  * - Hiển thị Card xác nhận đề xuất y khoa (Verification Proposal) trước khi lưu vào Supabase.
  * - Tự động reload lại Header khi người dùng xác nhận cập nhật thông tin sức khỏe.
  */
@@ -106,10 +106,6 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
     });
   };
 
-  const getWordCount = (str) => {
-    return str.trim() ? str.trim().split(/\s+/).length : 0;
-  };
-
   const getAuthToken = () => {
     let t = localStorage.getItem('token') || localStorage.getItem('access_token');
     if (!t && user) {
@@ -132,9 +128,9 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
     const trimmed = inputMessage.trim();
     if (!trimmed || loading) return;
 
-    const wordCount = getWordCount(trimmed);
-    if (wordCount > 100) {
-      alert(`Câu hỏi của bạn hiện có ${wordCount} từ. Để đảm bảo tính chính xác và súc tích trong y khoa, vui lòng rút gọn dưới 100 từ!`);
+    const characterCount = trimmed.length;
+    if (characterCount > 100) {
+      alert(`Câu hỏi của bạn hiện có ${characterCount} ký tự. Giới hạn tối đa là 100 ký tự.`);
       return;
     }
 
@@ -250,7 +246,7 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
     setActiveProposal(null);
   };
 
-  const currentWords = getWordCount(inputMessage);
+  const currentCharacters = inputMessage.length;
 
   return (
     <div className="telehealth-widget" role="complementary" aria-label="Bác sĩ Trợ lý FitBreak">
@@ -354,8 +350,8 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
           <form className="telehealth-footer" onSubmit={handleSendMessage}>
             <div className="telehealth-quota-bar">
               <span>Hạn mức: <strong>{remainingQuestions}/3</strong> câu hỏi hôm nay</span>
-              <span className={currentWords > 100 ? 'limit-warning' : ''}>
-                {currentWords}/100 từ
+              <span className={currentCharacters > 100 ? 'limit-warning' : ''}>
+                {currentCharacters}/100 ký tự
               </span>
             </div>
             <div className="telehealth-input-group">
@@ -365,12 +361,13 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
                 placeholder="Nhập triệu chứng, thuốc, thắc mắc y khoa..."
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
+                maxLength={100}
                 disabled={loading || remainingQuestions <= 0}
               />
               <button 
                 type="submit" 
                 className="telehealth-send-btn"
-                disabled={loading || !inputMessage.trim() || currentWords > 100 || remainingQuestions <= 0}
+                disabled={loading || !inputMessage.trim() || currentCharacters > 100 || remainingQuestions <= 0}
               >
                 Gửi
               </button>
