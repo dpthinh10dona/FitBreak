@@ -1,12 +1,62 @@
 import json
 import logging
 import re
+import unicodedata
 from typing import Dict, Any, Optional
 
 from app.core.ollama_client import generate_chat
 from app.services.clinical_rag import InsufficientMedicalEvidenceError, retrieve_medical_docs
 
 logger = logging.getLogger(__name__)
+
+HEALTH_SCOPE_KEYWORDS = {
+    "sức khỏe", "y tế", "bác sĩ", "bệnh", "triệu chứng", "đau", "nhức", "mỏi",
+    "sốt", "ho", "khó thở", "ngực", "bụng", "dạ dày", "tiêu hóa", "tiêu chảy",
+    "táo bón", "buồn nôn", "dị ứng", "huyết áp", "đường huyết", "tim mạch", "xương",
+    "khớp", "cơ bắp", "chấn thương", "tập luyện", "vận động", "thể dục", "thể thao",
+    "dinh dưỡng", "thực phẩm", "ăn uống", "calo", "protein", "bmi", "cân nặng",
+    "chiều cao", "giấc ngủ", "mất ngủ", "mệt", "chóng mặt", "uống thuốc", "liều thuốc",
+    "khám", "cấp cứu", "hồi phục", "tâm lý", "stress", "lo âu", "trầm cảm", "da liễu",
+    "mụn", "răng", "đau mắt", "khô mắt", "mờ mắt", "tai mũi họng",
+    "medical", "health", "doctor", "diet", "exercise", "pain",
+}
+
+
+def _normalize_scope_text(text: str) -> str:
+    normalized = unicodedata.normalize("NFC", text or "").lower()
+    return re.sub(r"[^\w]+", " ", normalized, flags=re.UNICODE).strip()
+
+
+def is_health_related_message(message: str) -> bool:
+    """Cheap fail-fast scope gate; runs before retrieval or any model/provider call."""
+    normalized = _normalize_scope_text(message)
+    if not normalized:
+        return False
+    padded = f" {normalized} "
+    return any(f" {keyword} " in padded for keyword in HEALTH_SCOPE_KEYWORDS)
+
+
+def out_of_scope_result() -> Dict[str, Any]:
+    return {
+        "reply": (
+            "Mình chỉ hỗ trợ các câu hỏi liên quan đến sức khỏe, triệu chứng, dinh dưỡng, "
+            "vận động và phục hồi. Bạn hãy đặt lại câu hỏi trong phạm vi này; nếu có tình "
+            "trạng khẩn cấp, hãy liên hệ cơ sở y tế hoặc gọi 115."
+        ),
+        "status": "OUT_OF_SCOPE",
+        "allow_ai_generation": False,
+        "has_update": False,
+        "has_proposed_changes": False,
+        "conflict_detected": False,
+        "conflict_explanation": None,
+        "conflict_message": None,
+        "summary_for_ui_card": None,
+        "suggested_food_recommendation": None,
+        "suggested_level_of_physical_activity": None,
+        "reason": "Câu hỏi nằm ngoài phạm vi sức khỏe của FitBreak.",
+        "verification_question": None,
+        "proposed_updates": None,
+    }
 
 # ==============================================================================
 # AGENT 1: TRỢ LÝ SÀNG LỌC Y TẾ SỐ (AI CLINICAL INTAKE ASSISTANT) - CLARIFICATION & RAG
@@ -326,6 +376,9 @@ async def analyze_and_chat(
     2. Agent 2 (Personalization Logic Engine): Strictly evaluates Supabase updates and clinical conflicts.
     3. UI Human-in-the-Loop Action Card: Renders proposal waiting for user confirmation.
     """
+    if not is_health_related_message(user_message):
+        return out_of_scope_result()
+
     try:
         # Step 1: Run Agent 1 (Clinical AI Advisor)
         clinical_reply = await run_clinical_advisor(user_message, user_profile)
@@ -396,19 +449,15 @@ async def analyze_and_chat(
     except Exception as e:
         logger.error(f"Multi-Agent Telehealth execution error: {e}", exc_info=True)
         fallback_reply = (
-            "**Nhận định sơ bộ:**\n"
-            "Hệ thống ghi nhận câu hỏi của bạn. Kết nối mạng hiện đang chậm, "
-            "tôi xin gửi khuyến cáo an toàn sơ bộ dựa trên hồ sơ thể trạng của bạn.\n\n"
-            "**Giải pháp & Lời khuyên tức thì:**\n"
-            "- Hãy tạm dừng các vận động mạnh và nghỉ ngơi tại nơi thoáng khí.\n"
-            "- Uống nước ấm từng ngụm nhỏ, giữ ấm cơ thể và duy trì chế độ ăn thanh đạm.\n\n"
-            "**Dấu hiệu cảnh báo (Red Flags):**\n"
-            "- Nếu xuất hiện đau dữ dội, choáng ngất hoặc khó thở, vui lòng đến ngay cơ sở y tế gần nhất.\n\n"
-            "**Miễn trừ trách nhiệm y tế (Disclaimer):**\n"
-            "*Thông tin tư vấn mang tính chất hỗ trợ ban đầu và không thay thế chẩn đoán chuyên khoa của bác sĩ.*"
+            "**Chưa đủ căn cứ y khoa để trả lời**\n\n"
+            "FitBreak không thể truy xuất và kiểm chứng tài liệu y khoa vào lúc này, "
+            "nên hệ thống không tạo khuyến nghị sức khỏe tự động. Vui lòng thử lại sau "
+            "hoặc tham khảo bác sĩ/nhân viên y tế có chuyên môn."
         )
         return {
             "reply": fallback_reply,
+            "status": "INSUFFICIENT_DATA",
+            "allow_ai_generation": False,
             "has_update": False,
             "has_proposed_changes": False,
             "conflict_detected": False,
@@ -417,7 +466,7 @@ async def analyze_and_chat(
             "summary_for_ui_card": None,
             "suggested_food_recommendation": None,
             "suggested_level_of_physical_activity": None,
-            "reason": None,
+            "reason": f"Không thể kiểm chứng bằng chứng y khoa: {type(e).__name__}",
             "verification_question": None,
             "proposed_updates": None
         }

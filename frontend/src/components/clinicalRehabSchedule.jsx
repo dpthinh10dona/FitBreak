@@ -292,6 +292,7 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated, initialSelec
 
     // Trích xuất các lưu ý hạn chế vận động (limitation_type) từ các bài tập trong lịch trình
     const rawLimitations = [];
+    const rawSources = [];
     Object.values(weeklySchedule).forEach(dayVal => {
       const slots = Array.isArray(dayVal) ? dayVal : (dayVal ? [dayVal] : []);
       slots.forEach(slot => {
@@ -300,10 +301,15 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated, initialSelec
             const trimmed = ex.limitation_type.trim();
             if (trimmed) rawLimitations.push(trimmed);
           }
+          if (ex.source_citation && typeof ex.source_citation === 'string') {
+            const source = ex.source_citation.trim();
+            if (source) rawSources.push(source);
+          }
         });
       });
     });
     const uniqueLimitations = Array.from(new Set(rawLimitations));
+    const uniqueSources = Array.from(new Set(rawSources));
 
     return (
       <div className="clinical-schedule-container">
@@ -358,6 +364,13 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated, initialSelec
           </div>
         </div>
 
+        {uniqueSources.length > 0 && (
+          <div className="exercise-sources-card">
+            <span className="exercise-sources-label">Nguồn dữ liệu bài tập:</span>
+            <span className="exercise-sources-value">{uniqueSources.join('; ')}</span>
+          </div>
+        )}
+
         {/* 7 Days Grid */}
         <div className="clinical-board-grid">
           {days.map((day) => {
@@ -411,6 +424,11 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated, initialSelec
                             <span style={{ textTransform: 'capitalize' }}>🎯 {bodyPart}</span>
                             <span className="task-sets-clinical">⏱ {setsReps}</span>
                           </div>
+                          {ex.source_citation && (
+                            <div className="task-source-clinical">
+                              Nguồn: {ex.source_citation}
+                            </div>
+                          )}
                         </div>
                       );
                     })

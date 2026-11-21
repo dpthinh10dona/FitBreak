@@ -7,6 +7,29 @@ from app.services.safety_guardrail import check_exercise_data_sufficiency
 DATA_PATH = Path(__file__).resolve().parents[1] / "core" / "dataset" / "Exercise_Database.csv"
 DF_EXERCISES_CACHE = pd.read_csv(DATA_PATH)
 
+REQUIRED_EXERCISE_COLUMNS = {
+    "type",
+    "exercise",
+    "level of physical activity",
+    "time_need",
+    "body_part",
+    "limitation_type",
+    "source_citation",
+}
+missing_exercise_columns = REQUIRED_EXERCISE_COLUMNS.difference(DF_EXERCISES_CACHE.columns)
+if missing_exercise_columns:
+    raise RuntimeError(
+        "Exercise_Database.csv thiếu các cột bắt buộc: "
+        + ", ".join(sorted(missing_exercise_columns))
+    )
+
+# Chuẩn hóa metadata nguồn ngay khi nạp để API luôn trả chuỗi JSON hợp lệ,
+# không làm rơi source_citation hoặc phát sinh NaN ở frontend.
+for metadata_column in ("limitation_type", "source_citation"):
+    DF_EXERCISES_CACHE[metadata_column] = (
+        DF_EXERCISES_CACHE[metadata_column].fillna("").astype(str).str.strip()
+    )
+
 
 def filter_exercises(user_information: dict) -> pd.DataFrame:
     """Lọc danh sách bài tập theo level thể chất của user ('heavy', 'medium', 'light')."""

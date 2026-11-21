@@ -245,54 +245,19 @@ async def test_nutrition_rag():
 # TEST 6: AI CLINICAL INTAKE ASSISTANT & PERSONALIZATION ENGINE
 # ==============================================================================
 async def test_clinical_intake_chatbot():
-    print("\n--- TEST GROUP 6: AI Clinical Intake Assistant & Personalization Engine ---")
-    from app.services.chatbot_agent import (
-        run_clinical_advisor,
-        run_personalization_engine,
-        analyze_and_chat,
-        map_activity_to_code
-    )
+    print("\n--- TEST GROUP 6: Deterministic Clinical Evaluation (No Network) ---")
+    from evaluation.run_clinical_evaluation import EVAL_DIR, run
 
-    # 6.1 Map activity code
-    code_light = map_activity_to_code("Nghỉ ngơi hoàn toàn")
-    code_medium = map_activity_to_code("Vận động vừa phải")
-    code_heavy = map_activity_to_code("Cường độ cao")
-    log_test("Activity Code Mapping", code_light == "light" and code_medium == "medium" and code_heavy == "heavy", f"L: {code_light}, M: {code_medium}, H: {code_heavy}")
-
-    # 6.2 Red Flag Emergency Triage (Must trigger immediately)
-    emergency_msg = "Tôi đang bị đau thắt ngực dữ dội, khó thở và ngất xỉu"
-    emergency_reply = await run_clinical_advisor(emergency_msg, {})
-    is_emergency = "115" in emergency_reply or "cấp cứu" in emergency_reply.lower() or "RED FLAG" in emergency_reply
-    log_test(
-        "Emergency Triage (Red Flag Fast-Path)",
-        is_emergency,
-        "Detected critical condition and prompted 115 / ER redirect"
+    report = await run(
+        EVAL_DIR / "clinical_cases_80.json",
+        EVAL_DIR / "reports",
     )
-
-    # 6.3 Claude-Style Clarification (Ambiguous Query -> 1-2 questions with options)
-    ambiguous_msg = "Tôi bị đau mỏi người từ hôm qua"
-    clarification_reply = await run_clinical_advisor(ambiguous_msg, {})
-    is_clarifying = "?" in clarification_reply and ("1." in clarification_reply or "2." in clarification_reply or "thông tin" in clarification_reply.lower() or "vị trí" in clarification_reply.lower())
-    log_test(
-        "Claude-Style Clarification (Ambiguity Handling)",
-        is_clarifying,
-        "Asked targeted clarifying questions with empathetic pacing"
-    )
-
-    # 6.4 Full analyze_and_chat Pipeline with Personalization Proposal
-    sample_profile = {
-        "height": 170,
-        "weight": 65,
-        "food_recommendation": "Ăn giảm muối",
-        "level_of_physical_activity": "medium",
-        "allergies": "Không có"
-    }
-    chat_result = await analyze_and_chat("Tôi bị bong gân cổ chân sưng to sau khi đá bóng", sample_profile)
-    log_test(
-        "Full Clinical & Personalization Multi-Agent Flow",
-        "reply" in chat_result and "has_proposed_changes" in chat_result,
-        f"Proposal: {chat_result.get('has_proposed_changes')}, Activity update: {chat_result.get('suggested_level_of_physical_activity')}"
-    )
+    for group, result in report["summary_by_group"].items():
+        log_test(
+            f"Clinical evaluation: {group}",
+            result["failed"] == 0,
+            f"Passed {result['passed']}/{result['total']} (network_used={report['network_used']})",
+        )
 
 
 # ==============================================================================

@@ -3,11 +3,11 @@ from typing import Optional, List, Dict, Any
 
 class ChatMessage(BaseModel):
     role: str  # 'user' | 'assistant'
-    content: str
+    content: str = Field(..., max_length=1000)
 
 class ChatBotRequest(BaseModel):
-    message: str = Field(..., max_length=1000)
-    history: Optional[List[ChatMessage]] = []
+    message: str = Field(..., min_length=1, max_length=100)
+    history: Optional[List[ChatMessage]] = Field(default_factory=list, max_length=5)
 
 class FieldUpdateDetail(BaseModel):
     previous_value: Optional[str] = None

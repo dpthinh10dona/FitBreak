@@ -273,6 +273,13 @@
   gap: 6px;
 }
 
+.exercise-source-citation {
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
 .exercise-duration b {
   color: var(--text-primary);
 }
