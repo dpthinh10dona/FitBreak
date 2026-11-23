@@ -4,21 +4,35 @@ import tempfile
 from pathlib import Path
 from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi.responses import FileResponse
 from app.core.database import supabase
 from app.core.token_authorization import require_admin, token_authorization, tokenAuthorization
 from app.schemas.chatbot import ChatBotRequest, ChatBotResponse, ProfileUpdateProposal, ConfirmProposalRequest
-from app.services.chatbot_agent import analyze_and_chat, is_health_related_message, out_of_scope_result
+from app.services.chatbot_agent import analyze_and_chat, is_health_related_message, out_of_scope_result, is_emergency_message, emergency_result
 from app.services.clinical_rag import get_medical_knowledge_stats, ingest_new_medical_document
 from app.services.medical_storage import persist_medical_document
 from app.services.runtime_store import daily_chatbot_quota
-try:
-    from app.services.knowledge_ingestor import DEFAULT_KNOWLEDGE_DIR
-except Exception:
-    DEFAULT_KNOWLEDGE_DIR = Path(__file__).resolve().parents[1] / "core" / "dataset" / "medical_knowledge"
+from app.services.knowledge_ingestor import DEFAULT_KNOWLEDGE_DIR, load_source_catalog
 
 router = APIRouter(prefix="/chatbot", tags=["AI Health ChatBot"])
 
 DAILY_LIMIT = 3
+
+
+@router.get("/sources/{source_id}")
+async def get_approved_medical_source(source_id: str):
+    """Serve only a catalogued PDF so citations remain accessible without guessed external URLs."""
+    for record in load_source_catalog(DEFAULT_KNOWLEDGE_DIR).values():
+        if record.get("source_id") != source_id or record.get("verification_status") != "APPROVED":
+            continue
+        filename = Path(record.get("file", "")).name
+        if not filename.lower().endswith(".pdf") or filename != record.get("file"):
+            break
+        target = DEFAULT_KNOWLEDGE_DIR / filename
+        if target.is_file():
+            return FileResponse(target, media_type="application/pdf", filename=filename)
+        break
+    raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu nguồn đã duyệt.")
 
 @router.get("/quota")
 async def get_chatbot_quota(
@@ -58,13 +72,17 @@ async def ask_health_chatbot(
 
     # 2. Ràng buộc số lượng câu hỏi trong ngày: Tối đa 3 câu/ngày
     current_count = await daily_chatbot_quota.get(user_id)
-    if current_count >= DAILY_LIMIT:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Bạn đã sử dụng hết 3 lượt tư vấn miễn phí hôm nay. Vui lòng quay lại vào ngày mai!"
+    # Câu ngoài phạm vi được chặn trước Supabase profile, RAG và model; không trừ lượt hỏi.
+    if is_emergency_message(message):
+        agent_output = emergency_result()
+        return ChatBotResponse(
+            reply=agent_output["reply"],
+            remaining_questions_today=max(0, DAILY_LIMIT - current_count),
+            proposal=None,
+            status=agent_output["status"],
+            allow_ai_generation=False,
         )
 
-    # Câu ngoài phạm vi được chặn trước Supabase profile, RAG và model; không trừ lượt hỏi.
     if not is_health_related_message(message):
         agent_output = out_of_scope_result()
         return ChatBotResponse(
@@ -73,6 +91,12 @@ async def ask_health_chatbot(
             proposal=None,
             status=agent_output["status"],
             allow_ai_generation=False,
+        )
+
+    if current_count >= DAILY_LIMIT:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Bạn đã sử dụng hết 3 lượt tư vấn miễn phí hôm nay. Vui lòng quay lại vào ngày mai!"
         )
 
     # 3. Lấy profile hiện tại từ Supabase (dùng auth_data.client đã xác thực JWT)

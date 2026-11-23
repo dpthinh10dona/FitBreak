@@ -22,6 +22,15 @@ logger = logging.getLogger("knowledge_ingestor")
 
 DEFAULT_KNOWLEDGE_DIR = Path(__file__).resolve().parents[1] / "core" / "dataset" / "medical_knowledge"
 CACHE_FILE_NAME = "chunks_cache.json"
+CATALOG_FILE_NAME = "source_catalog.json"
+
+
+def load_source_catalog(knowledge_dir: Path) -> dict:
+    path = knowledge_dir / CATALOG_FILE_NAME
+    if not path.exists():
+        return {}
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return {item["file"]: item for item in data.get("sources", [])}
 
 
 class KnowledgeIngestor:
@@ -54,6 +63,7 @@ class KnowledgeIngestor:
 
         logger.info(f"[Ingestor] Đang phân mảnh (chunking) tài liệu: {p.name}")
         raw_chunks = chunk_document(markdown_text, source=str(p), config=self.config)
+        source_record = load_source_catalog(self.knowledge_dir).get(p.name)
 
         # Xác định chuyên mục (category) từ thư mục con nếu có
         category = "chung"
@@ -75,6 +85,10 @@ class KnowledgeIngestor:
             metadata.setdefault("file_type", p.suffix.lstrip(".").lower())
             metadata.setdefault("category", category)
             metadata.setdefault("ingested_at", time.strftime("%Y-%m-%d %H:%M:%S"))
+            if source_record:
+                for field in ("source_id", "title", "publisher", "decision", "issued_at",
+                              "effective_at", "source_url", "scope", "limitations", "verification_status"):
+                    metadata[field] = source_record.get(field)
 
             # Extract auto-keywords from content and headings
             keywords = self._extract_keywords(content, metadata.get("heading_path", ""))
@@ -87,6 +101,7 @@ class KnowledgeIngestor:
                 "id": f"{p.stem}_{idx}",
                 "title": metadata.get("section_title") or metadata.get("heading_path") or p.stem,
                 "source": p.name,
+                "source_id": source_record.get("source_id") if source_record else None,
                 "category": category,
                 "heading_path": metadata.get("heading_path", ""),
                 "content": content,

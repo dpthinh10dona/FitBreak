@@ -5,15 +5,67 @@ for RAG-First clinical advisor responses.
 """
 
 from typing import List, Dict, Any, Optional
+from datetime import date
 import re
 import logging
 from pathlib import Path
+from app.services.knowledge_ingestor import load_source_catalog, DEFAULT_KNOWLEDGE_DIR
 
 logger = logging.getLogger("clinical_rag")
+
+GENERIC_QUERY_TERMS = {"điều", "trị", "hướng", "dẫn", "chẩn", "đoán", "của", "tôi", "bệnh", "thế", "nào", "cho", "với", "nên", "sau", "làm", "sao", "khi", "cần", "được"}
+
+
+def _meaningful_terms(text: str) -> set[str]:
+    return {term for term in re.findall(r"\w+", text.lower()) if len(term) >= 3 and term not in GENERIC_QUERY_TERMS}
+
+
+def _local_chunk_score(chunk: dict, query_terms: set[str]) -> float:
+    """Rank actual guidance text, not the decision cover or table of contents."""
+    content = chunk.get("content", "").lower()
+    title = chunk.get("title", "")
+    page_match = re.search(r"Trang\s+(\d+)", title)
+    if page_match and int(page_match.group(1)) <= 5:
+        return 0.0
+    if "......" in content or "nơi nhận:" in content or "quyết định:" in content:
+        return 0.0
+    overlap = sum(term in content for term in query_terms)
+    if overlap < max(2, (3 * len(query_terms) + 3) // 4):
+        return 0.0
+    return overlap + sum(min(content.count(term), 3) * 0.1 for term in query_terms)
+
+
+def _ranked_evidence_score(chunk: dict, source_record: dict, query_terms: set[str]) -> float:
+    content_score = _local_chunk_score(chunk, query_terms)
+    if content_score <= 0:
+        return 0.0
+    title_terms = _meaningful_terms(source_record["title"])
+    title_overlap = len(query_terms & title_terms)
+    exact_topic_bonus = 20 if len(query_terms) >= 2 and query_terms <= title_terms else 0
+    return content_score + 6 * title_overlap + exact_topic_bonus
 
 
 class InsufficientMedicalEvidenceError(RuntimeError):
     """Không có tài liệu đã xác minh đủ liên quan để cho phép AI tư vấn."""
+
+
+def _approved_source_is_usable(item: dict) -> bool:
+    if item.get("verification_status") != "APPROVED":
+        return False
+    if not all(item.get(field) for field in ("source_id", "title", "limitations", "source_url", "file")):
+        return False
+    try:
+        effective = date.fromisoformat(item["effective_at"]) if item.get("effective_at") else None
+        expires = date.fromisoformat(item["expires_at"]) if item.get("expires_at") else None
+    except (TypeError, ValueError):
+        return False
+    return (effective is None or effective <= date.today()) and (expires is None or date.today() <= expires)
+
+
+def _source_label(item: dict) -> str:
+    decision = item.get("decision") or "không ghi số quyết định"
+    effective = item.get("effective_at") or "chưa xác định thời điểm áp dụng"
+    return f"{item['title']} ({decision}; hiệu lực: {effective})"
 
 try:
     from app.services.knowledge_ingestor import default_ingestor
@@ -104,20 +156,42 @@ def retrieve_medical_docs(user_message: str, top_k: int = 3) -> str:
     if not user_message:
         raise InsufficientMedicalEvidenceError("Câu hỏi trống, không thể truy xuất căn cứ y khoa.")
 
+    approved = {
+        item["source_id"]: item
+        for item in load_source_catalog(DEFAULT_KNOWLEDGE_DIR).values()
+        if _approved_source_is_usable(item)
+    }
+    query_terms = _meaningful_terms(user_message)
+
     # 0. ƯU TIÊN SỐ 1: Tìm kiếm ngữ nghĩa Cosine Similarity trên Supabase pgvector
     try:
         from app.services.supabase_rag_chat import search_medical_knowledge_pgvector
-        pg_chunks = search_medical_knowledge_pgvector(user_message, top_k=top_k, match_threshold=0.45)
+        pg_chunks = search_medical_knowledge_pgvector(
+            user_message, top_k=max(top_k * 5, 10), match_threshold=0.45
+        )
+        pg_chunks = [
+            c for c in pg_chunks if c.get("source_id") in approved
+            and _ranked_evidence_score(c, approved[c["source_id"]], query_terms) > 0
+        ]
+        pg_chunks.sort(
+            key=lambda c: _ranked_evidence_score(c, approved[c["source_id"]], query_terms),
+            reverse=True,
+        )
+        pg_chunks = pg_chunks[:top_k]
         if pg_chunks:
             formatted_chunks = []
             for i, chunk in enumerate(pg_chunks, 1):
-                source = chunk.get("source_name", "Tài liệu Y tế Bộ Y Tế")
+                source_record = approved[chunk["source_id"]]
+                source = _source_label(source_record)
                 heading = chunk.get("heading_path") or "Thông tin lâm sàng"
                 content = chunk.get("content", "").strip()
                 sim = chunk.get("similarity", 0)
                 formatted_chunks.append(
                     f"--- TRÍCH ĐOẠN {i} [{heading}] (Độ tương đồng: {sim:.1%}) ---\n"
                     f"Nguồn tài liệu: {source}\n"
+                    f"Mã nguồn: {chunk['source_id']}\n"
+                    f"URL nguồn: {source_record.get('source_url') or 'Chưa có'}\n"
+                    f"Giới hạn: {source_record['limitations']}\n"
                     f"{content}"
                 )
             return "\n\n".join(formatted_chunks)
@@ -127,30 +201,37 @@ def retrieve_medical_docs(user_message: str, top_k: int = 3) -> str:
     # 1. Ưu tiên số 2: Tìm kiếm trong Knowledge Ingestor (Document-based RAG local)
     if default_ingestor is not None:
         try:
-            dynamic_chunks = default_ingestor.search_chunks(user_message, top_k=top_k)
-            query_lower = user_message.lower()
-            dynamic_chunks = [
-                chunk
-                for chunk in dynamic_chunks
-                if any(
-                    keyword and keyword.lower() in query_lower
-                    for keyword in chunk.get("keywords", [])
-                )
-            ]
+            ranked_chunks = []
+            for chunk in default_ingestor.load_chunks():
+                source_record = approved.get(chunk.get("source_id"))
+                if not source_record or chunk.get("source") != source_record.get("file"):
+                    continue
+                score = _ranked_evidence_score(chunk, source_record, query_terms)
+                if score > 0:
+                    ranked_chunks.append((score, chunk))
+            ranked_chunks.sort(key=lambda entry: entry[0], reverse=True)
+            dynamic_chunks = [chunk for _, chunk in ranked_chunks[:top_k]]
             if dynamic_chunks:
                 formatted_chunks = []
                 for i, chunk in enumerate(dynamic_chunks, 1):
-                    source = chunk.get("source", "Tài liệu Y khoa FitBreak")
+                    source_record = approved[chunk["source_id"]]
+                    source = _source_label(source_record)
                     heading = chunk.get("heading_path") or chunk.get("title", "")
                     content = chunk.get("content", "").strip()
                     formatted_chunks.append(
                         f"--- TRÍCH ĐOẠN {i} [{heading}] ---\n"
                         f"Nguồn tài liệu: {source}\n"
+                        f"Mã nguồn: {chunk['source_id']}\n"
+                        f"URL nguồn: {source_record.get('source_url') or 'Chưa có'}\n"
+                        f"Giới hạn: {source_record['limitations']}\n"
                         f"{content}"
                     )
                 return "\n\n".join(formatted_chunks)
         except Exception as exc:
             logger.warning(f"Lỗi khi truy xuất tài liệu động: {exc}, chuyển sang tri thức tĩnh dự phòng...")
+
+    # Bộ tĩnh không có phiên bản/ngày hiệu lực được xác minh, không dùng để tư vấn.
+    raise InsufficientMedicalEvidenceError("Không có tài liệu đã duyệt và còn hiệu lực phù hợp.")
 
     # 2. Chỉ dùng bộ tĩnh khi thực sự khớp từ khóa; không chọn tài liệu mặc
     # định cho câu hỏi ngoài phạm vi vì điều đó tạo cảm giác có căn cứ giả.

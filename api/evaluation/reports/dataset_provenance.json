@@ -1,0 +1,936 @@
+{
+  "datasets": {
+    "food": {
+      "file": "Vietnamese_Food_Database.csv",
+      "row_count": 91,
+      "source_citations": {
+        "Bộ Y tế, Viện Dinh dưỡng Quốc gia": 91
+      },
+      "rows_missing_valid_period": 0,
+      "rows_missing_limitation": 0,
+      "rows_verified_against_original": 0,
+      "verification_status": "PENDING_ROW_VERIFICATION",
+      "context_reference": "https://chuyentrang.viendinhduong.vn/viewfilenew/vi/thu-vien-sach-chuyen-nganh/189/1.html",
+      "context_note": "Tài liệu Viện Dinh dưỡng là nguồn tham khảo chung; chưa đối chiếu từng công thức và giá trị dinh dưỡng của CSV.",
+      "review_items": [
+        {
+          "row_number": 2,
+          "name": "Phở bò chín",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 3,
+          "name": "Xúc xích rán (5 cái)",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 4,
+          "name": "Trứng vịt lộn",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 5,
+          "name": "Thịt xiên nướng",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 6,
+          "name": "Sắn luộc",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 7,
+          "name": "Xôi xéo",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 8,
+          "name": "Xôi lạc",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 9,
+          "name": "Xôi khúc",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 10,
+          "name": "Xôi đỗ xanh",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 11,
+          "name": "Cháo trai",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 12,
+          "name": "Cháo sườn",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 13,
+          "name": "Bún thang",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 14,
+          "name": "Bún riêu cua",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 15,
+          "name": "Bún ngan",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 16,
+          "name": "Bún móng giò",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 17,
+          "name": "Bún cá",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 18,
+          "name": "Bún sườn mọc",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 19,
+          "name": "Bún riêu cua bò giò",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 20,
+          "name": "Bún ốc",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 21,
+          "name": "Tim bầu dục xào cần tỏi",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 22,
+          "name": "Thịt gà xào sả",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 23,
+          "name": "Thịt trâu xào rau muống",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 24,
+          "name": "Thịt chim câu xào răm",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 25,
+          "name": "Thịt bò xào su su",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 26,
+          "name": "Thịt bò xào nấm",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 27,
+          "name": "Thịt bò xào măng",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 28,
+          "name": "Thịt bò xào hoa thiên lý",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 29,
+          "name": "Thịt bò xào hành tây cà chua",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 30,
+          "name": "Thịt bò xào đậu cove",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 31,
+          "name": "Thịt bò xào dứa",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 32,
+          "name": "Thịt bò xào cần tỏi",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 33,
+          "name": "Sườn xào chua ngọt",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 34,
+          "name": "Su hào xào",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 35,
+          "name": "Rau muống xào",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 36,
+          "name": "Cá trích hộp xốt cà chua",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 37,
+          "name": "Cá nục xốt cà chua (cá hộp)",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 38,
+          "name": "Cá ngừ hộp",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 39,
+          "name": "Miến ngan nước",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 40,
+          "name": "Mỳ vằn thắn",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 41,
+          "name": "Mỳ trộn bò",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 42,
+          "name": "Mỳ tim cật",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 43,
+          "name": "Miến lươn (nước)",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 44,
+          "name": "Hủ tiếu Nam vang nước",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 45,
+          "name": "Bánh canh ghẹ",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 46,
+          "name": "Miến gà trộn",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 47,
+          "name": "Mỳ trộn",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 48,
+          "name": "Miến riêu cua (trộn)",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 49,
+          "name": "Bánh canh sườn heo",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 50,
+          "name": "Vịt rang me",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 51,
+          "name": "Sủi dìn",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 52,
+          "name": "Phá lấu",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 53,
+          "name": "Lòng dồi sụn",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 54,
+          "name": "Giá bể xào",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 55,
+          "name": "Dồi sụn nướng",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 56,
+          "name": "Chim cút quay lá mắc mật (4 con)",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 57,
+          "name": "Bánh mỳ sốt trứng cút",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 58,
+          "name": "Bánh mỳ nướng muối ớt",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 59,
+          "name": "Bánh mỳ chảo",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 60,
+          "name": "Bánh mỳ chả cá sốt cay",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 61,
+          "name": "Bánh cuốn trứng",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 62,
+          "name": "Bánh cuốn nhân tôm thịt",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 63,
+          "name": "Cơm suất (cá, tôm, sườn chua ngọt)",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 64,
+          "name": "Cơm suất (thịt lợn, tôm)",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 65,
+          "name": "Cơm suất (thịt lợn, cá, ốc)",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 66,
+          "name": "Cơm suất (thịt gà, lợn, trứng)",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 67,
+          "name": "Cơm suất (tôm, ốc, thịt gà)",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 68,
+          "name": "Cơm suất (sườn, móng giò giả cầy)",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 69,
+          "name": "Cơm suất (ba chỉ kho)",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 70,
+          "name": "Cơm suất (ba chỉ rang)",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 71,
+          "name": "Cơm suất (sườn, đậu, chả lá lốt)",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 72,
+          "name": "Cơm suất (cá, trứng, thịt)",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 73,
+          "name": "Cơm suất (trứng, thịt ba chỉ)",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 74,
+          "name": "Cơm suất (thịt, cá)",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 75,
+          "name": "Cơm gà",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 76,
+          "name": "Cơm bụi",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 77,
+          "name": "Cơm bình dân (cá, thịt, tôm, đậu)",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 78,
+          "name": "Cơm bình dân (thịt gà, tôm, thịt lợn ba chỉ)",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 79,
+          "name": "Cơm bình dân (cá nục, thịt ba chỉ)",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 80,
+          "name": "Chả rươi",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 81,
+          "name": "Chả cá Lã Vọng",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 82,
+          "name": "Cánh gà tẩm bột chiên",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 83,
+          "name": "Cánh gà nướng (5 cái)",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 84,
+          "name": "Bánh tôm Hồ Tây",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 85,
+          "name": "Bánh cuốn Thanh Trì",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 86,
+          "name": "Bánh mỳ Pate thập cẩm",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 87,
+          "name": "Bánh mỳ pa tê trứng",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 88,
+          "name": "Bánh mỳ chảo lợn",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 89,
+          "name": "Bánh mỳ chảo bò",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 90,
+          "name": "Bánh mỳ bít tết",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 91,
+          "name": "Bánh mì chảo (4 cái)",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 92,
+          "name": "Trứng gà rán ngải cứu",
+          "source_citation": "Bộ Y tế, Viện Dinh dưỡng Quốc gia",
+          "valid_period": "2023",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        }
+      ],
+      "spot_checks": [
+        {
+          "name": "Phở bò chín",
+          "csv_kcal": "474.9",
+          "official_reference": "https://chuyentrang.viendinhduong.vn/FileUpload/Documents/500%20mon%20an%20thong%20dung/%2814%29%20Pho.PDF",
+          "official_variants_kcal": [
+            291,
+            352
+          ],
+          "result": "NOT_SAME_RECIPE",
+          "note": "Tài liệu gốc ghi hai công thức phở bò chín khác công thức CSV; không dùng trang này để xác nhận giá trị CSV."
+        }
+      ]
+    },
+    "exercise": {
+      "file": "Exercise_Database.csv",
+      "row_count": 36,
+      "source_citations": {
+        "Megagym Dataset": 36
+      },
+      "rows_missing_valid_period": 36,
+      "rows_missing_limitation": 0,
+      "rows_verified_against_original": 0,
+      "verification_status": "PENDING_ROW_VERIFICATION",
+      "context_reference": "https://www.who.int/publications/i/item/9789240015128",
+      "context_note": "Hướng dẫn WHO chỉ hỗ trợ nguyên tắc vận động chung; không xác nhận từng bài tập hoặc thời lượng trong CSV.",
+      "review_items": [
+        {
+          "row_number": 2,
+          "name": "HIIT",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 3,
+          "name": "LISS",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 4,
+          "name": "Walking",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 5,
+          "name": "Standard Push-Up",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 6,
+          "name": "Incline Push-Up",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 7,
+          "name": "Knee Push-Up",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 8,
+          "name": "Dumbbell Row",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 9,
+          "name": "Resistance Band Row",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 10,
+          "name": "Prone Cobra Pose",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 11,
+          "name": "Goblet Squat",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 12,
+          "name": "Bodyweight Squat",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 13,
+          "name": "Chair Squat",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 14,
+          "name": "Dumbbell Romanian Deadlift",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 15,
+          "name": "Banded Glute Bridge",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 16,
+          "name": "Bodyweight Glute Bridge",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 17,
+          "name": "Dumbbell Overhead Press",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 18,
+          "name": "Dumbbell Lateral Raise",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 19,
+          "name": "Band Pull-Apart",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 20,
+          "name": "Hanging Knee Raise",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 21,
+          "name": "Forearm Plank",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 22,
+          "name": "Dead Bug",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 23,
+          "name": "The Teaser",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 24,
+          "name": "Pilates Push-Up to Pike",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 25,
+          "name": "Side Plank with Leg Lift",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 26,
+          "name": "Advanced Swimming",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 27,
+          "name": "The Hundred",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 28,
+          "name": "Pilates Roll-Up",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 29,
+          "name": "Prone Swan Dive Prep",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 30,
+          "name": "Side Kick Series",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 31,
+          "name": "Kneeling Arm & Leg Reach",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 32,
+          "name": "Double Leg Stretch",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 33,
+          "name": "Toe Taps",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 34,
+          "name": "Cat-Cow Stretch",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 35,
+          "name": "Clamshell",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 36,
+          "name": "Pelvic Curl",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        },
+        {
+          "row_number": 37,
+          "name": "Bird-Dog",
+          "source_citation": "Megagym Dataset",
+          "valid_period": "",
+          "verification_status": "PENDING_ROW_VERIFICATION"
+        }
+      ]
+    }
+  }
+}

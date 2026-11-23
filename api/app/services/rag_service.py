@@ -149,16 +149,12 @@ def get_dish_info(dish_name: str, df: pd.DataFrame) -> dict:
 
       matched = df[df["name"].apply(normalize_text) == norm_target]
 
-      if matched.empty:
-            matched = df[df["name"].apply(normalize_text).str.contains(norm_target, regex=False)]
-
-      if matched.empty and not df.empty:
-            matched = df.head(1)
-
       if not matched.empty:
             row = matched.iloc[0]
             ingredients_val = row.get("ingredients", row["name"])
             limitation_val = row.get("limitation_type", "")
+            citation_val = row.get("source_citation", "")
+            period_val = row.get("valid_period", "")
             return {
                   "calories": float(row.get("calories", 0)),
                   "protein": float(row.get("protein_g", 0)),
@@ -167,6 +163,8 @@ def get_dish_info(dish_name: str, df: pd.DataFrame) -> dict:
                   "price": float(row.get("cost_vnd", 0)),
                   "ingredients": str(ingredients_val) if pd.notna(ingredients_val) else row["name"],
                   "limitation_type": str(limitation_val).strip() if pd.notna(limitation_val) else "",
+                  "source_citation": str(citation_val).strip() if pd.notna(citation_val) else "",
+                  "valid_period": str(period_val).strip() if pd.notna(period_val) else "",
                   "real_name": row["name"]
             }
       raise InvalidResponseError(f"Món ăn không có trong database: {dish_name}")
@@ -419,7 +417,9 @@ def format_meal_summary(response: str, df_pool: pd.DataFrame, user_information: 
                         "fat": round(bf_fat, 1),
                         "ingredients": scale_ingredients_text(bf_info["ingredients"], bf_mult),
                         "limitation_type": bf_info.get("limitation_type", ""),
-                        "source_citation": "Bảng thành phần dinh dưỡng thực phẩm Việt Nam (Viện Dinh dưỡng Quốc gia - Bộ Y tế)",
+                        "source_citation": bf_info.get("source_citation", ""),
+                        "valid_period": bf_info.get("valid_period", ""),
+                        "source_verification_status": "UNVERIFIED_ROW",
                   },
                   {
                         "type": "Bữa trưa",
@@ -435,7 +435,9 @@ def format_meal_summary(response: str, df_pool: pd.DataFrame, user_information: 
                         "fat": round(lu_total_fat, 1),
                         "ingredients": scale_ingredients_text(lu_main["ingredients"], lu_mult),
                         "limitation_type": lu_main.get("limitation_type", ""),
-                        "source_citation": "Bảng thành phần dinh dưỡng thực phẩm Việt Nam (Viện Dinh dưỡng Quốc gia - Bộ Y tế)",
+                        "source_citation": lu_main.get("source_citation", ""),
+                        "valid_period": lu_main.get("valid_period", ""),
+                        "source_verification_status": "UNVERIFIED_ROW",
                   },
                   {
                         "type": "Bữa tối",
@@ -451,7 +453,9 @@ def format_meal_summary(response: str, df_pool: pd.DataFrame, user_information: 
                         "fat": round(dn_total_fat, 1),
                         "ingredients": scale_ingredients_text(dn_main["ingredients"], dn_mult),
                         "limitation_type": dn_main.get("limitation_type", ""),
-                        "source_citation": "Bảng thành phần dinh dưỡng thực phẩm Việt Nam (Viện Dinh dưỡng Quốc gia - Bộ Y tế)",
+                        "source_citation": dn_main.get("source_citation", ""),
+                        "valid_period": dn_main.get("valid_period", ""),
+                        "source_verification_status": "UNVERIFIED_ROW",
                   },
             ],
       }
