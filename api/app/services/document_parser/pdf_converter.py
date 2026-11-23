@@ -1273,16 +1273,29 @@ def pdf_to_markdown(file_path: str | Path, output_dir: str) -> str:
     Được gọi bởi DocumentParserPipeline.
     Không lưu ảnh theo mặc định — chỉ OCR ảnh để lấy text.
     """
+    import tempfile
+    if output_dir is None:
+        with tempfile.TemporaryDirectory(prefix="fitbreak-pdf-") as temp_dir:
+            return pdf_to_markdown(file_path, temp_dir)
     os.makedirs(output_dir, exist_ok=True)
     base_name = Path(file_path).stem
     output_md_path = os.path.join(output_dir, f"{base_name}.md")
     engine = LocalCoreEngine()
     try:
-        md = asyncio.run(engine.extract_markdown_string_async(
-            str(file_path),
-            output_dir=output_dir,
-            image_output_dir=None,  # mặc định không lưu ảnh
-        ))
+        try:
+            md = asyncio.run(engine.extract_markdown_string_async(
+                str(file_path),
+                output_dir=output_dir,
+                image_output_dir=None,  # mặc định không lưu ảnh
+            ))
+        except ImportError:
+            from pypdf import PdfReader
+            md = "\n\n".join(
+                f"## Trang {number}\n\n{page.extract_text() or ''}"
+                for number, page in enumerate(PdfReader(str(file_path)).pages, 1)
+            )
+            if not md.strip():
+                raise ValueError("PDF không có văn bản trích xuất; cần OCR trước khi nạp.")
     finally:
         engine.shutdown()
     with open(output_md_path, "w", encoding="utf-8") as f:

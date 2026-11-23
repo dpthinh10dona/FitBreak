@@ -29,6 +29,8 @@ for metadata_column in ("limitation_type", "source_citation"):
     DF_EXERCISES_CACHE[metadata_column] = (
         DF_EXERCISES_CACHE[metadata_column].fillna("").astype(str).str.strip()
     )
+DF_EXERCISES_CACHE["valid_period"] = ""
+DF_EXERCISES_CACHE["source_verification_status"] = "UNVERIFIED_ROW"
 
 
 def filter_exercises(user_information: dict) -> pd.DataFrame:

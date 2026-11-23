@@ -38,7 +38,7 @@ async def food_suggest(
         # Supabase thực tế đã có đủ dữ liệu.
         profile_response = (
             token.client.table("profiles")
-            .select("height, weight, age, activity_frequency")
+            .select("*")
             .eq("id", token.user_id)
             .execute()
         )
@@ -130,6 +130,17 @@ async def food_suggest(
         return FoodSuggestResponse(success=True, result=result)
     except HTTPException:
         raise
+    except InvalidResponseError:
+        return FoodSuggestResponse(
+            success=False,
+            result={
+                "status": "INSUFFICIENT_DATA",
+                "allow_ai_generation": False,
+                "reasons": ["Món ăn do AI đề xuất không khớp đúng một dòng dữ liệu; chưa thể xác nhận nguồn và giá trị dinh dưỡng."],
+                "disclaimer": DEFAULT_DISCLAIMER,
+            },
+            error="INSUFFICIENT_DATA",
+        )
     except Exception:
         raise HTTPException(status_code=400, detail="Không thể tạo thực đơn từ dữ liệu đã cung cấp")
     # except AIModelOfflineException as e:

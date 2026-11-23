@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 HEALTH_SCOPE_KEYWORDS = {
     "sức khỏe", "y tế", "bác sĩ", "bệnh", "triệu chứng", "đau", "nhức", "mỏi",
     "sốt", "ho", "khó thở", "ngực", "bụng", "dạ dày", "tiêu hóa", "tiêu chảy",
+    "đái tháo đường", "tiền đái tháo đường", "tiểu đường", "ung thư",
     "táo bón", "buồn nôn", "dị ứng", "huyết áp", "đường huyết", "tim mạch", "xương",
     "khớp", "cơ bắp", "chấn thương", "tập luyện", "vận động", "thể dục", "thể thao",
     "dinh dưỡng", "thực phẩm", "ăn uống", "calo", "protein", "bmi", "cân nặng",
@@ -57,6 +58,49 @@ def out_of_scope_result() -> Dict[str, Any]:
         "verification_question": None,
         "proposed_updates": None,
     }
+
+
+def is_emergency_message(message: str) -> bool:
+    normalized = _normalize_scope_text(message)
+    strong_signs = (
+        "ngất", "co giật", "mất ý thức", "liệt", "tím tái", "nôn ra máu",
+        "chảy máu không cầm", "đau thắt ngực", "khó thở cấp", "yếu một bên",
+        "méo miệng", "nói khó", "đi ngoài ra máu nhiều", "cứng gáy",
+        "xuất huyết nhanh", "sưng môi kèm khó thở", "đau ngực lan",
+        "lú lẫn đột ngột", "không thể chịu lực", "biến dạng khớp",
+        "nước tiểu sẫm", "khó thở kèm tụt huyết áp",
+    )
+    chest_and_breath = ("đau ngực" in normalized or "đau thắt ngực" in normalized) and "khó thở" in normalized
+    return chest_and_breath or any(sign in normalized for sign in strong_signs)
+
+
+def emergency_result() -> Dict[str, Any]:
+    result = out_of_scope_result()
+    result.update({
+        "reply": "⚠️ Triệu chứng bạn mô tả có thể cần cấp cứu. Hãy dừng hoạt động, gọi 115 hoặc đến cơ sở y tế gần nhất ngay. FitBreak không thể chẩn đoán qua chat.",
+        "status": "MEDICAL_WARNING",
+        "reason": "Phát hiện dấu hiệu cần đánh giá cấp cứu.",
+    })
+    return result
+
+
+UNSAFE_OUTPUT_CLAIMS = (
+    "cứ tiếp tục tập nặng", "tập xuyên qua cơn đau", "tự tăng liều thuốc",
+    "dùng liều bất kỳ", "chắc chắn mắc bệnh", "thay thế hoàn toàn bác sĩ",
+    "không bao giờ cần bác sĩ", "tăng mức tạ ngay",
+)
+
+
+def contains_unsafe_medical_claim(reply: str) -> bool:
+    normalized = _normalize_scope_text(reply)
+    for claim in UNSAFE_OUTPUT_CLAIMS:
+        phrase = _normalize_scope_text(claim)
+        for match in re.finditer(re.escape(phrase), normalized):
+            prefix = normalized[max(0, match.start() - 18):match.start()].strip()
+            if not phrase.startswith("không ") and prefix.endswith(("không", "không nên", "đừng", "tránh")):
+                continue
+            return True
+    return False
 
 # ==============================================================================
 # AGENT 1: TRỢ LÝ SÀNG LỌC Y TẾ SỐ (AI CLINICAL INTAKE ASSISTANT) - CLARIFICATION & RAG
@@ -162,6 +206,7 @@ Cho mình hỏi thêm:
 - Format rõ ràng: sử dụng bullet points ngắn, xuống dòng thoáng mắt, không viết đoạn văn dài liền mạch.
 - KHÔNG bọc đầu ra trong JSON, KHÔNG sinh cú pháp code block ``` trừ khi viết công thức.
 - KHÔNG tự động hỏi xác nhận lưu dữ liệu Supabase (việc này do Node UI xử lý riêng).
+- Mỗi nhận định y khoa phải dựa trên phần tài liệu truy xuất và ghi mã trích dẫn dạng [SOURCE:MÃ_NGUỒN] ngay sau nhận định. Chỉ dùng đúng mã ở dòng "Mã nguồn" bên dưới. Nếu không có căn cứ phù hợp, không đưa ra nhận định y khoa.
 
 ---
 
@@ -323,6 +368,34 @@ async def run_clinical_advisor(
     if clinical_reply.endswith("```"):
         clinical_reply = clinical_reply[:-3].strip()
 
+    sources = re.findall(r"^Nguồn tài liệu: (.+)$", retrieved_docs, re.MULTILINE)
+    source_ids = set(re.findall(r"^Mã nguồn: ([\w-]+)$", retrieved_docs, re.MULTILINE))
+    if not sources:
+        raise InsufficientMedicalEvidenceError("Không có nguồn đã xác minh để trích dẫn.")
+    model_source_ids = set(re.findall(r"\[SOURCE:([^\]]+)\]", clinical_reply))
+    if source_ids and not model_source_ids:
+        raise InsufficientMedicalEvidenceError("Câu trả lời thiếu mã trích dẫn tài liệu đã truy xuất.")
+    if model_source_ids - source_ids:
+        raise InsufficientMedicalEvidenceError("Câu trả lời trích dẫn nguồn ngoài tài liệu đã truy xuất.")
+    if contains_unsafe_medical_claim(clinical_reply):
+        raise InsufficientMedicalEvidenceError("Câu trả lời có nhận định y khoa không an toàn.")
+    # Bỏ mục nguồn do model tự viết và gắn nguồn từ retrieval bằng mã ứng dụng.
+    clinical_reply = re.split(
+        r"(?im)^\s*(?:#{1,6}\s*)?(?:📚\s*)?Nguồn tài liệu tham khảo\s*:?",
+        clinical_reply,
+        maxsplit=1,
+    )[0].strip()
+    if not clinical_reply:
+        raise InsufficientMedicalEvidenceError("Model không cung cấp nội dung có thể kiểm chứng.")
+    urls = re.findall(r"^URL nguồn: (.+)$", retrieved_docs, re.MULTILINE)
+    urls.extend(["Chưa có"] * (len(sources) - len(urls)))
+    limitations = re.findall(r"^Giới hạn: (.+)$", retrieved_docs, re.MULTILINE)
+    limitations.extend(["Cần tham khảo nhân viên y tế trước khi áp dụng."] * (len(sources) - len(limitations)))
+    clinical_reply += "\n\nNguồn tài liệu tham khảo:\n" + "\n".join(
+        f"- {source}" + (f" — {url}" if url != "Chưa có" else "") + f". Giới hạn: {limit}"
+        for source, url, limit in dict.fromkeys(zip(sources, urls, limitations))
+    )
+
     return clinical_reply
 
 
@@ -376,6 +449,8 @@ async def analyze_and_chat(
     2. Agent 2 (Personalization Logic Engine): Strictly evaluates Supabase updates and clinical conflicts.
     3. UI Human-in-the-Loop Action Card: Renders proposal waiting for user confirmation.
     """
+    if is_emergency_message(user_message):
+        return emergency_result()
     if not is_health_related_message(user_message):
         return out_of_scope_result()
 
@@ -427,8 +502,8 @@ async def analyze_and_chat(
         return {
             "reply": (
                 "**Chưa đủ căn cứ y khoa để trả lời**\n\n"
-                "FitBreak chưa tìm thấy tài liệu đã xác minh đủ liên quan đến câu hỏi này, "
-                "nên hệ thống không tạo khuyến nghị tự động. Vui lòng tham khảo bác sĩ hoặc "
+                "FitBreak chưa có đủ căn cứ phù hợp hoặc câu trả lời chưa qua kiểm tra an toàn, "
+                "nên hệ thống không đưa ra khuyến nghị tự động. Vui lòng tham khảo bác sĩ hoặc "
                 "nhân viên y tế có chuyên môn.\n\n"
                 "**Miễn trừ trách nhiệm y tế:** FitBreak không thay thế chẩn đoán hoặc phác đồ điều trị."
             ),

@@ -29,21 +29,28 @@ def _citations(text: str) -> list[str]:
 async def _evaluate_text(case: dict, expected: dict) -> tuple[bool, str, list[str]]:
     expected_sources = sorted(expected.get("must_cite_exactly", []))
     retrieved_docs = "\n".join(
-        f"Nguồn tài liệu: {source}\nNội dung kiểm thử đã xác minh."
+        f"Nguồn tài liệu: {source}\nMã nguồn: {source}\nURL nguồn: Chưa có\nNội dung kiểm thử đã xác minh."
         for source in expected_sources
     )
 
     async def mock_generate(*_args, **_kwargs):
         return case.get("candidate", "")
 
+    rejected_by_backend = None
     with (
         patch("app.services.chatbot_agent.retrieve_medical_docs", return_value=retrieved_docs),
         patch("app.services.chatbot_agent.generate_chat", mock_generate),
     ):
-        text = await run_clinical_advisor(case["input"], {})
+        try:
+            text = await run_clinical_advisor(case["input"], {})
+        except InsufficientMedicalEvidenceError as exc:
+            text = ""
+            rejected_by_backend = str(exc)
 
     lower = text.lower()
     reasons: list[str] = []
+    if rejected_by_backend:
+        reasons.append("backend_rejected:" + rejected_by_backend)
 
     for term in case.get("must_include", expected.get("must_include", [])):
         if term.lower() not in lower:
@@ -157,6 +164,30 @@ async def run(cases_path: Path, output_dir: Path) -> dict:
         "summary_by_group": summary,
         "results": results,
     }
+    ai_error_results = [r for r in results if r["group"] == "AI_ERROR"]
+    report["ai_error_enforcement"] = {
+        "mock_wrong_answers": len(ai_error_results),
+        "evaluator_detected": sum(r["passed"] for r in ai_error_results),
+        "backend_rejected": sum("backend_rejected:" in r["reason"] for r in ai_error_results),
+        "clinical_accuracy_score": None,
+        "note": "Evaluator phát hiện câu giả lập sai; backend_rejected mới là số câu bị chặn trong luồng mock. Không đo độ đúng của LLM thực.",
+    }
+    error_counts = Counter(
+        reason.split(":", 1)[0]
+        for result in results if result["group"] == "AI_ERROR"
+        for reason in result["reason"].split("; ")
+        if reason.startswith(("forbidden_present:", "missing_required:", "citation_mismatch:", "backend_rejected:"))
+    )
+    fixes = {
+        "forbidden_present": "Chặn nội dung nguy hiểm và chuyển ca cần đánh giá y tế.",
+        "missing_required": "Bổ sung cảnh báo bắt buộc và kiểm thử lại với chuyên gia.",
+        "citation_mismatch": "Chỉ chấp nhận mã nguồn nằm trong retrieval.",
+        "backend_rejected": "Giữ cơ chế từ chối câu trích nguồn không hợp lệ.",
+    }
+    report["typical_errors_and_fixes"] = [
+        {"error": error, "count": count, "fix": fixes[error]}
+        for error, count in sorted(error_counts.items())
+    ]
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "clinical_evaluation_report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
@@ -181,6 +212,7 @@ async def run(cases_path: Path, output_dir: Path) -> dict:
         f"- Chưa đạt: **{report['failed']}**",
         "- Gọi mạng/provider: **Không**",
         f"- Trạng thái duyệt lâm sàng: **{suite['review_policy']['review_status']}**",
+        f"- AI_ERROR bị backend chặn: **{report['ai_error_enforcement']['backend_rejected']}/{report['ai_error_enforcement']['mock_wrong_answers']}**",
         "",
         "> Kết quả kỹ thuật không thay thế chữ ký duyệt của chuyên gia y tế.",
         "",
@@ -192,6 +224,9 @@ async def run(cases_path: Path, output_dir: Path) -> dict:
             f"| {group} | {stats['total']} | {stats['passed']} | "
             f"{stats['failed']} | {stats['pass_rate']}% |"
         )
+    lines.extend(["", "## Lỗi điển hình trong câu trả lời sai giả lập", "", "| Lỗi | Số ca | Cách sửa |", "|---|---:|---|"])
+    for item in report["typical_errors_and_fixes"]:
+        lines.append(f"| {item['error']} | {item['count']} | {item['fix']} |")
     lines.extend(["", "## Chi tiết", "", "| ID | Nhóm | Kết quả | Nguyên nhân |", "|---|---|---|---|"])
     for result in results:
         lines.append(
