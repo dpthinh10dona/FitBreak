@@ -66,10 +66,12 @@ async def register(data: signUp, request: Request):
         audit_event("auth.register", request, user_id=str(data.email), outcome="provider_rejected")
         error_code = str(getattr(exc, "code", "") or "").lower()
         error_message = str(exc).lower()
-        if "already" in error_message or "user_already_exists" in error_code:
+        if error_code in {"user_already_exists", "email_exists"} or (
+            not error_code and error_message.strip() == "user already registered"
+        ):
             detail = "Email này đã được đăng ký. Vui lòng đăng nhập hoặc sử dụng email khác."
             response_status = status.HTTP_409_CONFLICT
-        elif "rate" in error_message or "over_email_send_rate_limit" in error_code:
+        elif error_code in {"over_email_send_rate_limit", "over_request_rate_limit", "too_many_requests"}:
             detail = "Bạn đã đăng ký quá nhiều lần. Vui lòng đợi một lúc rồi thử lại."
             response_status = status.HTTP_429_TOO_MANY_REQUESTS
         elif "email" in error_message and "invalid" in error_message:
