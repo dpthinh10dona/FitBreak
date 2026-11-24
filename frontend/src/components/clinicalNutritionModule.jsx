@@ -463,7 +463,6 @@ const ClinicalNutritionModule = ({ user }) => {
                     <span className="citation-text">
                       {meal.source_citation || "Chưa ghi nguồn dữ liệu"}
                       {meal.valid_period && ` · Mốc dữ liệu: ${meal.valid_period}`}
-                      {meal.source_verification_status !== 'APPROVED' && ' · Chưa đối chiếu giá trị của từng món với tài liệu gốc'}
                     </span>
                   </div>
                 </div>

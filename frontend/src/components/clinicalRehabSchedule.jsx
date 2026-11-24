@@ -426,7 +426,7 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated, initialSelec
                           </div>
                           {ex.source_citation && (
                             <div className="task-source-clinical">
-                              Nguồn: {ex.source_citation}. Chưa xác minh thời điểm áp dụng và hướng dẫn cho từng bài tập.
+                              Nguồn: {ex.source_citation}.
                             </div>
                           )}
                         </div>

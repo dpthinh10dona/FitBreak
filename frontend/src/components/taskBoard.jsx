@@ -404,7 +404,7 @@ const TaskBoard = ({ scheduleData, onUpdateCoins, onUpdateSchedule, selectedTime
                           </div>
                           {item.source_citation && (
                             <div className="exercise-source-citation">
-                              Nguồn dữ liệu: {item.source_citation}. Chưa xác minh thời điểm áp dụng và hướng dẫn cho từng bài tập.
+                              Nguồn dữ liệu: {item.source_citation}.
                             </div>
                           )}
                         </div>
