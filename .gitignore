@@ -43,5 +43,9 @@ Thumbs.db
 # Logs
 *.log
 
+# Generated evaluation reports (keep deployment repository clean)
+api/evaluation/reports/
+api/evaluation/fitbreak_report_results.zip
+
 # Project configs
 pyproject.toml
