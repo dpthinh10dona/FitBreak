@@ -15,20 +15,6 @@
       "approval_basis": "Chủ dự án xác nhận đã kiểm chứng tài liệu ngày 2026-11-22."
     },
     {
-      "source_id": "BYT-2058-2020",
-      "file": "2058_qd-byt-huong-dan-chan-doan-va-dieu-tr-rltt.pdf",
-      "title": "Hướng dẫn chẩn đoán và điều trị một số rối loạn tâm thần thường gặp",
-      "publisher": "Bộ Y tế",
-      "decision": "2058/QĐ-BYT",
-      "issued_at": "2020-05-14",
-      "effective_at": "2020-05-14",
-      "source_url": "/chatbot/sources/BYT-2058-2020",
-      "scope": "Hướng dẫn chẩn đoán và điều trị một số rối loạn tâm thần thường gặp",
-      "limitations": "Tài liệu chuyên môn; cần nhân viên y tế đánh giá trước khi áp dụng cho cá nhân.",
-      "verification_status": "APPROVED",
-      "approval_basis": "Chủ dự án xác nhận đã kiểm chứng tài liệu ngày 2026-11-22."
-    },
-    {
       "source_id": "BYT-2187-2019",
       "file": "2187-2019-hddt-hoi-chung-mach-vanh-cap.pdf",
       "title": "Hướng dẫn chẩn đoán và xử trí hội chứng mạch vành cấp",
@@ -67,76 +53,6 @@
       "source_url": "https://emohbackup.moh.gov.vn/publish/attach/getfile/407300",
       "scope": "Tiền đái tháo đường; không dùng để chẩn đoán cá nhân",
       "limitations": "Cần nhân viên y tế đánh giá bối cảnh và hiệu lực văn bản trước khi áp dụng.",
-      "verification_status": "APPROVED",
-      "approval_basis": "Chủ dự án xác nhận đã kiểm chứng tài liệu ngày 2026-11-22."
-    },
-    {
-      "source_id": "BYT-3127-2020",
-      "file": "3127_QD-BYT_Huong-dan-chan-doan-va-dieu-tri-ung-thu-DD-1.pdf",
-      "title": "Hướng dẫn chẩn đoán và điều trị ung thư dạ dày",
-      "publisher": "Bộ Y tế",
-      "decision": "3127/QĐ-BYT",
-      "issued_at": "2020-07-17",
-      "effective_at": "2020-07-17",
-      "source_url": "https://emohbackup.moh.gov.vn/publish/attach/getfile/407296",
-      "scope": "Ung thư dạ dày; chỉ để tham khảo chuyên môn",
-      "limitations": "Không dùng để tự chẩn đoán hoặc điều trị; cần bác sĩ chuyên khoa.",
-      "verification_status": "APPROVED",
-      "approval_basis": "Chủ dự án xác nhận đã kiểm chứng tài liệu ngày 2026-11-22."
-    },
-    {
-      "source_id": "BYT-3128-2020",
-      "file": "3128_QD-BYT_Huong-dan-chan-doan-va-dieu-tri-ung-thu-vu.pdf",
-      "title": "Hướng dẫn chẩn đoán và điều trị ung thư vú",
-      "publisher": "Bộ Y tế",
-      "decision": "3128/QĐ-BYT",
-      "issued_at": "2020-07-17",
-      "effective_at": "2020-07-17",
-      "source_url": "/chatbot/sources/BYT-3128-2020",
-      "scope": "Hướng dẫn chẩn đoán và điều trị ung thư vú",
-      "limitations": "Tài liệu chuyên môn; cần nhân viên y tế đánh giá trước khi áp dụng cho cá nhân.",
-      "verification_status": "APPROVED",
-      "approval_basis": "Chủ dự án xác nhận đã kiểm chứng tài liệu ngày 2026-11-22."
-    },
-    {
-      "source_id": "BYT-3129-2020",
-      "file": "3129_QD-BYT_Huong-dan-chan-doan-va-dieu-tri-ung-thu-bieu-mo-te-bao-gan.pdf",
-      "title": "Hướng dẫn chẩn đoán và điều trị ung thư biểu mô tế bào gan",
-      "publisher": "Bộ Y tế",
-      "decision": "3129/QĐ-BYT",
-      "issued_at": "2020-07-17",
-      "effective_at": "2020-07-17",
-      "source_url": "/chatbot/sources/BYT-3129-2020",
-      "scope": "Hướng dẫn chẩn đoán và điều trị ung thư biểu mô tế bào gan",
-      "limitations": "Tài liệu chuyên môn; cần nhân viên y tế đánh giá trước khi áp dụng cho cá nhân.",
-      "verification_status": "APPROVED",
-      "approval_basis": "Chủ dự án xác nhận đã kiểm chứng tài liệu ngày 2026-11-22."
-    },
-    {
-      "source_id": "BYT-3130-2020",
-      "file": "3130_QD-BYT_Huong-dan-chan-doan-va-dieu-tri-UT-tuyen-tien-liẹt.pdf",
-      "title": "Hướng dẫn chẩn đoán và điều trị ung thư tuyến tiền liệt",
-      "publisher": "Bộ Y tế",
-      "decision": "3130/QĐ-BYT",
-      "issued_at": "2020-07-17",
-      "effective_at": "2020-07-17",
-      "source_url": "/chatbot/sources/BYT-3130-2020",
-      "scope": "Hướng dẫn chẩn đoán và điều trị ung thư tuyến tiền liệt",
-      "limitations": "Tài liệu chuyên môn; cần nhân viên y tế đánh giá trước khi áp dụng cho cá nhân.",
-      "verification_status": "APPROVED",
-      "approval_basis": "Chủ dự án xác nhận đã kiểm chứng tài liệu ngày 2026-11-22."
-    },
-    {
-      "source_id": "BYT-3908-2023",
-      "file": "3908__QD__ban_hanh_HD_thuyen_tac_huyet_khoi_tinh_mach_signed_12ec6.pdf",
-      "title": "Hướng dẫn điều trị dự phòng thuyên tắc huyết khối tĩnh mạch",
-      "publisher": "Bộ Y tế",
-      "decision": "3908/QĐ-BYT",
-      "issued_at": "2023-10-20",
-      "effective_at": "2023-10-20",
-      "source_url": "/chatbot/sources/BYT-3908-2023",
-      "scope": "Hướng dẫn điều trị dự phòng thuyên tắc huyết khối tĩnh mạch",
-      "limitations": "Tài liệu chuyên môn; cần nhân viên y tế đánh giá trước khi áp dụng cho cá nhân.",
       "verification_status": "APPROVED",
       "approval_basis": "Chủ dự án xác nhận đã kiểm chứng tài liệu ngày 2026-11-22."
     },
@@ -225,5 +141,5 @@
       "approval_basis": "Chủ dự án xác nhận đã kiểm chứng tài liệu ngày 2026-11-22."
     }
   ],
-  "policy": "Chủ dự án xác nhận đã kiểm chứng cả 16 PDF ngày 2026-11-22. APPROVED cho phép RAG dùng tài liệu; ngày áp dụng chưa xác định được ghi rõ thay vì suy đoán. Kết quả kiểm thử kỹ thuật không phải chứng nhận chuyên môn cho phản hồi AI."
+  "policy": "Danh mục 10 tài liệu phục vụ kiến thức dinh dưỡng, vận động và nhận diện giới hạn an toàn. APPROVED là xác nhận của chủ dự án, không phải thẩm định lâm sàng độc lập."
 }

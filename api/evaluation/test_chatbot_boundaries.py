@@ -157,7 +157,7 @@ class VerifiedSourceTests(unittest.TestCase):
 
     def test_all_owner_approved_pdfs_are_cached_and_retrievable(self):
         catalog = load_source_catalog(DEFAULT_KNOWLEDGE_DIR)
-        self.assertEqual(len(catalog), 16)
+        self.assertEqual(len(catalog), 10)
         self.assertTrue(all(_approved_source_is_usable(item) for item in catalog.values()))
         cache = json.loads((DEFAULT_KNOWLEDGE_DIR / "chunks_cache.json").read_text(encoding="utf-8"))
         cached_files = {chunk["source"] for chunk in cache}
@@ -168,8 +168,8 @@ class VerifiedSourceTests(unittest.TestCase):
 
     def test_newly_approved_source_can_be_used_offline(self):
         with patch("app.services.supabase_rag_chat.search_medical_knowledge_pgvector", return_value=[]):
-            result = retrieve_medical_docs("Ung thư vú điều trị ra sao?")
-        self.assertIn("Mã nguồn: BYT-3128-2020", result)
+            result = retrieve_medical_docs("Tiền đái tháo đường là gì?")
+        self.assertIn("Mã nguồn: BYT-3087-2020", result)
 
     def test_unsafe_medication_claim_is_blocked_without_blocking_negation(self):
         self.assertTrue(contains_unsafe_medical_claim("Tự tăng liều thuốc."))
