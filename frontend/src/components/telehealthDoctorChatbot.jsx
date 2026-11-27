@@ -187,7 +187,9 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
       const botMsg = {
         role: 'assistant',
         content: data.reply,
-        proposal: data.proposal
+        proposal: data.proposal,
+        status: data.status,
+        reasonCode: data.reason_code
       };
 
       setMessages((prev) => [...prev, botMsg]);

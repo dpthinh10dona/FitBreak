@@ -15,7 +15,15 @@ if str(API_DIR) not in sys.path:
 from pydantic import ValidationError
 from app.schemas.chatbot import ChatBotRequest
 from app.router.chatbot import ask_health_chatbot, get_approved_medical_source
-from app.services.chatbot_agent import analyze_and_chat, classify_message_scope, run_clinical_advisor, contains_unsafe_medical_claim
+from app.services.chatbot_agent import (
+    MedicalAnswerValidationError,
+    MissingMedicalInformationError,
+    OutOfMedicalScopeError,
+    analyze_and_chat,
+    classify_message_scope,
+    contains_unsafe_medical_claim,
+    run_clinical_advisor,
+)
 from app.services.clinical_rag import InsufficientMedicalEvidenceError, retrieve_medical_docs, _approved_source_is_usable
 from app.services.knowledge_ingestor import DEFAULT_KNOWLEDGE_DIR, load_source_catalog
 
@@ -147,6 +155,98 @@ class ChatbotScopeTests(unittest.TestCase):
         ):
             with self.assertRaises(ValueError):
                 asyncio.run(classify_message_scope("Một câu hỏi mơ hồ"))
+
+    def test_scope_classifier_distinguishes_out_of_scope_and_missing_context(self):
+        with patch(
+            "app.services.chatbot_agent.generate_chat",
+            new=AsyncMock(return_value='{"status":"OUT_OF_SCOPE","clarification_question":null}'),
+        ):
+            with self.assertRaises(OutOfMedicalScopeError):
+                asyncio.run(classify_message_scope("Viết code Python"))
+
+        with patch(
+            "app.services.chatbot_agent.generate_chat",
+            new=AsyncMock(return_value=(
+                '{"status":"NEEDS_CLARIFICATION",'
+                '"clarification_question":"Bạn đang gặp triệu chứng gì?"}'
+            )),
+        ):
+            with self.assertRaises(MissingMedicalInformationError) as caught:
+                asyncio.run(classify_message_scope("Tôi thấy không khỏe"))
+        self.assertEqual(caught.exception.clarification_question, "Bạn đang gặp triệu chứng gì?")
+
+    def test_api_requests_clarification_without_profile_or_quota_consumption(self):
+        class ExplodingClient:
+            def table(self, *_args, **_kwargs):
+                raise AssertionError("profile database must not be queried")
+
+        quota_increment = AsyncMock(side_effect=AssertionError("quota must not be consumed"))
+        auth = SimpleNamespace(user_id="clarification-test-user", client=ExplodingClient())
+        with (
+            patch("app.router.chatbot.daily_chatbot_quota.get", new=AsyncMock(return_value=1)),
+            patch("app.router.chatbot.daily_chatbot_quota.increment", quota_increment),
+            patch(
+                "app.router.chatbot.classify_message_scope",
+                new=AsyncMock(side_effect=MissingMedicalInformationError("Bạn đau ở vị trí nào?")),
+            ),
+        ):
+            response = asyncio.run(ask_health_chatbot(
+                ChatBotRequest(message="Tôi thấy không khỏe"), auth
+            ))
+
+        self.assertEqual(response.status, "NEEDS_CLARIFICATION")
+        self.assertEqual(response.reason_code, "MISSING_USER_CONTEXT")
+        self.assertIn("Bạn đau ở vị trí nào?", response.reply)
+        self.assertEqual(response.remaining_questions_today, 2)
+        quota_increment.assert_not_awaited()
+
+    def test_answer_validation_failure_has_a_distinct_status(self):
+        with patch(
+            "app.services.chatbot_agent.run_clinical_advisor",
+            new=AsyncMock(side_effect=MedicalAnswerValidationError("Thiếu mã nguồn")),
+        ):
+            result = asyncio.run(analyze_and_chat("Tôi bị đau cơ", {}, scope_status="IN_SCOPE"))
+
+        self.assertEqual(result["status"], "ANSWER_BLOCKED")
+        self.assertEqual(result["reason_code"], "ANSWER_VALIDATION_FAILED")
+        self.assertFalse(result["allow_ai_generation"])
+
+    def test_api_does_not_consume_quota_when_no_answer_is_available(self):
+        class ProfileClient:
+            def table(self, *_args, **_kwargs):
+                return self
+
+            def select(self, *_args, **_kwargs):
+                return self
+
+            def eq(self, *_args, **_kwargs):
+                return self
+
+            def execute(self):
+                return SimpleNamespace(data=[{}])
+
+        quota_increment = AsyncMock(side_effect=AssertionError("quota must not be consumed"))
+        auth = SimpleNamespace(user_id="evidence-test-user", client=ProfileClient())
+        no_evidence = {
+            "reply": "Chưa đủ căn cứ y khoa để trả lời.",
+            "status": "INSUFFICIENT_DATA",
+            "reason_code": "MEDICAL_KNOWLEDGE_NOT_FOUND",
+            "allow_ai_generation": False,
+        }
+        with (
+            patch("app.router.chatbot.daily_chatbot_quota.get", new=AsyncMock(return_value=1)),
+            patch("app.router.chatbot.daily_chatbot_quota.increment", quota_increment),
+            patch("app.router.chatbot.classify_message_scope", new=AsyncMock(return_value="IN_SCOPE")),
+            patch("app.router.chatbot.analyze_and_chat", new=AsyncMock(return_value=no_evidence)),
+        ):
+            response = asyncio.run(ask_health_chatbot(
+                ChatBotRequest(message="Tôi bị đau cơ sau tập"), auth
+            ))
+
+        self.assertEqual(response.status, "INSUFFICIENT_DATA")
+        self.assertEqual(response.reason_code, "MEDICAL_KNOWLEDGE_NOT_FOUND")
+        self.assertEqual(response.remaining_questions_today, 2)
+        quota_increment.assert_not_awaited()
 
 
 class ChatbotCharacterLimitTests(unittest.TestCase):
