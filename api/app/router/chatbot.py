@@ -9,7 +9,16 @@ from fastapi.responses import FileResponse
 from app.core.database import supabase
 from app.core.token_authorization import require_admin, token_authorization, tokenAuthorization
 from app.schemas.chatbot import ChatBotRequest, ChatBotResponse, ProfileUpdateProposal, ConfirmProposalRequest
-from app.services.chatbot_agent import analyze_and_chat, classify_message_scope, out_of_scope_result, is_emergency_message, emergency_result
+from app.services.chatbot_agent import (
+    MissingMedicalInformationError,
+    OutOfMedicalScopeError,
+    analyze_and_chat,
+    classify_message_scope,
+    emergency_result,
+    is_emergency_message,
+    needs_clarification_result,
+    out_of_scope_result,
+)
 from app.services.clinical_rag import get_medical_knowledge_stats, ingest_new_medical_document
 from app.services.medical_storage import persist_medical_document
 from app.services.runtime_store import daily_chatbot_quota
@@ -82,6 +91,7 @@ async def ask_health_chatbot(
             remaining_questions_today=max(0, DAILY_LIMIT - current_count),
             proposal=None,
             status=agent_output["status"],
+            reason_code=agent_output.get("reason_code"),
             allow_ai_generation=False,
         )
 
@@ -89,6 +99,26 @@ async def ask_health_chatbot(
     # vẫn được chặn trước truy vấn hồ sơ/RAG và không trừ lượt hỏi.
     try:
         scope_status = await classify_message_scope(message)
+    except OutOfMedicalScopeError:
+        agent_output = out_of_scope_result()
+        return ChatBotResponse(
+            reply=agent_output["reply"],
+            remaining_questions_today=max(0, DAILY_LIMIT - current_count),
+            proposal=None,
+            status=agent_output["status"],
+            reason_code=agent_output["reason_code"],
+            allow_ai_generation=False,
+        )
+    except MissingMedicalInformationError as exc:
+        agent_output = needs_clarification_result(exc.clarification_question)
+        return ChatBotResponse(
+            reply=agent_output["reply"],
+            remaining_questions_today=max(0, DAILY_LIMIT - current_count),
+            proposal=None,
+            status=agent_output["status"],
+            reason_code=agent_output["reason_code"],
+            allow_ai_generation=False,
+        )
     except Exception as exc:
         logger.warning("Không thể phân loại phạm vi bằng model; tiếp tục theo luồng an toàn: %s", exc)
         scope_status = "IN_SCOPE"
@@ -100,6 +130,7 @@ async def ask_health_chatbot(
             remaining_questions_today=max(0, DAILY_LIMIT - current_count),
             proposal=None,
             status=agent_output["status"],
+            reason_code=agent_output.get("reason_code"),
             allow_ai_generation=False,
         )
 
@@ -121,8 +152,9 @@ async def ask_health_chatbot(
         scope_status=scope_status,
     )
 
-    # Tăng lượt đếm câu hỏi hôm nay
-    current_count = await daily_chatbot_quota.increment(user_id)
+    # Chỉ trừ lượt khi hệ thống thực sự tạo được câu trả lời đã kiểm chứng.
+    if agent_output.get("status", "PASS") == "PASS":
+        current_count = await daily_chatbot_quota.increment(user_id)
     remaining = max(0, DAILY_LIMIT - current_count)
 
     # 5. Xây dựng đề xuất cập nhật nếu AI phát hiện thông tin mới
@@ -148,6 +180,7 @@ async def ask_health_chatbot(
         remaining_questions_today=remaining,
         proposal=proposal,
         status=agent_output.get("status", "PASS"),
+        reason_code=agent_output.get("reason_code", "ANSWER_AVAILABLE"),
         allow_ai_generation=agent_output.get("allow_ai_generation", True),
     )
 
