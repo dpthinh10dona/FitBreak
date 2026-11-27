@@ -15,7 +15,7 @@ if str(API_DIR) not in sys.path:
 from pydantic import ValidationError
 from app.schemas.chatbot import ChatBotRequest
 from app.router.chatbot import ask_health_chatbot, get_approved_medical_source
-from app.services.chatbot_agent import analyze_and_chat, is_health_related_message, run_clinical_advisor, contains_unsafe_medical_claim
+from app.services.chatbot_agent import analyze_and_chat, classify_message_scope, run_clinical_advisor, contains_unsafe_medical_claim
 from app.services.clinical_rag import InsufficientMedicalEvidenceError, retrieve_medical_docs, _approved_source_is_usable
 from app.services.knowledge_ingestor import DEFAULT_KNOWLEDGE_DIR, load_source_catalog
 
@@ -58,7 +58,7 @@ class ChatbotScopeTests(unittest.TestCase):
         self.assertIn("115", response.reply)
         quota_increment.assert_not_awaited()
 
-    def test_unrelated_messages_are_rejected_locally(self):
+    def test_unrelated_messages_are_rejected_before_clinical_ai(self):
         unrelated = [
             "Viết code Python cho tôi",
             "Thủ đô của Pháp là gì?",
@@ -76,11 +76,15 @@ class ChatbotScopeTests(unittest.TestCase):
         ]
         for message in unrelated:
             with self.subTest(message=message):
-                self.assertFalse(is_health_related_message(message))
-
-                with patch(
-                    "app.services.chatbot_agent.run_clinical_advisor",
-                    new=AsyncMock(side_effect=AssertionError("AI must not be called")),
+                with (
+                    patch(
+                        "app.services.chatbot_agent.classify_message_scope",
+                        new=AsyncMock(return_value="OUT_OF_SCOPE"),
+                    ),
+                    patch(
+                        "app.services.chatbot_agent.run_clinical_advisor",
+                        new=AsyncMock(side_effect=AssertionError("Clinical AI must not be called")),
+                    ),
                 ):
                     result = asyncio.run(analyze_and_chat(message, {}))
 
@@ -99,6 +103,7 @@ class ChatbotScopeTests(unittest.TestCase):
         with (
             patch("app.router.chatbot.daily_chatbot_quota.get", quota_get),
             patch("app.router.chatbot.daily_chatbot_quota.increment", quota_increment),
+            patch("app.router.chatbot.classify_message_scope", new=AsyncMock(return_value="OUT_OF_SCOPE")),
         ):
             response = asyncio.run(
                 ask_health_chatbot(ChatBotRequest(message="Viết code Python cho tôi"), auth)
@@ -109,8 +114,9 @@ class ChatbotScopeTests(unittest.TestCase):
         self.assertEqual(response.remaining_questions_today, 2)
         quota_increment.assert_not_awaited()
 
-    def test_health_messages_remain_in_scope(self):
+    def test_scope_classifier_uses_semantic_model_decision(self):
         related = [
+            "Tập xong hôm sau cơ bị ê ẩm khó cử động là bị sao, có nên tập tiếp không?",
             "Tôi bị đau ngực",
             "Cách tập thể dục an toàn?",
             "Tôi khó thở khi vận động",
@@ -128,7 +134,19 @@ class ChatbotScopeTests(unittest.TestCase):
         ]
         for message in related:
             with self.subTest(message=message):
-                self.assertTrue(is_health_related_message(message))
+                model = AsyncMock(return_value='{"status":"IN_SCOPE"}')
+                with patch("app.services.chatbot_agent.generate_chat", new=model):
+                    result = asyncio.run(classify_message_scope(message))
+                self.assertEqual(result, "IN_SCOPE")
+                self.assertIn(message, model.await_args.args[0])
+
+    def test_scope_classifier_rejects_invalid_model_status(self):
+        with patch(
+            "app.services.chatbot_agent.generate_chat",
+            new=AsyncMock(return_value='{"status":"MAYBE"}'),
+        ):
+            with self.assertRaises(ValueError):
+                asyncio.run(classify_message_scope("Một câu hỏi mơ hồ"))
 
 
 class ChatbotCharacterLimitTests(unittest.TestCase):

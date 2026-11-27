@@ -1,6 +1,7 @@
 import os
 import uuid
 import tempfile
+import logging
 from pathlib import Path
 from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
@@ -8,13 +9,14 @@ from fastapi.responses import FileResponse
 from app.core.database import supabase
 from app.core.token_authorization import require_admin, token_authorization, tokenAuthorization
 from app.schemas.chatbot import ChatBotRequest, ChatBotResponse, ProfileUpdateProposal, ConfirmProposalRequest
-from app.services.chatbot_agent import analyze_and_chat, is_health_related_message, out_of_scope_result, is_emergency_message, emergency_result
+from app.services.chatbot_agent import analyze_and_chat, classify_message_scope, out_of_scope_result, is_emergency_message, emergency_result
 from app.services.clinical_rag import get_medical_knowledge_stats, ingest_new_medical_document
 from app.services.medical_storage import persist_medical_document
 from app.services.runtime_store import daily_chatbot_quota
 from app.services.knowledge_ingestor import DEFAULT_KNOWLEDGE_DIR, load_source_catalog
 
 router = APIRouter(prefix="/chatbot", tags=["AI Health ChatBot"])
+logger = logging.getLogger(__name__)
 
 DAILY_LIMIT = 3
 
@@ -72,7 +74,7 @@ async def ask_health_chatbot(
 
     # 2. Ràng buộc số lượng câu hỏi trong ngày: Tối đa 3 câu/ngày
     current_count = await daily_chatbot_quota.get(user_id)
-    # Câu ngoài phạm vi được chặn trước Supabase profile, RAG và model; không trừ lượt hỏi.
+    # Cấp cứu được chặn bằng quy tắc xác định để không phụ thuộc vào độ trễ của model.
     if is_emergency_message(message):
         agent_output = emergency_result()
         return ChatBotResponse(
@@ -83,7 +85,15 @@ async def ask_health_chatbot(
             allow_ai_generation=False,
         )
 
-    if not is_health_related_message(message):
+    # Dùng model hiểu ngữ nghĩa thay cho bộ lọc từ khóa cứng. Câu ngoài phạm vi
+    # vẫn được chặn trước truy vấn hồ sơ/RAG và không trừ lượt hỏi.
+    try:
+        scope_status = await classify_message_scope(message)
+    except Exception as exc:
+        logger.warning("Không thể phân loại phạm vi bằng model; tiếp tục theo luồng an toàn: %s", exc)
+        scope_status = "IN_SCOPE"
+
+    if scope_status == "OUT_OF_SCOPE":
         agent_output = out_of_scope_result()
         return ChatBotResponse(
             reply=agent_output["reply"],
@@ -107,7 +117,8 @@ async def ask_health_chatbot(
     agent_output = await analyze_and_chat(
         user_message=message,
         user_profile=user_profile,
-        history=payload.history
+        history=payload.history,
+        scope_status=scope_status,
     )
 
     # Tăng lượt đếm câu hỏi hôm nay
