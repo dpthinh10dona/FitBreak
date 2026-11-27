@@ -9,7 +9,7 @@ import sys
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 EVAL_DIR = Path(__file__).resolve().parent
 API_DIR = EVAL_DIR.parent
@@ -91,7 +91,10 @@ async def _evaluate_insufficient(case: dict, expected: dict) -> tuple[bool, dict
 
     with (
         patch("app.services.chatbot_agent.run_clinical_advisor", fail_advisor),
-        patch("app.services.chatbot_agent.is_health_related_message", return_value=True),
+        patch(
+            "app.services.chatbot_agent.classify_message_scope",
+            new=AsyncMock(return_value="IN_SCOPE"),
+        ),
         patch("app.services.chatbot_agent.logger.error"),
     ):
         actual = await analyze_and_chat(case["input"], {})
