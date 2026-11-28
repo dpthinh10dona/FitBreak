@@ -492,7 +492,9 @@ async def process_rag_pipeline(user_information: dict) -> str:
             return {"guardrail": blocked, **blocked}
 
       # Truyền filtered_df vào prompt_builder để LLM chỉ chọn trong danh sách này
-      food_rec = get_user_value(user_information, "food_recommendation", None)
+      from app.services.pii_scrubber import scrub_pii
+      allergen = scrub_pii(str(allergen))
+      food_rec = None  # Profile free text can contain earlier chatbot prose.
 
       prompt = await prompt_builder(
             calories_need=get_user_value(user_information, "calories_need"),

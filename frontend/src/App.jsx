@@ -16,7 +16,12 @@ import OnboardingTour from './components/onboardingTour';
 import PrivacyCenter from './components/PrivacyCenter';
 import './App.css';
 
-const getScheduleKey = (u) => (u?.email ? `workoutSchedule_${u.email}` : null);
+const getScheduleKey = (u) => (u?.id ? `workoutSchedule_${u.id}` : null);
+
+const cacheUser = (value) => {
+  const { email, name, phone, address, school, workplace, user_metadata, app_metadata, ...minimal } = value;
+  localStorage.setItem('user', JSON.stringify(minimal));
+};
 
 const loadScheduleForUser = (u) => {
   const key = getScheduleKey(u);
@@ -52,10 +57,10 @@ function App() {
   const handleAvatarUpdated = () => {
     setAvatarVersion((prev) => prev + 1);
   };
-  const fetchUserProfileByEmail = async (email, token) => {
-    if (!email || !token) return null;
+  const fetchUserProfile = async (token) => {
+    if (!token) return null;
     try {
-      const response = await fetch(`${API_BASE_URL}/profiles/get-profile-by-email/${email}`, {
+      const response = await fetch(`${API_BASE_URL}/profiles/me`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -187,7 +192,7 @@ function App() {
           }
 
           const [profile, stats, savedSchedule] = await Promise.all([
-            fetchUserProfileByEmail(parsedUser.email, token),
+            fetchUserProfile(token),
             fetchUserStats(token),
             loadScheduleFromServer(token, parsedUser),
           ]);
@@ -207,7 +212,7 @@ function App() {
           };
 
           setUser(fullUserData);
-          localStorage.setItem('user', JSON.stringify(fullUserData));
+          cacheUser(fullUserData);
           setCurrentScreen('main');
           setShowCreateProfileModal(!profile);
 
@@ -241,7 +246,7 @@ function App() {
       }
       const signedUpUser = { ...userObj, token, access_token: token, hasProfile: false };
       setUser(signedUpUser);
-      localStorage.setItem('user', JSON.stringify(signedUpUser));
+      cacheUser(signedUpUser);
       setWorkoutSchedule(null);
       setSelectedTimeSlots([]);
       setCurrentScreen('main');
@@ -250,7 +255,7 @@ function App() {
     }
 
     const [profile, stats] = await Promise.all([
-      fetchUserProfileByEmail(userObj?.email, token),
+      fetchUserProfile(token),
       fetchUserStats(token)
     ]);
     if (profile === undefined) return;
@@ -266,7 +271,7 @@ function App() {
     };
 
     setUser(fullUserData);
-    localStorage.setItem('user', JSON.stringify(fullUserData));
+    cacheUser(fullUserData);
     setWorkoutSchedule(savedSchedule.schedule);
     setSelectedTimeSlots(savedSchedule.slots);
     setCurrentScreen('main');
@@ -280,13 +285,12 @@ function App() {
 
   const handleUpdateProfileSuccess = async (updatedData) => {
     const token = localStorage.getItem('token') || localStorage.getItem('access_token');
-    const email = user?.email || updatedData?.email;
-    const refreshedProfile = await fetchUserProfileByEmail(email, token);
+    const refreshedProfile = await fetchUserProfile(token);
     const newProfileInfo = refreshedProfile || updatedData?.profile || updatedData?.user || updatedData || {};
 
     setUser((prevUser) => {
       const newUserState = { ...prevUser, ...newProfileInfo };
-      localStorage.setItem('user', JSON.stringify(newUserState));
+      cacheUser(newUserState);
       return newUserState;
     });
   };
@@ -294,12 +298,12 @@ function App() {
   const handleCreateProfileSuccess = async (data) => {
     const token = localStorage.getItem('token') || localStorage.getItem('access_token');
     const [profile, stats] = await Promise.all([
-      fetchUserProfileByEmail(user?.email, token),
+      fetchUserProfile(token),
       fetchUserStats(token),
     ]);
     const updatedUser = { ...user, ...(data?.user || {}), ...profile, ...stats, hasProfile: true };
     setUser(updatedUser);
-    localStorage.setItem('user', JSON.stringify(updatedUser));
+    cacheUser(updatedUser);
     setShowCreateProfileModal(false);
     if (!localStorage.getItem('fitbreak_tour_completed')) setShowOnboardingTour(true);
   };
@@ -307,7 +311,7 @@ function App() {
   const handleUpdateCoins = (newCoins) => {
     setUser((prevUser) => {
       const updatedUser = { ...prevUser, coins: newCoins };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      cacheUser(updatedUser);
       return updatedUser;
     });
   };
@@ -319,7 +323,7 @@ function App() {
 
     setUser((prevUser) => {
       const updatedUser = { ...prevUser, ...stats };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      cacheUser(updatedUser);
       return updatedUser;
     });
   };
@@ -426,12 +430,12 @@ function App() {
           user={user} 
           onProfileUpdated={async () => {
             const token = localStorage.getItem('token');
-            if (user?.email && token) {
-              const updatedProfile = await fetchUserProfileByEmail(user.email, token);
+            if (token) {
+              const updatedProfile = await fetchUserProfile(token);
               if (updatedProfile) {
                 const newFull = { ...user, ...updatedProfile };
                 setUser(newFull);
-                localStorage.setItem('user', JSON.stringify(newFull));
+                cacheUser(newFull);
               }
             }
           }} 

@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, UUID4
 
 class joinTeam(BaseModel):
-    email : str
+    invite_code: UUID4

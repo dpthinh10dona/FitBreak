@@ -1,13 +1,9 @@
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
-
-class ChatMessage(BaseModel):
-    role: str  # 'user' | 'assistant'
-    content: str = Field(..., max_length=1000)
+from pydantic import BaseModel, ConfigDict, Field
+from typing import Optional, Literal
 
 class ChatBotRequest(BaseModel):
-    message: str = Field(..., min_length=1, max_length=100)
-    history: Optional[List[ChatMessage]] = Field(default_factory=list, max_length=5)
+    model_config = ConfigDict(extra="forbid")
+    message: str = Field(..., min_length=1, max_length=99)
 
 class FieldUpdateDetail(BaseModel):
     previous_value: Optional[str] = None
@@ -41,5 +37,5 @@ class ChatBotResponse(BaseModel):
     allow_ai_generation: bool = True
 
 class ConfirmProposalRequest(BaseModel):
-    food_recommendation: Optional[str] = None
-    level_of_physical_activity: Optional[str] = None
+    model_config = ConfigDict(extra="forbid")
+    status_flag: Literal["restrict_heavy_exercise", "maintain_activity", "nutrition_review"]

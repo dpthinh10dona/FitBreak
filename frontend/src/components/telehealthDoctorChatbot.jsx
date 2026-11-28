@@ -35,25 +35,25 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
 
   const getQuotaStorageKey = (currentUser) => {
     const u = currentUser || user;
-    let email = u?.email;
-    if (!email) {
+    let accountId = u?.id;
+    if (!accountId) {
       try {
         const cachedUser = JSON.parse(localStorage.getItem('user') || '{}');
-        email = cachedUser?.email;
+        accountId = cachedUser?.id;
       } catch (e) {}
     }
-    return `fitbreak_telehealth_quota_${email || 'guest'}_${getTodayDateStr()}`;
+    return `fitbreak_telehealth_quota_${accountId || 'guest'}_${getTodayDateStr()}`;
   };
 
   const [loading, setLoading] = useState(false);
   const [remainingQuestions, setRemainingQuestions] = useState(() => {
     try {
-      let email = user?.email;
-      if (!email) {
+      let accountId = user?.id;
+      if (!accountId) {
         const cachedUser = JSON.parse(localStorage.getItem('user') || '{}');
-        email = cachedUser?.email;
+        accountId = cachedUser?.id;
       }
-      const key = `fitbreak_telehealth_quota_${email || 'guest'}_${new Date().toISOString().split('T')[0]}`;
+      const key = `fitbreak_telehealth_quota_${accountId || 'guest'}_${new Date().toISOString().split('T')[0]}`;
       const saved = localStorage.getItem(key);
       if (saved !== null) {
         return parseInt(saved, 10);
@@ -150,7 +150,7 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
     }
 
     const token = getAuthToken();
-    if (!token && !user?.email) {
+    if (!token) {
       alert('Vui lòng đăng nhập để kết nối với Bác sĩ Trợ lý.');
       return;
     }

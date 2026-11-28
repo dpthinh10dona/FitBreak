@@ -24,12 +24,9 @@ const FoodSuggest = () => {
         const fetchUserProfile = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const userObj = JSON.parse(localStorage.getItem('user') || '{}');
-                const email = userObj?.email;
-
                 let data = null;
-                if (email) {
-                    const res = await fetch(`${API_BASE_URL}/profiles/get-profile-by-email/${email}`, {
+                if (token) {
+                    const res = await fetch(`${API_BASE_URL}/profiles/me`, {
                         headers: {
                             'Authorization': `Bearer ${token}`,
                         },
@@ -159,7 +156,7 @@ const FoodSuggest = () => {
             food_recommendation: profile?.food_recommendation || "",
             height_cm: Number(profile?.height) || null,
             weight_kg: Number(profile?.weight) || null,
-            age: Number(profile?.age) || null,
+            age: profile?.birth_year ? new Date().getFullYear() - Number(profile.birth_year) : null,
             free_minutes_per_week: Number.isFinite(profileFreeMinutes) && profileFreeMinutes >= 0
                 ? profileFreeMinutes
                 : (derivedFreeMinutes ?? null),

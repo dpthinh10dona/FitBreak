@@ -179,6 +179,11 @@ def generate_rag_response(
     """
     Tổng hợp câu trả lời hoàn chỉnh dựa trên câu hỏi và các chunks y khoa được trích xuất.
     """
+    from app.services.pii_scrubber import scrub_symptom
+    user_query = scrub_symptom(user_query)
+    # This legacy entry point accepts a free-form profile string. It cannot be
+    # proven anonymous, so no profile context is forwarded to Gemini.
+    user_profile_context = None
     start_time = time.time()
 
     # Nếu chưa truyền chunks vào, tự động tìm kiếm từ pgvector
