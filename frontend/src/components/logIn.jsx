@@ -71,11 +71,11 @@ const LogIn = ({ onLoginSuccess, onGoToSignUp, notice = '' }) => {
             </div>
             <div className="feature-item">
               <span className="feature-icon">🥗</span>
-              <span>Đề xuất thực đơn dinh dưỡng lâm sàng theo bệnh lý</span>
+              <span>Gợi ý thực đơn tham khảo theo mục tiêu cá nhân</span>
             </div>
             <div className="feature-item">
               <span className="feature-icon">🤖</span>
-              <span>Bác sĩ AI Telehealth tư vấn trực tuyến 24/7</span>
+              <span>Trợ lý tra cứu thông tin sức khỏe hỗ trợ 24/7</span>
             </div>
           </div>
         </div>
@@ -83,7 +83,7 @@ const LogIn = ({ onLoginSuccess, onGoToSignUp, notice = '' }) => {
         <div className="login-form-container">
           <div className="login-form-header">
             <h2>Đăng Nhập Hệ Thống</h2>
-            <p>Truy cập hồ sơ y tế và tiếp tục lộ trình chăm sóc sức khỏe của bạn</p>
+            <p>Truy cập ghi chú chỉ số cá nhân và tiếp tục lộ trình chăm sóc sức khỏe của bạn</p>
           </div>
 
           <form className="login-form" onSubmit={handleSubmit}>

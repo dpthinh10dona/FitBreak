@@ -1,14 +1,24 @@
 import { useState } from 'react';
 import { API_BASE_URL } from '../config';
+import MedicalDisclaimerModal, { AI_HEALTH_CONSENT_KEY } from './MedicalDisclaimerModal';
+import DisclaimerBanner from './DisclaimerBanner';
+import AiTransparencyBadge from './AiTransparencyBadge';
 import '../style/healthChatbot.css';
 
 const HealthChatbot = ({ user, onProfileUpdated }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [hasConsent, setHasConsent] = useState(() => {
+    try {
+      return localStorage.getItem(AI_HEALTH_CONSENT_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [inputMessage, setInputMessage] = useState('');
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: 'Xin chào! Tôi là Trợ lý Bác sĩ FitBreak. Tôi có thể giải đáp các thắc mắc về sức khỏe, triệu chứng hay bệnh lý của bạn và giúp bạn cá nhân hóa chế độ ăn, lịch tập phù hợp nhất.',
+      content: 'Xin chào! Tôi là Trợ lý tra cứu thông tin sức khỏe FitBreak. Tôi có thể hỗ trợ tra cứu thông tin tham khảo về sức khỏe, dinh dưỡng và lịch tập phù hợp với bạn.',
     }
   ]);
   const [loading, setLoading] = useState(false);
@@ -128,28 +138,34 @@ const HealthChatbot = ({ user, onProfileUpdated }) => {
       {!isOpen && (
         <button className="chatbot-toggle-btn" onClick={() => setIsOpen(true)}>
           <span>🩺</span>
-          <span>Bác Sĩ AI</span>
+          <span>Trợ Lý Sức Khỏe</span>
           <span className="chatbot-badge">{remainingQuestions}/3</span>
         </button>
       )}
 
       {isOpen && (
         <div className="chatbot-window">
+          <MedicalDisclaimerModal
+            isOpen={!hasConsent}
+            onAccept={() => setHasConsent(true)}
+          />
           <div className="chatbot-header">
             <div className="chatbot-header-title">
               <span className="chatbot-avatar-icon">👨‍⚕️</span>
               <div>
-                <h4>FitBreak Health Doctor</h4>
-                <span className="chatbot-status">Sẵn sàng chẩn đoán & tư vấn</span>
+                <h4>Trợ Lý Tra Cứu Thông Tin Sức Khỏe</h4>
+                <span className="chatbot-status">Sẵn sàng hỗ trợ tra cứu thông tin</span>
               </div>
             </div>
             <button className="chatbot-close-btn" onClick={() => setIsOpen(false)}>✕</button>
           </div>
 
           <div className="chatbot-messages">
+            <DisclaimerBanner sticky={true} />
             {messages.map((m, idx) => (
               <div key={idx} className={`chat-bubble ${m.role}`}>
                 <div>{m.content}</div>
+                {m.role !== 'user' && <AiTransparencyBadge />}
 
                 {/* Nếu tin nhắn có đề xuất cập nhật */}
                 {m.proposal && m.proposal.has_update && (
@@ -196,7 +212,7 @@ const HealthChatbot = ({ user, onProfileUpdated }) => {
                 )}
               </div>
             ))}
-            {loading && <div className="chatbot-typing">Bác sĩ đang chẩn đoán và suy nghĩ...</div>}
+            {loading && <div className="chatbot-typing">Trợ lý AI đang tổng hợp thông tin...</div>}
           </div>
 
           <form className="chatbot-footer" onSubmit={handleSendMessage}>

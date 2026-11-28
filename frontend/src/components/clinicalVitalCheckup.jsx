@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { API_BASE_URL } from '../config';
+import MedicalDisclaimerModal, { AI_HEALTH_CONSENT_KEY } from './MedicalDisclaimerModal';
+import DisclaimerBanner from './DisclaimerBanner';
+import { DeterministicBadge, AiTransparencyBadge } from './AiTransparencyBadge';
 import '../style/clinicalCheckup.css';
 
 /**
@@ -89,8 +92,21 @@ const ClinicalVitalCheckup = ({ user, onCheckupSuccess }) => {
     return { box: 'level-danger', badge: 'badge-danger' };
   };
 
+  const [hasConsent, setHasConsent] = useState(() => {
+    try {
+      return localStorage.getItem(AI_HEALTH_CONSENT_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
+
   return (
     <div className="clinical-checkup-container">
+      <MedicalDisclaimerModal
+        isOpen={!hasConsent}
+        onAccept={() => setHasConsent(true)}
+      />
+      <DisclaimerBanner sticky={true} />
       {/* 1. INPUT FORM CARD */}
       <div className="clinical-checkup-card">
         <div className="clinical-card-header">
@@ -99,7 +115,7 @@ const ClinicalVitalCheckup = ({ user, onCheckupSuccess }) => {
             Kiểm Tra Sức Khỏe & Đo Lường Chỉ Số Sinh Tồn (Vital Signs)
           </h3>
           <p>
-            Nhập các chỉ số đo đạc từ thiết bị y tế cá nhân tại nhà để hệ thống Bác sĩ AI phân loại thể trạng, đánh giá rủi ro và tự động cá nhân hóa lộ trình tập luyện & dinh dưỡng.
+            Nhập các chỉ số đo đạc từ thiết bị cá nhân tại nhà để hệ thống AI phân loại thể trạng tham khảo, đánh giá mức độ lưu ý và gợi ý lộ trình tập luyện &amp; thực đơn.
           </p>
         </div>
 
@@ -343,7 +359,7 @@ const ClinicalVitalCheckup = ({ user, onCheckupSuccess }) => {
 
             {medicalResult.recommendations?.diet_advice?.length > 0 && (
               <div className="clinical-advice-card diet">
-                <h5>🥗 Chỉ dẫn Dinh dưỡng Lâm sàng</h5>
+                <h5>🥗 Gợi ý Thực đơn Tham khảo</h5>
                 <ul>
                   {medicalResult.recommendations.diet_advice.map((adv, idx) => (
                     <li key={idx}>{adv}</li>

@@ -70,11 +70,11 @@ const SignUp = ({ onSignUpSuccess, onGoToLogIn }) => {
             </div>
             <div className="signup-feature-item">
               <span className="signup-feature-icon">🥗</span>
-              <span>Đề xuất thực đơn dinh dưỡng lâm sàng theo bệnh lý</span>
+              <span>Gợi ý thực đơn tham khảo theo mục tiêu cá nhân</span>
             </div>
             <div className="signup-feature-item">
               <span className="signup-feature-icon">🤖</span>
-              <span>Bác sĩ AI Telehealth tư vấn trực tuyến 24/7</span>
+              <span>Trợ lý tra cứu thông tin sức khỏe hỗ trợ 24/7</span>
             </div>
           </div>
         </div>

@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { API_BASE_URL } from '../config';
+import MedicalDisclaimerModal, { AI_HEALTH_CONSENT_KEY } from './MedicalDisclaimerModal';
+import DisclaimerBanner from './DisclaimerBanner';
+import AiTransparencyBadge from './AiTransparencyBadge';
 import '../style/telehealthChatbot.css';
 
 /**
@@ -12,6 +15,13 @@ import '../style/telehealthChatbot.css';
  */
 const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [hasConsent, setHasConsent] = useState(() => {
+    try {
+      return localStorage.getItem(AI_HEALTH_CONSENT_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [inputMessage, setInputMessage] = useState('');
   const [messages, setMessages] = useState([
     {
@@ -178,7 +188,7 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
           localStorage.setItem(getQuotaStorageKey(), '0');
           throw new Error(data.detail || 'Bạn đã sử dụng hết 3 lượt tư vấn miễn phí hôm nay. Vui lòng quay lại vào ngày mai!');
         }
-        throw new Error(data.detail || 'Không thể kết nối đến hệ thống Bác sĩ AI.');
+        throw new Error(data.detail || 'Không thể kết nối đến Trợ lý tra cứu thông tin sức khỏe.');
       }
 
       setRemainingQuestions(data.remaining_questions_today);
@@ -251,7 +261,7 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
   const currentCharacters = inputMessage.length;
 
   return (
-    <div className="telehealth-widget" role="complementary" aria-label="Bác sĩ Trợ lý FitBreak">
+    <div className="telehealth-widget" role="complementary" aria-label="Trợ lý tra cứu thông tin sức khỏe FitBreak">
       {!isOpen && (
         <button 
           className="telehealth-launcher-btn" 
@@ -265,15 +275,19 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
 
       {isOpen && (
         <div className="telehealth-window" role="dialog" aria-modal="true">
+          <MedicalDisclaimerModal
+            isOpen={!hasConsent}
+            onAccept={() => setHasConsent(true)}
+          />
           {/* Header */}
           <div className="telehealth-header">
             <div className="doctor-identity-meta">
               <div className="doctor-avatar-circle" aria-hidden="true">
-                DR
+                AI
               </div>
               <div className="doctor-text-info">
-                <h4>Hội Chẩn Lâm Sàng</h4>
-                <span className="doctor-availability">Y học thể thao & Vận động phục hồi</span>
+                <h4>Trợ Lý Tra Cứu Thông Tin Sức Khỏe</h4>
+                <span className="doctor-availability">Hỗ trợ tra cứu vận động &amp; sức khỏe</span>
               </div>
             </div>
             <button 
@@ -287,9 +301,11 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
 
           {/* Message Thread */}
           <div className="telehealth-thread">
+            <DisclaimerBanner sticky={true} />
             {messages.map((m, idx) => (
               <div key={idx} className={`chat-bubble-clinical ${m.role}`}>
                 <div>{formatClinicalMessage(m.content)}</div>
+                {m.role !== 'user' && <AiTransparencyBadge />}
 
                 {/* Proposal Verification Card */}
                 {m.proposal && (m.proposal.has_update || m.proposal.has_proposed_changes) && (
@@ -343,7 +359,7 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
             ))}
             {loading && (
               <div className="doctor-thinking-indicator">
-                <span>⚕️ Bác sĩ đang kiểm tra chỉ số và chẩn đoán...</span>
+                <span>⚕️ Trợ lý AI đang tổng hợp thông tin...</span>
               </div>
             )}
           </div>

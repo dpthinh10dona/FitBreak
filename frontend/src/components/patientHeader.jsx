@@ -53,8 +53,8 @@ const PatientHeader = ({
 
   const navItems = [
     { id: 'tasks', label: 'Vận Động Phục Hồi' },
-    { id: 'profile', label: 'Hồ Sơ Y Tế' },
-    { id: 'food', label: 'Dinh Dưỡng Lâm Sàng' },
+    { id: 'profile', label: 'Ghi Chú Chỉ Số Cá Nhân' },
+    { id: 'food', label: 'Gợi Ý Thực Đơn Tham Khảo' },
     { id: 'schedule', label: 'Lịch Trình Vận Động' },
     { id: 'team', label: 'Nhóm Rèn Luyện' },
     { id: 'shop', label: 'Vật Phẩm Hỗ Trợ' },
@@ -214,7 +214,7 @@ const PatientHeader = ({
                 </span>
               </div>
               <div className="vital-evaluation" style={{ color: '#71717a' }}>
-                Đồng bộ theo phác đồ vận động
+                Đồng bộ theo lộ trình vận động
               </div>
             </div>
           </div>
@@ -223,7 +223,7 @@ const PatientHeader = ({
           {foodRecommendation && (
             <div className="patient-diet-notice">
               <div className="diet-notice-content">
-                <h4>Chỉ dẫn y tế & Dinh dưỡng lâm sàng</h4>
+                <h4>Thông tin sức khỏe &amp; Gợi ý thực đơn tham khảo</h4>
                 <p>{foodRecommendation}</p>
               </div>
             </div>
