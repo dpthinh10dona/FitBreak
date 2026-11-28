@@ -17,6 +17,7 @@ ORDER BY tablename;
 DO $$
 DECLARE
   tbl TEXT;
+  owner_col TEXT;
   tables TEXT[] := ARRAY['profiles', 'vitals', 'workouts', 'health_states', 'user_schedules'];
 BEGIN
   FOREACH tbl IN ARRAY tables LOOP
@@ -24,6 +25,14 @@ BEGIN
       SELECT 1 FROM information_schema.tables
       WHERE table_schema = 'public' AND table_name = tbl
     ) THEN
+      -- profiles is keyed by id; the remaining per-user tables use user_id.
+      owner_col := CASE WHEN tbl = 'profiles' THEN 'id' ELSE 'user_id' END;
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = tbl AND column_name = owner_col
+      ) THEN
+        RAISE EXCEPTION 'Missing owner column %.%', tbl, owner_col;
+      END IF;
       -- Bắt buộc bật RLS
       EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY;', tbl);
 
@@ -35,20 +44,20 @@ BEGIN
 
       -- Tạo 4 Policy chặt chẽ với điều kiện auth.uid() = user_id
       EXECUTE format(
-        'CREATE POLICY %I_select_own ON public.%I FOR SELECT USING (auth.uid() = user_id);',
-        tbl, tbl
+        'CREATE POLICY %I_select_own ON public.%I FOR SELECT USING (auth.uid() = %I);',
+        tbl, tbl, owner_col
       );
       EXECUTE format(
-        'CREATE POLICY %I_insert_own ON public.%I FOR INSERT WITH CHECK (auth.uid() = user_id);',
-        tbl, tbl
+        'CREATE POLICY %I_insert_own ON public.%I FOR INSERT WITH CHECK (auth.uid() = %I);',
+        tbl, tbl, owner_col
       );
       EXECUTE format(
-        'CREATE POLICY %I_update_own ON public.%I FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);',
-        tbl, tbl
+        'CREATE POLICY %I_update_own ON public.%I FOR UPDATE USING (auth.uid() = %I) WITH CHECK (auth.uid() = %I);',
+        tbl, tbl, owner_col, owner_col
       );
       EXECUTE format(
-        'CREATE POLICY %I_delete_own ON public.%I FOR DELETE USING (auth.uid() = user_id);',
-        tbl, tbl
+        'CREATE POLICY %I_delete_own ON public.%I FOR DELETE USING (auth.uid() = %I);',
+        tbl, tbl, owner_col
       );
     END IF;
   END LOOP;
