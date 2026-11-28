@@ -53,9 +53,23 @@ function App() {
   const [selectedTimeSlots, setSelectedTimeSlots] = useState([]);
   const [authNotice, setAuthNotice] = useState('');
   const [avatarVersion, setAvatarVersion] = useState(0);
+  const [syncVersion, setSyncVersion] = useState(0);
 
   const handleAvatarUpdated = () => {
     setAvatarVersion((prev) => prev + 1);
+  };
+
+  const refreshClosedLoopState = async () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      const updatedProfile = await fetchUserProfile(token);
+      if (updatedProfile) {
+        const newFull = { ...user, ...updatedProfile };
+        setUser(newFull);
+        cacheUser(newFull);
+      }
+    }
+    setSyncVersion((prev) => prev + 1);
   };
   const fetchUserProfile = async (token) => {
     if (!token) return null;
@@ -389,11 +403,18 @@ function App() {
           {activeTab === 'profile' && (
             <UpdateProfile user={user} onUpdateProfileSuccess={handleUpdateProfileSuccess} />
           )}
-          {activeTab === 'food' && <ClinicalNutritionModule user={user} />}
+          {activeTab === 'food' && (
+            <ClinicalNutritionModule
+              user={user}
+              syncVersion={syncVersion}
+              onHealthModeCleared={refreshClosedLoopState}
+            />
+          )}
           {activeTab === 'schedule' && (
-            <ClinicalRehabSchedule 
-              scheduleData={workoutSchedule} 
-              onScheduleGenerated={handleScheduleGenerated} 
+            <ClinicalRehabSchedule
+              key={`schedule-${syncVersion}`}
+              scheduleData={workoutSchedule}
+              onScheduleGenerated={handleScheduleGenerated}
               initialSelectedTimeSlots={selectedTimeSlots}
             />
           )}
@@ -432,17 +453,7 @@ function App() {
 
         <TelehealthDoctorChatbot 
           user={user} 
-          onProfileUpdated={async () => {
-            const token = localStorage.getItem('token');
-            if (token) {
-              const updatedProfile = await fetchUserProfile(token);
-              if (updatedProfile) {
-                const newFull = { ...user, ...updatedProfile };
-                setUser(newFull);
-                cacheUser(newFull);
-              }
-            }
-          }} 
+          onProfileUpdated={refreshClosedLoopState} 
         />
       </div>
     );

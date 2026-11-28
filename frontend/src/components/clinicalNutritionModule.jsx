@@ -11,7 +11,7 @@ import '../style/clinicalDiet.css';
  * - Kiểm soát ngân sách, lọc kiêng cữ dị ứng y khoa nghiêm ngặt.
  * - Trực quan hóa 3 bữa ăn (Sáng, Trưa, Tối) với thanh Macro vi chất, hệ số khẩu phần và phân tích lâm sàng từ AI.
  */
-const ClinicalNutritionModule = ({ user }) => {
+const ClinicalNutritionModule = ({ user, syncVersion = 0, onHealthModeCleared }) => {
   const [formData, setFormData] = useState({
     calories_need: '',
     protein_need: '',
@@ -64,7 +64,33 @@ const ClinicalNutritionModule = ({ user }) => {
     };
 
     fetchUserProfile();
-  }, [user]);
+  }, [user, syncVersion]);
+
+  const isAdaptiveHealthMode =
+    Boolean(resultData?.applied_health_mode?.active) ||
+    profile?.status_flag === 'restrict_heavy_exercise';
+
+  const handleClearHealthMode = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const res = await fetch(`${API_BASE_URL}/api/chatbot/health-flags`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setProfile((prev) => (prev ? { ...prev, status_flag: 'maintain_activity' } : prev));
+        setResultData((prev) =>
+          prev
+            ? { ...prev, applied_health_mode: { active: false, label: null, trigger_flag: null } }
+            : prev
+        );
+        if (onHealthModeCleared) onHealthModeCleared();
+      }
+    } catch (err) {
+      console.error('Không thể tắt chế độ cảnh báo:', err);
+    }
+  };
 
   const allergenOptions = [
     { id: 'đậu', label: 'Đậu phộng / Đậu nành' },
@@ -184,6 +210,43 @@ const ClinicalNutritionModule = ({ user }) => {
           <p className="med-disclaimer-banner-text" style={{ color: '#0c4a6e' }}>
             <strong>Gợi ý:</strong> Ở độ tuổi phát triển thể chất (12–17 tuổi), cơ thể cần đầy đủ dưỡng chất để tăng trưởng chiều cao và trí lực. Hãy chia sẻ thực đơn tham khảo này với bố mẹ hoặc người giám hộ để cùng chuẩn bị bữa ăn phù hợp nhất nhé!
           </p>
+        </div>
+      )}
+
+      {isAdaptiveHealthMode && (
+        <div
+          className="med-disclaimer-banner"
+          style={{
+            marginBottom: '16px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: '12px',
+            flexWrap: 'wrap',
+          }}
+        >
+          <div>
+            <strong>Đang bật chế độ ưu tiên món thanh đạm / ít natri</strong>
+            <div style={{ fontSize: '0.78rem', marginTop: '2px' }}>
+              Chế độ này được kích hoạt tự động từ xác nhận cảnh báo sức khỏe của bạn.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleClearHealthMode}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '6px',
+              border: '1px solid var(--med-warning-border, #fde68a)',
+              background: '#ffffff',
+              color: 'var(--med-warning, #b45309)',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            Tắt chế độ cảnh báo
+          </button>
         </div>
       )}
 
@@ -443,6 +506,23 @@ const ClinicalNutritionModule = ({ user }) => {
                 <div className="clinical-meal-body">
                   <div className="meal-dish-name">{meal.name}</div>
                   <AiTransparencyBadge />
+                  {isAdaptiveHealthMode && (
+                    <div
+                      style={{
+                        marginTop: '6px',
+                        display: 'inline-block',
+                        padding: '2px 8px',
+                        borderRadius: '6px',
+                        backgroundColor: 'var(--med-warning-bg, #fffbeb)',
+                        border: '1px solid var(--med-warning-border, #fde68a)',
+                        color: 'var(--med-warning, #b45309)',
+                        fontSize: '0.72rem',
+                        fontWeight: 600,
+                      }}
+                    >
+                      Đang bật chế độ ưu tiên món thanh đạm / ít natri
+                    </div>
+                  )}
 
                   <div className="meal-cost-calories-row">
                     <span className="meal-calories">{meal.kcal || 0} kcal</span>

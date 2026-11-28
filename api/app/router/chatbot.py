@@ -248,7 +248,61 @@ async def confirm_profile_update(
         update_fields["level_of_physical_activity"] = "light"
 
     auth_data.client.table("profiles").update(update_fields).eq("id", user_id).execute()
-    return {"success": True, "message": "Đã cập nhật hồ sơ cá nhân hóa thành công!", "updated": update_fields}
+
+    # Lưu active_health_flags vào bảng health_states để liên thông sang Lịch tập & Thực đơn
+    active_flags = payload.health_flags
+    if active_flags is None:
+        if payload.status_flag == "restrict_heavy_exercise":
+            active_flags = ["high_blood_pressure", "chest_pain_or_fatigue"]
+        elif payload.status_flag == "maintain_activity":
+            active_flags = []
+        else:
+            active_flags = ["chest_pain_or_fatigue"]
+
+    try:
+        auth_data.client.table("health_states").upsert(
+            {
+                "user_id": user_id,
+                "active_health_flags": active_flags,
+                "status_flag": payload.status_flag,
+            },
+            on_conflict="user_id",
+        ).execute()
+    except Exception:
+        pass
+
+    return {
+        "success": True,
+        "message": "Đã cập nhật hồ sơ cá nhân hóa thành công!",
+        "updated": update_fields,
+        "active_health_flags": active_flags,
+    }
+
+
+@router.delete("/health-flags")
+async def clear_active_health_flags(
+    auth_data: tokenAuthorization = Depends(token_authorization),
+):
+    """Gỡ bỏ trạng thái cảnh báo sức khỏe khi chỉ số người dùng đã ổn định."""
+    user_id = auth_data.user_id
+    try:
+        auth_data.client.table("profiles").update(
+            {"status_flag": "maintain_activity", "status_note": "Chỉ số sức khỏe ổn định"}
+        ).eq("id", user_id).execute()
+    except Exception:
+        pass
+    try:
+        auth_data.client.table("health_states").upsert(
+            {
+                "user_id": user_id,
+                "active_health_flags": [],
+                "status_flag": "maintain_activity",
+            },
+            on_conflict="user_id",
+        ).execute()
+    except Exception:
+        pass
+    return {"success": True, "active_health_flags": []}
 
 
 @router.get("/knowledge-stats")
