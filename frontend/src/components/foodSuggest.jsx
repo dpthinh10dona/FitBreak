@@ -307,7 +307,7 @@ const FoodSuggest = () => {
                 </div>
 
                 <button type="submit" className="food-btn-submit" disabled={!formData.daily_budget || fetchingProfile}>
-                    <span>✨</span> Gợi ý thực đơn AI
+                    Gợi ý thực đơn AI
                 </button>
             </form>
         )}

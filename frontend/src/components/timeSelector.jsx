@@ -370,7 +370,7 @@ const TimeSelector = ({ scheduleData, onScheduleGenerated, initialSelectedTimeSl
             onClick={handleGenerateSchedule}
             disabled={loading || selectedCount === 0}
           >
-            {loading ? 'Đang tạo lịch...' : '✨ Lưu & Tạo Lịch Tập'}
+            {loading ? 'Đang tạo lịch...' : 'Lưu & Tạo Lịch Tập'}
           </button>
         </div>
 

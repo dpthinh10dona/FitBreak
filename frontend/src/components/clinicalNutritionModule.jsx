@@ -424,7 +424,7 @@ const ClinicalNutritionModule = ({ user }) => {
                   <AiTransparencyBadge />
 
                   <div className="meal-cost-calories-row">
-                    <span className="meal-calories">🔥 {meal.kcal || 0} kcal</span>
+                    <span className="meal-calories">{meal.kcal || 0} kcal</span>
                     <span className="meal-cost">💵 {(meal.cost || 0).toLocaleString()}đ</span>
                   </div>
 
