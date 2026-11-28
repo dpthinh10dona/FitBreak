@@ -14,9 +14,11 @@ from app.services.chatbot_agent import (
     MissingMedicalInformationError,
     OutOfMedicalScopeError,
     analyze_and_chat,
+    asthma_exercise_warning_result,
     classify_message_scope,
     emergency_result,
     is_emergency_message,
+    is_active_asthma_exercise_question,
     needs_clarification_result,
     out_of_scope_result,
 )
@@ -97,6 +99,16 @@ async def ask_health_chatbot(
             proposal=None,
             status=agent_output["status"],
             reason_code=agent_output.get("reason_code"),
+            allow_ai_generation=False,
+        )
+    if is_active_asthma_exercise_question(message):
+        agent_output = asthma_exercise_warning_result()
+        return ChatBotResponse(
+            reply=agent_output["reply"],
+            remaining_questions_today=max(0, DAILY_LIMIT - current_count),
+            proposal=None,
+            status=agent_output["status"],
+            reason_code=agent_output["reason_code"],
             allow_ai_generation=False,
         )
 

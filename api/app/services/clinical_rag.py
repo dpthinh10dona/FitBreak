@@ -80,6 +80,14 @@ def _chunk_location(chunk: dict) -> str:
         return heading.group(1).strip(" */#")[:120]
     return str(chunk.get("heading_path") or chunk.get("title") or "").strip(" /#*")[:120]
 
+
+def _required_topic_source_ids(message: str) -> set[str] | None:
+    """Keep an explicit asthma question from citing a COPD guideline."""
+    normalized = message.lower()
+    if re.search(r"\bhen\b", normalized) and not re.search(r"\b(?:copd|bptnmt)\b", normalized):
+        return {"BYT-5850-2021"}
+    return None
+
 try:
     from app.services.knowledge_ingestor import default_ingestor
 except Exception as exc:
@@ -176,6 +184,7 @@ def retrieve_medical_docs(user_message: str, top_k: int = 3) -> str:
     }
     approved_by_file = {item["file"]: source_id for source_id, item in approved.items()}
     query_terms = _meaningful_terms(user_message)
+    required_source_ids = _required_topic_source_ids(user_message)
 
     # 0. ƯU TIÊN SỐ 1: Tìm kiếm ngữ nghĩa Cosine Similarity trên Supabase pgvector
     try:
@@ -190,6 +199,7 @@ def retrieve_medical_docs(user_message: str, top_k: int = 3) -> str:
                 chunk["source_id"] = approved_by_file.get(chunk.get("source_name") or chunk.get("document_id"))
         pg_chunks = [
             c for c in pg_chunks if c.get("source_id") in approved
+            and (required_source_ids is None or c["source_id"] in required_source_ids)
             and _ranked_evidence_score(c, approved[c["source_id"]], query_terms) > 0
         ]
         pg_chunks.sort(
@@ -228,6 +238,8 @@ def retrieve_medical_docs(user_message: str, top_k: int = 3) -> str:
             for chunk in default_ingestor.load_chunks():
                 source_record = approved.get(chunk.get("source_id"))
                 if not source_record or chunk.get("source") != source_record.get("file"):
+                    continue
+                if required_source_ids is not None and chunk["source_id"] not in required_source_ids:
                     continue
                 score = _ranked_evidence_score(chunk, source_record, query_terms)
                 if score > 0:
