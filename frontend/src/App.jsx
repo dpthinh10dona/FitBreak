@@ -80,10 +80,12 @@ function App() {
       if (response.ok) {
         return await response.json();
       }
-      return null;
+      const failure = await response.json().catch(() => ({}));
+      setAuthNotice(failure.detail || 'Không thể kiểm tra hồ sơ hiện có. Vui lòng thử lại sau.');
+      return undefined;
     } catch (error) {
       console.error("Lá»—i khi láº¥y thÃ´ng tin profile:", error);
-      return null;
+      return undefined;
     }
   };
 
@@ -301,11 +303,13 @@ function App() {
       fetchUserProfile(token),
       fetchUserStats(token),
     ]);
+    if (!profile) return false;
     const updatedUser = { ...user, ...(data?.user || {}), ...profile, ...stats, hasProfile: true };
     setUser(updatedUser);
     cacheUser(updatedUser);
     setShowCreateProfileModal(false);
     if (!localStorage.getItem('fitbreak_tour_completed')) setShowOnboardingTour(true);
+    return true;
   };
 
   const handleUpdateCoins = (newCoins) => {

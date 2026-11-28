@@ -359,7 +359,7 @@ const ClinicalVitalCheckup = ({ user, onCheckupSuccess }) => {
 
             {medicalResult.recommendations?.diet_advice?.length > 0 && (
               <div className="clinical-advice-card diet">
-                <h5>🥗 Gợi ý Thực đơn Tham khảo</h5>
+                <h5>Gợi ý Thực đơn Tham khảo</h5>
                 <ul>
                   {medicalResult.recommendations.diet_advice.map((adv, idx) => (
                     <li key={idx}>{adv}</li>

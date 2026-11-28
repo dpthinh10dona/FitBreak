@@ -173,7 +173,7 @@ const HealthChatbot = ({ user, onProfileUpdated }) => {
                 {m.proposal && m.proposal.has_update && (
                   <div className={`proposal-card ${m.proposal.conflict_detected ? 'conflict' : ''}`}>
                     <span className="proposal-title">
-                      {m.proposal.conflict_detected ? '⚠️ Cảnh Báo Mâu Thuẫn Sức Khỏe' : '💡 Đề Xuất Cá Nhân Hóa Hồ Sơ'}
+                      {m.proposal.conflict_detected ? 'Cảnh Báo Mâu Thuẫn Sức Khỏe' : 'Đề Xuất Cá Nhân Hóa Hồ Sơ'}
                     </span>
                     {m.proposal.conflict_message && (
                       <p className="proposal-detail" style={{ color: '#fca5a5' }}>

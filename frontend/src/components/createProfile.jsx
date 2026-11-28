@@ -51,6 +51,11 @@ const CreateProfile = ({ user, onCreateProfileSuccess }) => {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 409 && onCreateProfileSuccess) {
+          const found = await onCreateProfileSuccess({ existing: true });
+          if (!found) throw new Error('Không thể tải hồ sơ đã có. Vui lòng thử lại sau.');
+          return;
+        }
         if (Array.isArray(data.detail)) {
           throw new Error(data.detail[0].msg || 'Dữ liệu nhập vào không hợp lệ!');
         }
@@ -58,7 +63,8 @@ const CreateProfile = ({ user, onCreateProfileSuccess }) => {
       }
 
       if (onCreateProfileSuccess) {
-        onCreateProfileSuccess(data);
+        const found = await onCreateProfileSuccess(data);
+        if (!found) throw new Error('Đã lưu nhưng chưa thể tải lại hồ sơ. Vui lòng thử lại sau.');
       }
     } catch (err) {
       setError(err.message);

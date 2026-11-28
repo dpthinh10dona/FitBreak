@@ -13,6 +13,7 @@ PROFILE_COLUMNS = (
     "bmi,bmr,tdee,protein,allergies,food_recommendation,"
     "level_of_physical_activity,status_flag,status_note"
 )
+PROFILE_FIELD_SET = set(PROFILE_COLUMNS.split(","))
 
 
 
@@ -104,8 +105,15 @@ def _profile_write_error(exc: Exception, operation: str, stage: str) -> HTTPExce
 @router.post("/profiles/create-profile")
 async def createProfile(request: Request, data: createProfile,
                         token: tokenAuthorization = Depends(token_authorization)):
-    stage = "calculate"
+    stage = "profiles.exists"
     try:
+        existing = token.client.table("profiles").select("id").eq("id", token.user_id).limit(1).execute()
+        if existing.data:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Hồ sơ đã tồn tại. Chỉ cập nhật khi bạn chủ động điền lại thông tin sức khỏe.",
+            )
+        stage = "calculate"
         bmi = calculateBMI(data.weight, data.height)
         bmr = calculateBMR(data.weight, data.height, date.today().year - data.birth_year, data.gender)
         tdee = calculateTDEE(bmr, data.activity_frequency)
@@ -241,14 +249,36 @@ async def updateProfile(request: Request, data: updateProfile,
 @router.get("/profiles/me")
 async def getMyProfile(token: tokenAuthorization = Depends(token_authorization)):
     try:
-        response = token.client.table("profiles").select(PROFILE_COLUMNS).eq("id", token.user_id).execute()
-        if response.data and len(response.data) > 0:
-            return response.data[0]
+        try:
+            response = token.client.table("profiles").select(PROFILE_COLUMNS).eq("id", token.user_id).execute()
+        except Exception as exc:
+            if str(getattr(exc, "code", "") or "") not in {"42703", "PGRST204"}:
+                raise
+            # A previously created account can still use the old column set.
+            # Read it only to recognize the profile; never return legacy PII.
+            response = token.client.table("profiles").select("*").eq("id", token.user_id).execute()
+        if response.data:
+            row = response.data[0]
+            safe = {key: value for key, value in row.items() if key in PROFILE_FIELD_SET}
+            if not safe.get("nickname"):
+                legacy_display_name = row.get("name")
+                safe["nickname"] = (
+                    legacy_display_name
+                    if isinstance(legacy_display_name, str)
+                    and 1 <= len(legacy_display_name) <= 32
+                    and not any(ch.isspace() for ch in legacy_display_name)
+                    and "@" not in legacy_display_name
+                    else "Chiến binh"
+                )
+            if not safe.get("birth_year") and isinstance(row.get("age"), int):
+                safe["birth_year"] = date.today().year - row["age"]
+            return safe
         return None
     except HTTPException:
         raise
-    except Exception:
-        return None
+    except Exception as exc:
+        logger.error("Profile read failed (Supabase code=%s)", getattr(exc, "code", "unknown"))
+        raise HTTPException(status_code=503, detail="Không thể kiểm tra hồ sơ hiện có. Vui lòng thử lại sau.") from exc
 
 @router.post("/profiles/medical-checkup")
 async def analyze_medical_checkup(data: MedicalCheckupRequest, token: tokenAuthorization = Depends(token_authorization)):
