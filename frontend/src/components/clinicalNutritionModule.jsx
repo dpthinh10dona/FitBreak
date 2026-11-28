@@ -1,6 +1,7 @@
 import { API_BASE_URL } from '../config';
 import { useState, useEffect } from 'react';
 import SafetyGuardrailAlert from './safetyGuardrailAlert';
+import AiTransparencyBadge, { DeterministicBadge } from './AiTransparencyBadge';
 import '../style/clinicalDiet.css';
 
 /**
@@ -30,12 +31,9 @@ const ClinicalNutritionModule = ({ user }) => {
     const fetchUserProfile = async () => {
       try {
         const token = localStorage.getItem('token');
-        const userObj = user || JSON.parse(localStorage.getItem('user') || '{}');
-        const email = userObj?.email;
-
         let data = null;
-        if (email) {
-          const res = await fetch(`${API_BASE_URL}/profiles/get-profile-by-email/${email}`, {
+        if (token) {
+          const res = await fetch(`${API_BASE_URL}/profiles/me`, {
             headers: { 'Authorization': `Bearer ${token}` },
           });
           if (res.ok) {
@@ -117,7 +115,7 @@ const ClinicalNutritionModule = ({ user }) => {
         food_recommendation: profile?.food_recommendation || null,
         height_cm: Number(profile?.height) || null,
         weight_kg: Number(profile?.weight) || null,
-        age: Number(profile?.age) || null,
+        age: profile?.birth_year ? new Date().getFullYear() - Number(profile.birth_year) : null,
         free_minutes_per_week: Number.isFinite(profileFreeMinutes) && profileFreeMinutes >= 0
           ? profileFreeMinutes
           : (derivedFreeMinutes ?? null),
@@ -173,8 +171,8 @@ const ClinicalNutritionModule = ({ user }) => {
       <header className="clinical-diet-header">
         <div className="clinical-diet-icon">🥗</div>
         <div className="clinical-diet-title-group">
-          <h2>Tư Vấn Dinh Dưỡng Lâm Sàng & Thực Đơn AI</h2>
-          <p>Thiết lập chế độ ăn chuẩn y khoa, đo lường năng lượng TDEE và vi chất cá nhân hóa theo tình trạng sức khỏe.</p>
+          <h2>Gợi Ý Thực Đơn Tham Khảo &amp; Thực Đơn AI</h2>
+          <p>Thiết lập thực đơn tham khảo, đo lường năng lượng TDEE và vi chất cá nhân hóa theo chỉ số sức khỏe.</p>
         </div>
       </header>
 
@@ -333,7 +331,7 @@ const ClinicalNutritionModule = ({ user }) => {
       {loading && (
         <div className="clinical-form-card" style={{ textAlign: 'center', padding: '60px 20px' }}>
           <div style={{ fontSize: '2.5rem', marginBottom: '16px' }}>⏳</div>
-          <h3 style={{ color: 'var(--med-navy)', margin: '0 0 8px 0' }}>Bác sĩ AI đang hội chẩn & cân đối vi chất...</h3>
+          <h3 style={{ color: 'var(--med-navy)', margin: '0 0 8px 0' }}>Hệ thống AI đang tổng hợp & cân đối vi chất...</h3>
           <p style={{ color: 'var(--med-muted)', margin: 0 }}>Đang tính toán TDEE, lượng Protein và rà soát các thực phẩm kiêng cữ.</p>
         </div>
       )}
@@ -362,15 +360,16 @@ const ClinicalNutritionModule = ({ user }) => {
               <div className="clinical-rationale-main">
                 <span className="clinical-rationale-icon">💡</span>
                 <div className="clinical-rationale-body">
-                  <h4>Phân tích Y khoa & Lý do chỉ định thực đơn:</h4>
+                  <h4>Phân tích &amp; Lý do gợi ý thực đơn:</h4>
                   <p>{resultData.nutrition_note || "Thực đơn được thiết kế tối ưu hóa năng lượng và cân bằng lượng vi chất dinh dưỡng theo thể trạng."}</p>
+                  <AiTransparencyBadge />
                 </div>
               </div>
 
               <div className="clinical-rationale-limitations-aside">
                 <div className="rationale-limitations-header">
                   <span className="rationale-limitations-icon">⚠️</span>
-                  <span className="rationale-limitations-title">Chú ý Y tế & Hạn chế dinh dưỡng</span>
+                  <span className="rationale-limitations-title">Lưu ý dị ứng &amp; Hạn chế thực phẩm</span>
                 </div>
                 {uniqueDietLimitations.length > 0 ? (
                   <div className="rationale-limitations-list">
@@ -383,13 +382,16 @@ const ClinicalNutritionModule = ({ user }) => {
                   </div>
                 ) : (
                   <div className="rationale-limitation-empty">
-                    Định lượng chuẩn dựa trên nguyên liệu cơ bản. Điều chỉnh mức gia vị và dầu mỡ theo chỉ dẫn của bác sĩ điều trị.
+                    Định lượng chuẩn dựa trên nguyên liệu cơ bản. Điều chỉnh mức gia vị và dầu mỡ theo nhu cầu cá nhân hoặc hướng dẫn của chuyên gia.
                   </div>
                 )}
               </div>
             </div>
 
             {/* Daily Macros Overview */}
+            <div style={{ marginBottom: '8px' }}>
+              <DeterministicBadge label="Tính toán theo công thức chuẩn / Bộ lọc dữ liệu (TDEE, 0/1 Knapsack, Bộ lọc dị ứng Pandas)" />
+            </div>
           <div className="clinical-macro-overview">
             <div className="clinical-macro-box">
               <div className="macro-box-number">{(resultData.total_calories || 0).toLocaleString()}</div>
@@ -419,6 +421,7 @@ const ClinicalNutritionModule = ({ user }) => {
 
                 <div className="clinical-meal-body">
                   <div className="meal-dish-name">{meal.name}</div>
+                  <AiTransparencyBadge />
 
                   <div className="meal-cost-calories-row">
                     <span className="meal-calories">🔥 {meal.kcal || 0} kcal</span>

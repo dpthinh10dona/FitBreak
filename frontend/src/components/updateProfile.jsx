@@ -5,8 +5,8 @@ import "../style/updateProfile.css";
 
 const UpdateProfile = ({ user, onUpdateProfileSuccess }) => {
   const [formData, setFormData] = useState({
-    name: user?.name || '',
-    age: user?.age ? String(user.age) : '',
+    nickname: user?.nickname || '',
+    birth_year: user?.birth_year ? String(user.birth_year) : '',
     gender: user?.gender !== undefined ? String(user.gender) : '',
     height: user?.height ? String(user.height) : '',
     weight: user?.weight ? String(user.weight) : '',
@@ -18,8 +18,8 @@ const UpdateProfile = ({ user, onUpdateProfileSuccess }) => {
     if (user) {
       // Đồng bộ form khi parent nhận snapshot profile mới từ Supabase.
       setFormData({
-        name: user.name || '',
-        age: user.age ? String(user.age) : '',
+        nickname: user.nickname || '',
+        birth_year: user.birth_year ? String(user.birth_year) : '',
         gender: user.gender !== undefined ? String(user.gender) : '',
         height: user.height ? String(user.height) : '',
         weight: user.weight ? String(user.weight) : '',
@@ -42,12 +42,13 @@ const UpdateProfile = ({ user, onUpdateProfileSuccess }) => {
   };
 
   const validateProfile = () => {
-    const age = Number(formData.age);
+    const birthYear = Number(formData.birth_year);
+    const age = new Date().getFullYear() - birthYear;
     const height = Number(formData.height);
     const weight = Number(formData.weight);
     const activityFrequency = Number(formData.activity_frequency);
 
-    if (!formData.name.trim()) return 'Tên hiển thị không được để trống.';
+    if (!formData.nickname.trim()) return 'Biệt danh không được để trống.';
     if (!Number.isFinite(age) || age < 12 || age > 65) {
       return 'Tuổi phải nằm trong khoảng 12 đến 65.';
     }
@@ -87,7 +88,7 @@ const UpdateProfile = ({ user, onUpdateProfileSuccess }) => {
     const payload = {
       ...formData,
       gender: formData.gender === 'true',
-      age: Number(formData.age),
+      birth_year: Number(formData.birth_year),
       height: Number(formData.height),
       weight: Number(formData.weight),
       activity_frequency: Number(formData.activity_frequency),
@@ -148,27 +149,28 @@ const UpdateProfile = ({ user, onUpdateProfileSuccess }) => {
           <div className="update-profile-form-content">
             <div className="update-profile-form-column">
               <div className="update-profile-form-group">
-                <label>Tên hiển thị (Display Name)</label>
+                <label>Biệt danh (Nickname)</label>
                 <input
                   type="text"
-                  name="name"
-                  value={formData.name}
+                  name="nickname"
+                  value={formData.nickname}
                   onChange={handleInputChange}
-                  placeholder="Nhập tên hiển thị"
+                  placeholder="Nhập biệt danh, không dùng tên thật"
+                  maxLength={32}
                   required
                 />
               </div>
 
               <div className="update-profile-form-group">
-                <label>Tuổi (Age)</label>
+                  <label>Năm sinh</label>
                 <input
                   type="number"
-                  name="age"
-                  value={formData.age}
+                  name="birth_year"
+                  value={formData.birth_year}
                   onChange={handleInputChange}
-                  placeholder="Tuổi của bạn"
-                  min="12"
-                  max="65"
+                  placeholder="Ví dụ: 2000"
+                  min={new Date().getFullYear() - 65}
+                  max={new Date().getFullYear() - 12}
                   required
                 />
               </div>

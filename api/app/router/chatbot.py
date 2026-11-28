@@ -23,6 +23,7 @@ from app.services.clinical_rag import get_medical_knowledge_stats, ingest_new_me
 from app.services.medical_storage import persist_medical_document
 from app.services.runtime_store import daily_chatbot_quota
 from app.services.knowledge_ingestor import DEFAULT_KNOWLEDGE_DIR, load_source_catalog
+from app.services.pii_scrubber import scrub_symptom
 
 router = APIRouter(prefix="/chatbot", tags=["AI Health ChatBot"])
 logger = logging.getLogger(__name__)
@@ -75,11 +76,13 @@ async def ask_health_chatbot(
     # 1. Giới hạn trực tiếp theo độ dài chuỗi: tối đa 100 ký tự.
     message = payload.message.strip()
     character_count = len(message)
-    if character_count > 100:
+    if character_count > 99:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Câu hỏi quá dài ({character_count} ký tự). Giới hạn tối đa 100 ký tự mỗi câu hỏi."
         )
+
+    message = scrub_symptom(message)
 
     # 2. Ràng buộc số lượng câu hỏi trong ngày: Tối đa 3 câu/ngày
     current_count = await daily_chatbot_quota.get(user_id)
@@ -141,14 +144,13 @@ async def ask_health_chatbot(
         )
 
     # 3. Lấy profile hiện tại từ Supabase (dùng auth_data.client đã xác thực JWT)
-    profile_res = auth_data.client.table("profiles").select("*").eq("id", user_id).execute()
+    profile_res = auth_data.client.table("profiles").select("bmi,tdee,allergies").eq("id", user_id).execute()
     user_profile = profile_res.data[0] if (profile_res.data and len(profile_res.data) > 0) else {}
 
     # 4. Gửi qua AI Agent phân tích
     agent_output = await analyze_and_chat(
         user_message=message,
         user_profile=user_profile,
-        history=payload.history,
         scope_status=scope_status,
     )
 
@@ -196,14 +198,14 @@ async def confirm_profile_update(
     if not user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User unauthorized")
 
-    update_fields = {}
-    if payload.food_recommendation:
-        update_fields["food_recommendation"] = payload.food_recommendation
-    if payload.level_of_physical_activity:
-        update_fields["level_of_physical_activity"] = payload.level_of_physical_activity
-
-    if not update_fields:
-        return {"success": False, "message": "Không có thông tin nào cần cập nhật."}
+    notes = {
+        "restrict_heavy_exercise": "Đang có cảnh báo hạn chế tập nặng",
+        "maintain_activity": "Duy trì mức vận động phù hợp",
+        "nutrition_review": "Cần xem lại chế độ dinh dưỡng",
+    }
+    update_fields = {"status_flag": payload.status_flag, "status_note": notes[payload.status_flag]}
+    if payload.status_flag == "restrict_heavy_exercise":
+        update_fields["level_of_physical_activity"] = "light"
 
     auth_data.client.table("profiles").update(update_fields).eq("id", user_id).execute()
     return {"success": True, "message": "Đã cập nhật hồ sơ cá nhân hóa thành công!", "updated": update_fields}

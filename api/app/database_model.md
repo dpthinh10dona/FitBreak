@@ -2,15 +2,17 @@ users
   │
   └── profiles
         │
-        ├── name
-        ├── age
+        ├── nickname
+        ├── birth_year
         ├── gender
         ├── height
         ├── weight
         ├── goal
         ├── bmi
         ├── bmr
-        └── tdee
+        ├── tdee
+        ├── status_flag
+        └── status_note
 
 users
   │

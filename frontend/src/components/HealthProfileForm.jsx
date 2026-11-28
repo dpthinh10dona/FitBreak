@@ -94,7 +94,7 @@ const mockClientSideValidate = (profile) => {
       bmi_category: getBmiCategory(bmi).label,
       reasons: medicalWarnings,
       suggestion: 'Vui lòng tham khảo ý kiến bác sĩ hoặc chuyên viên y tế trước khi thực hiện chế độ ăn kiêng hay vận động mạnh.',
-      disclaimer: 'FitBreak là công cụ hỗ trợ lối sống, không thay thế chẩn đoán hoặc phác đồ điều trị y tế chuyên khoa.',
+      disclaimer: 'FitBreak là công cụ hỗ trợ theo dõi lối sống cá nhân, không thay thế chẩn đoán hay chỉ định y tế chuyên khoa.',
       allow_ai_generation: false,
     };
   }
@@ -589,7 +589,7 @@ const HealthProfileForm = ({ onProfileSaved, apiBaseUrl = '' }) => {
               {/* Danh sách lý do cảnh báo */}
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-                  Lý do hệ thống tạm dừng tự động kê đơn:
+                  Lý do hệ thống tạm dừng gợi ý thực đơn tự động:
                 </h4>
                 <ul className="space-y-2 pl-0 list-none m-0">
                   {guardrailModalData.reasons.map((reason, idx) => (

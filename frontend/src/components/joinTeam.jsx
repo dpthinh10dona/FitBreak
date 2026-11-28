@@ -4,7 +4,8 @@ import "../style/joinTeam.css";
 
 const JoinTeam = () => {
   const [teamMembers, setTeamMembers] = useState([]);
-  const [emailInput, setEmailInput] = useState('');
+  const [teamInput, setTeamInput] = useState('');
+  const [myTeamCode, setMyTeamCode] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
@@ -37,6 +38,10 @@ const JoinTeam = () => {
 
       const data = await response.json();
       setTeamMembers(Array.isArray(data) ? data : [data]);
+      const codeResponse = await fetch(`${API_BASE_URL}/my-team-code`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (codeResponse.ok) setMyTeamCode((await codeResponse.json()).invite_code);
       setError(null);
     } catch (err) {
       setError(err.message || "Đã xảy ra lỗi khi lấy dữ liệu.");
@@ -51,8 +56,8 @@ const JoinTeam = () => {
 
   const handleJoinTeam = async (e) => {
     e.preventDefault();
-    if (!emailInput.trim()) {
-      alert("Vui lòng nhập email của người chơi!");
+    if (!teamInput.trim()) {
+      alert("Vui lòng nhập mã đội!");
       return;
     }
 
@@ -66,7 +71,7 @@ const JoinTeam = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ email: emailInput.trim() }),
+        body: JSON.stringify({ invite_code: teamInput.trim() }),
       });
 
       const data = await response.json();
@@ -76,7 +81,7 @@ const JoinTeam = () => {
       }
 
       alert("Tham gia team thành công!");
-      setEmailInput('');
+      setTeamInput('');
       fetchTeamMembers();
     } catch (err) {
       alert(`Lỗi: ${err.message}`);
@@ -91,17 +96,18 @@ const JoinTeam = () => {
         <div className="join-title-group">
           <h2>Đội Ngũ Luyện Tập (Team Roster)</h2>
           <p>Mời đồng đội cùng tham gia Guild để cùng hợp sức đánh Boss và tăng sức mạnh!</p>
+          {myTeamCode != null && <p>Mã mời đội của bạn: <strong>{myTeamCode}</strong></p>}
         </div>
 
         <form className="join-form" onSubmit={handleJoinTeam}>
           <div className="join-input-box">
-            <span className="join-input-icon">✉️</span>
+            <span className="join-input-icon">#</span>
             <input
-              type="email"
+              type="text"
               className="join-input"
-              placeholder="Nhập email đồng đội để gia nhập..."
-              value={emailInput}
-              onChange={(e) => setEmailInput(e.target.value)}
+              placeholder="Nhập mã mời đội để gia nhập..."
+              value={teamInput}
+              onChange={(e) => setTeamInput(e.target.value)}
             />
           </div>
           <button type="submit" className="join-btn" disabled={joining}>
@@ -123,7 +129,7 @@ const JoinTeam = () => {
         <div className="team-empty-state">
           <div className="team-empty-icon">👥</div>
           <h3>Chưa có thành viên nào trong team</h3>
-          <p>Nhập email người chơi ở trên để xây dựng Guild ngay!</p>
+          <p>Nhập mã đội ở trên để xây dựng Guild ngay!</p>
         </div>
       ) : (
         <div className="team-container">
@@ -135,49 +141,10 @@ const JoinTeam = () => {
               
               <div className="profile-info">
                 <div className="profile-header-meta">
-                  <h4 className="member-name">{member.name || 'Chiến Binh'}</h4>
+                  <h4 className="member-name">{member.nickname || 'Chiến Binh'}</h4>
                   <span className="member-goal-tag">🎯 {member.goal || 'Tập luyện'}</span>
                 </div>
 
-                <div className="profile-details-grid">
-                  <div className="profile-detail-column">
-                    <div className="detail-stat-row">
-                      <span className="detail-stat-label">Tuổi:</span>
-                      <span className="detail-stat-val">{member.age || '--'}</span>
-                    </div>
-                    <div className="detail-stat-row">
-                      <span className="detail-stat-label">Giới tính:</span>
-                      <span className="detail-stat-val">{member.gender ? "Nam" : "Nữ"}</span>
-                    </div>
-                    <div className="detail-stat-row">
-                      <span className="detail-stat-label">Chiều cao:</span>
-                      <span className="detail-stat-val">{member.height} cm</span>
-                    </div>
-                    <div className="detail-stat-row">
-                      <span className="detail-stat-label">Cân nặng:</span>
-                      <span className="detail-stat-val">{member.weight} kg</span>
-                    </div>
-                  </div>
-
-                  <div className="profile-detail-column profile-vitals-column">
-                    <div className="detail-stat-row">
-                      <span className="detail-stat-label">Tần suất:</span>
-                      <span className="detail-stat-val highlight-val">{member.activity_frequency} buổi/tuần</span>
-                    </div>
-                    <div className="detail-stat-row">
-                      <span className="detail-stat-label">Chỉ số BMI:</span>
-                      <span className="detail-stat-val">{member.bmi || '--'}</span>
-                    </div>
-                    <div className="detail-stat-row">
-                      <span className="detail-stat-label">Năng lượng TDEE:</span>
-                      <span className="detail-stat-val">{member.tdee ? `${member.tdee} kcal` : '--'}</span>
-                    </div>
-                    <div className="detail-stat-row">
-                      <span className="detail-stat-label">Protein cần nạp:</span>
-                      <span className="detail-stat-val highlight-protein">{member.protein ? `${member.protein}g` : '--'}</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           ))}

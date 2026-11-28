@@ -88,11 +88,9 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated, initialSelec
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem('token');
-        const userObj = JSON.parse(localStorage.getItem('user') || '{}');
-        const email = userObj?.email;
-        if (!email || !token) return;
+        if (!token) return;
 
-        const res = await fetch(`${API_BASE_URL}/profiles/get-profile-by-email/${email}`, {
+        const res = await fetch(`${API_BASE_URL}/profiles/me`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -209,10 +207,10 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated, initialSelec
           },
           body: JSON.stringify({
             timetable,
-            level: userProfile?.level_of_physical_activity || 'medium',
+            level: userProfile?.status_flag === 'restrict_heavy_exercise' ? 'light' : (userProfile?.level_of_physical_activity || 'medium'),
             height_cm: userProfile?.height,
             weight_kg: userProfile?.weight,
-            age: userProfile?.age,
+            age: userProfile?.birth_year ? new Date().getFullYear() - Number(userProfile.birth_year) : null,
           }),
         });
       } catch (netErr) {
@@ -228,7 +226,7 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated, initialSelec
           },
           body: JSON.stringify({
             timetable,
-            level: userProfile?.level_of_physical_activity || 'medium',
+            level: userProfile?.status_flag === 'restrict_heavy_exercise' ? 'light' : (userProfile?.level_of_physical_activity || 'medium'),
           }),
         });
       }
@@ -259,7 +257,7 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated, initialSelec
   const selectedCount = selectedSlots.size;
   const totalHours = (selectedCount * 0.5).toFixed(1);
 
-  const levelStr = (userProfile?.level_of_physical_activity || 'medium').toLowerCase();
+  const levelStr = (userProfile?.status_flag === 'restrict_heavy_exercise' ? 'light' : (userProfile?.level_of_physical_activity || 'medium')).toLowerCase();
   const getPrescriptionMeta = (lvl) => {
     switch (lvl) {
       case 'heavy':

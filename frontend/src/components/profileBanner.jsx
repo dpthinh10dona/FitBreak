@@ -7,8 +7,7 @@ import '../style/profileBanner.css';
 
 
 const ProfileBanner = ({ user, teamName, token: propToken, avatarVersion }) => {
-  const name = user?.name || "Player 1";
-  const email = user?.email || "player1@gmail.com";
+  const name = user?.nickname || "Chiến binh";
   const damage = user?.damage ?? user?.str ?? 1;
   const coins = user?.coins ?? 0;
 
@@ -138,7 +137,6 @@ const ProfileBanner = ({ user, teamName, token: propToken, avatarVersion }) => {
               <h3>{name}</h3>
               <span className="user-team-badge">Team #{activeTeam}</span>
             </div>
-            <p className="user-email-text">{email}</p>
             <div className="user-stats-text">
               <div className="stat-pill stat-damage">
                 <span className="stat-icon">⚔️</span>

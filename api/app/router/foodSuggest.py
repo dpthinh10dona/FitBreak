@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from datetime import date
 from app.schemas.foodSuggestResponse import FoodSuggestResponse
 from app.schemas.foodSuggestRequest import FoodSuggestRequest
 from app.core.rate_limiter import RateLimiter
@@ -47,7 +48,9 @@ async def food_suggest(
 
         height_cm = req.height_cm if req.height_cm is not None else profile.get("height")
         weight_kg = req.weight_kg if req.weight_kg is not None else profile.get("weight")
-        age = req.age if req.age is not None else profile.get("age")
+        age = req.age if req.age is not None else (
+            date.today().year - int(profile["birth_year"]) if profile.get("birth_year") else None
+        )
         free_minutes = req.free_minutes_per_week
         if free_minutes is None:
             free_minutes = profile.get("free_minutes_per_week")

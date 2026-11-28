@@ -6,6 +6,7 @@ from typing import Dict, Any, Optional
 
 from app.core.ollama_client import generate_chat
 from app.services.clinical_rag import InsufficientMedicalEvidenceError, retrieve_medical_docs
+from app.services.pii_scrubber import anonymous_health_json, scrub_symptom
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +84,7 @@ async def classify_message_scope(message: str) -> str:
     if not (message or "").strip():
         raise MissingMedicalInformationError("Bạn hãy mô tả triệu chứng hoặc câu hỏi sức khỏe cụ thể hơn nhé.")
 
-    prompt = SCOPE_CLASSIFIER_PROMPT_TEMPLATE.format(user_message=message.strip())
+    prompt = SCOPE_CLASSIFIER_PROMPT_TEMPLATE.format(user_message=scrub_symptom(message))
     raw_json = await generate_chat(prompt, response_mime_type="application/json")
     clean_json = raw_json.strip()
     if "```json" in clean_json:
@@ -370,49 +371,8 @@ Chỉ trả về duy nhất một khối JSON hợp lệ, không kèm bất kỳ
 """
 
 def format_user_profile(user_profile: Dict[str, Any]) -> str:
-    """Format Supabase profile data into medical context string."""
-    if not user_profile:
-        return "Chưa có thông tin hồ sơ sức khỏe trên hệ thống."
-
-    height = user_profile.get("height")
-    weight = user_profile.get("weight")
-    
-    bmi_str = "Chưa đo"
-    bmi_category = ""
-    if height and weight and height > 0:
-        bmi = weight / ((height / 100) ** 2)
-        bmi_str = f"{bmi:.1f} kg/m²"
-        if bmi < 18.5:
-            bmi_category = "Nhẹ cân"
-        elif bmi < 23:
-            bmi_category = "Bình thường"
-        elif bmi < 25:
-            bmi_category = "Tiền béo phì"
-        elif bmi < 30:
-            bmi_category = "Béo phì độ I"
-        else:
-            bmi_category = "Béo phì độ II"
-
-    food_rec = user_profile.get("food_recommendation") or "Chưa có lời khuyên dinh dưỡng cụ thể"
-    activity_level = user_profile.get("level_of_physical_activity") or "Chưa xác định"
-    allergies = user_profile.get("allergies") or "Không có dị ứng ghi nhận"
-
-    metrics = user_profile.get("health_metrics")
-    metrics_str = ""
-    if isinstance(metrics, dict):
-        bp = f"Huyết áp: {metrics.get('systolic', '')}/{metrics.get('diastolic', '')} mmHg" if 'systolic' in metrics else ""
-        sugar = f"Đường huyết: {metrics.get('glycemic_index', '')} mg/dL" if 'glycemic_index' in metrics else ""
-        cond = f"Bệnh lý/Lưu ý: {metrics.get('conditions', '')}" if 'conditions' in metrics else ""
-        metrics_str = ", ".join(filter(None, [bp, sugar, cond]))
-
-    profile_lines = [
-        f"- Chỉ số thể trạng: Chiều cao {height or '?'} cm, Cân nặng {weight or '?'} kg | BMI: {bmi_str} ({bmi_category})",
-        f"- Tiền sử dị ứng y khoa (ràng buộc cứng): {allergies}",
-        f"- Chỉ số xét nghiệm/bệnh lý lâm sàng (Hard Constraints): {metrics_str or 'Không có ghi nhận bất thường'}",
-        f"- Chế độ dinh dưỡng đang áp dụng (food_recommendation): \"{food_rec}\"",
-        f"- Mức độ vận động hiện tại (level_of_physical_activity): \"{activity_level}\"",
-    ]
-    return "\n".join(profile_lines)
+    """Compatibility helper for callers outside the chat route."""
+    return anonymous_health_json(user_profile, "Không có triệu chứng")
 
 
 def map_activity_to_code(activity_str: Optional[str]) -> Optional[str]:
@@ -434,8 +394,9 @@ async def run_clinical_advisor(
     user_profile: Dict[str, Any]
 ) -> str:
     """Agent 1: Clinical AI Advisor (RAG-First, Markdown only)."""
+    user_message = scrub_symptom(user_message)
     retrieved_docs = retrieve_medical_docs(user_message, top_k=2)
-    profile_formatted = format_user_profile(user_profile)
+    profile_formatted = anonymous_health_json(user_profile, user_message)
 
     prompt = CLINICAL_ADVISOR_PROMPT_TEMPLATE.format(
         user_message=user_message,
@@ -491,7 +452,8 @@ async def run_personalization_engine(
     user_profile: Dict[str, Any]
 ) -> Dict[str, Any]:
     """Agent 2: Personalization Logic Engine (Conflict Detection & Strict JSON Schema)."""
-    profile_formatted = format_user_profile(user_profile)
+    user_message = scrub_symptom(user_message)
+    profile_formatted = anonymous_health_json(user_profile, user_message)
 
     prompt = PERSONALIZATION_ENGINE_PROMPT_TEMPLATE.format(
         user_message=user_message,

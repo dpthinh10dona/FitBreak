@@ -1,8 +1,10 @@
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+from datetime import date
 
 class createProfile(BaseModel):
-    name : str = Field(..., min_length=1, max_length=100)
-    age : int = Field(..., ge=12, le=65)
+    model_config = ConfigDict(extra="forbid")
+    nickname : str = Field(..., min_length=1, max_length=32)
+    birth_year : int = Field(..., ge=1900)
     gender : bool
     height : int = Field(..., ge=100, le=230)
     weight : float = Field(..., ge=30, le=200)
@@ -11,6 +13,8 @@ class createProfile(BaseModel):
 
     @model_validator(mode="after")
     def validate_safe_bmi(self):
+        if not 12 <= date.today().year - self.birth_year <= 65:
+            raise ValueError("Năm sinh phải tương ứng độ tuổi từ 12 đến 65.")
         bmi = self.weight / ((self.height / 100) ** 2)
         if bmi < 16 or bmi >= 35:
             raise ValueError(

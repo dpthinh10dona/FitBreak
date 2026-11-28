@@ -5,6 +5,13 @@ from app.schemas.medicalCheckup import MedicalCheckupRequest
 from app.services.medical_checkup import medical_checkup
 from app.core.calculate_user_stats import calculateBMI, calculateBMR, calculateTDEE, calculateProtein
 from app.core.token_authorization import tokenAuthorization, token_authorization
+from datetime import date
+
+PROFILE_COLUMNS = (
+    "id,nickname,birth_year,gender,height,weight,goal,activity_frequency,"
+    "bmi,bmr,tdee,protein,allergies,food_recommendation,"
+    "level_of_physical_activity,status_flag,status_note"
+)
 
 
 
@@ -75,7 +82,7 @@ async def createProfile(request: Request, data: createProfile,
                         token: tokenAuthorization = Depends(token_authorization)):
     try:
         bmi = calculateBMI(data.weight, data.height)
-        bmr = calculateBMR(data.weight, data.height, data.age, data.gender)
+        bmr = calculateBMR(data.weight, data.height, date.today().year - data.birth_year, data.gender)
         tdee = calculateTDEE(bmr, data.activity_frequency)
         protein = calculateProtein(data.weight, data.activity_frequency)
         food_rec = _generate_diet_recommendation_from_bmi(data.weight, data.height)
@@ -83,9 +90,8 @@ async def createProfile(request: Request, data: createProfile,
 
         profile_payload = {
             "id": token.user_id,
-            "email": token.user_email,
-            "name": data.name,
-            "age": data.age,
+            "nickname": data.nickname,
+            "birth_year": data.birth_year,
             "gender": data.gender,
             "height": data.height,
             "weight": data.weight,
@@ -116,7 +122,6 @@ async def createProfile(request: Request, data: createProfile,
             token.client.table("stats").upsert({
                 "user_id": token.user_id,
                 "team": max_new_team,
-                "email": token.user_email,
                 "damage": 1,
                 "coins": 0
             }, on_conflict="user_id").execute()
@@ -155,7 +160,7 @@ async def updateProfile(request: Request, data: updateProfile,
                         token: tokenAuthorization = Depends(token_authorization)):
     try:
         bmi = calculateBMI(data.weight, data.height)
-        bmr = calculateBMR(data.weight, data.height, data.age, data.gender)
+        bmr = calculateBMR(data.weight, data.height, date.today().year - data.birth_year, data.gender)
         tdee = calculateTDEE(bmr, data.activity_frequency)
         protein = calculateProtein(data.weight, data.activity_frequency)
 
@@ -163,9 +168,8 @@ async def updateProfile(request: Request, data: updateProfile,
 
         update_payload = {
             "id" : token.user_id,
-            "email" : token.user_email,
-            "name" : data.name,
-            "age" : data.age,
+            "nickname" : data.nickname,
+            "birth_year" : data.birth_year,
             "gender" : data.gender,
             "height" : data.height,
             "weight" : data.weight,
@@ -188,7 +192,8 @@ async def updateProfile(request: Request, data: updateProfile,
             )
 
         response = token.client.table("profiles").update(update_payload).eq("id", token.user_id).execute()
-        saved_profile = response.data[0] if response.data else update_payload
+        saved_profile = {key: value for key, value in (response.data[0] if response.data else update_payload).items()
+                         if key in PROFILE_COLUMNS.split(",")}
         return {
             "message": "Cập nhật profile thành công",
             "profile": saved_profile,
@@ -198,12 +203,10 @@ async def updateProfile(request: Request, data: updateProfile,
     except Exception:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Không thể cập nhật hồ sơ")
 
-@router.get("/profiles/get-profile-by-email/{email}")
-async def getProfileByEmail(email: str, token: tokenAuthorization = Depends(token_authorization)):
+@router.get("/profiles/me")
+async def getMyProfile(token: tokenAuthorization = Depends(token_authorization)):
     try:
-        if email.strip().lower() != token.user_email.strip().lower():
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Không có quyền truy cập hồ sơ này")
-        response = token.client.table("profiles").select("*").eq("id", token.user_id).execute()
+        response = token.client.table("profiles").select(PROFILE_COLUMNS).eq("id", token.user_id).execute()
         if response.data and len(response.data) > 0:
             return response.data[0]
         return None

@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from app.core.ollama_client import chat as check_ollama
 from app.core.rate_limiter import RateLimitMiddleware
 from app.core.security import ALLOWED_HOSTS, ALLOWED_ORIGINS, IS_PRODUCTION, SecurityMiddleware
-from app.router import auth_route, exercise, profile, foodSuggest, team, raid, schedule, stats, shop, chatbot, user_schedule
+from app.router import auth_route, exercise, profile, foodSuggest, team, raid, schedule, stats, shop, chatbot, user_schedule, privacy
 
 app = FastAPI(
     docs_url=None if IS_PRODUCTION else "/docs",
@@ -42,6 +42,7 @@ app.include_router(stats.router, tags=["Stats"])
 app.include_router(shop.router, tags=["Shop"])
 app.include_router(chatbot.router, tags=["AI Health ChatBot"])
 app.include_router(user_schedule.router, tags=["User Schedule"])
+app.include_router(privacy.router, tags=["Privacy Center"])
 
 @app.get("/health", tags=["Health"])
 @app.get("/ping", tags=["Health"])

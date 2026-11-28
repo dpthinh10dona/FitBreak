@@ -80,11 +80,9 @@ const TimeSelector = ({ scheduleData, onScheduleGenerated, initialSelectedTimeSl
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem('token');
-        const userObj = JSON.parse(localStorage.getItem('user') || '{}');
-        const email = userObj?.email;
-        if (!email || !token) return;
+        if (!token) return;
 
-        const res = await fetch(`${API_BASE_URL}/profiles/get-profile-by-email/${email}`, {
+        const res = await fetch(`${API_BASE_URL}/profiles/me`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {

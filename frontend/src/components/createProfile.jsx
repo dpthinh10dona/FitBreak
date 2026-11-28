@@ -4,8 +4,8 @@ import '../style/createProfile.css';
 
 const CreateProfile = ({ user, onCreateProfileSuccess }) => {
   const [formData, setFormData] = useState({
-    name: user?.username || '',
-    age: '',
+    nickname: '',
+    birth_year: '',
     gender: '',
     height: '',
     weight: '',
@@ -32,7 +32,7 @@ const CreateProfile = ({ user, onCreateProfileSuccess }) => {
     const payload = {
       ...formData,
       gender: formData.gender === 'true',
-      age: Number(formData.age),
+      birth_year: Number(formData.birth_year),
       height: Number(formData.height),
       weight: Number(formData.weight),
       activity_frequency: Number(formData.activity_frequency)
@@ -75,8 +75,7 @@ const CreateProfile = ({ user, onCreateProfileSuccess }) => {
             <span className="create-profile-avatar-emoji">🐉</span>
           </div>
           <div className="create-profile-user-stats-summary">
-            <h3 className="create-profile-user-display-name">{user?.username || 'Warrior One'}</h3>
-            <p className="create-profile-user-subtext">@{user?.email || 'user'} • Level 1 Warrior</p>
+            <h3 className="create-profile-user-display-name">Chiến binh FitBreak</h3>
 
             <div className="create-profile-stat-row">
               <span className="create-profile-stat-icon">❤️</span>
@@ -113,26 +112,27 @@ const CreateProfile = ({ user, onCreateProfileSuccess }) => {
 
           <form onSubmit={handleSubmit} className="create-profile-profile-inputs-form">
             <div className="create-profile-form-group">
-              <label>Tên hiển thị (Display Name)</label>
+              <label>Biệt danh (Nickname)</label>
               <input
                 type="text"
-                name="name"
-                value={formData.name}
+                name="nickname"
+                value={formData.nickname}
                 onChange={handleInputChange}
-                placeholder="Nhập tên hiển thị"
+                placeholder="Nhập biệt danh, không dùng tên thật"
+                maxLength={32}
                 required
               />
             </div>
 
             <div className="create-profile-form-row-2">
               <div className="create-profile-form-group">
-                <label>Tuổi (Age)</label>
+                  <label>Năm sinh</label>
                 <input
                   type="number"
-                  name="age"
-                  value={formData.age}
+                  name="birth_year"
+                  value={formData.birth_year}
                   onChange={handleInputChange}
-                  placeholder="Tuổi"
+                  placeholder="Ví dụ: 2000"
                   required
                 />
               </div>

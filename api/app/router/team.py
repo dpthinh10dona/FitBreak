@@ -9,11 +9,11 @@ router = APIRouter()
 async def joinTeam(data: joinTeam, 
                    token: tokenAuthorization = Depends(token_authorization)):
     try:
-        response = token.client.table("stats").select("*").eq("email", data.email).single().execute()
+        response = token.client.table("raid").select("team").eq("invite_code", str(data.invite_code)).limit(1).execute()
         stat = response.data
         if not stat:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Email not exist")
-        team = stat["team"]
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team not found")
+        team = stat[0]["team"]
 
         token.client.table("stats").update({
             "team" : team
@@ -40,7 +40,7 @@ async def getTeam(token: tokenAuthorization = Depends(token_authorization)):
 
         member_ids = [item["user_id"] for item in team_stats.data]
 
-        profiles_response = token.client.table("profiles").select("*").in_("id", member_ids).execute()
+        profiles_response = token.client.table("profiles").select("id,nickname,goal").in_("id", member_ids).execute()
 
         return profiles_response.data
 
@@ -48,3 +48,12 @@ async def getTeam(token: tokenAuthorization = Depends(token_authorization)):
         raise
     except Exception:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Không thể tải thông tin đội")
+
+@router.get("/my-team-code")
+async def my_team_code(token: tokenAuthorization = Depends(token_authorization)):
+    response = token.client.table("stats").select("team").eq("user_id", token.user_id).single().execute()
+    team = response.data.get("team") if response.data else None
+    if team is None:
+        return {"invite_code": None}
+    invite = token.client.table("raid").select("invite_code").eq("team", team).single().execute()
+    return {"invite_code": invite.data.get("invite_code") if invite.data else None}

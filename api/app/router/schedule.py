@@ -3,6 +3,7 @@ from app.schemas.schedule import schedule
 from app.core.token_authorization import tokenAuthorization, token_authorization
 from app.services.schedule_service import schedule_maker
 from app.services.safety_guardrail import UserHealthInput, safety_guardrail
+from datetime import date
 
 router = APIRouter()
 
@@ -33,6 +34,8 @@ async def scheduleMaker(inp: dict,
 
         # Lấy trực tiếp level_of_physical_activity từ bảng profiles hoặc từ payload input
         level_of_physical_activity = stat.get("level_of_physical_activity") or inp.get("level")
+        if stat.get("status_flag") == "restrict_heavy_exercise":
+            level_of_physical_activity = "light"
         
         # Nếu cột này còn NULL (user cũ chưa cập nhật), fallback theo BMI hoặc activity_frequency
         if not level_of_physical_activity:
@@ -86,7 +89,9 @@ async def scheduleMaker(inp: dict,
         guardrail = safety_guardrail(UserHealthInput(
             height_cm=_number(inp.get("height_cm"), stat.get("height"), default=170),
             weight_kg=_number(inp.get("weight_kg"), stat.get("weight"), default=60),
-            age=int(_number(inp.get("age"), stat.get("age"), default=19)),
+            age=int(_number(inp.get("age"),
+                            date.today().year - int(stat["birth_year"])
+                            if stat.get("birth_year") else None, default=19)),
             goal=str(stat.get("goal") or inp.get("goal") or inp.get("aim") or "duy_tri"),
             target_calories=_number(inp.get("target_calories"), stat.get("tdee"), default=2000),
             budget_vnd=_number(inp.get("budget_vnd"), inp.get("daily_budget"), default=80000),

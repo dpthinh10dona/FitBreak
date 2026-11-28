@@ -109,7 +109,7 @@ const STEPS = [
     content: (
       <div className="tour-step-content">
         <p className="tour-lead-text">
-          Phần <strong>Dinh Dưỡng Lâm Sàng</strong> thiết lập thực đơn 3 bữa ăn mỗi ngày cho bạn:
+          Phần <strong>Gợi Ý Thực Đơn Tham Khảo</strong> thiết lập thực đơn 3 bữa ăn mỗi ngày cho bạn:
         </p>
         <ul className="tour-checklist">
           <li><strong>Ngân sách & Dị ứng:</strong> Nhập số tiền chi cho ăn uống mỗi ngày và tick chọn các thực phẩm gây dị ứng.</li>

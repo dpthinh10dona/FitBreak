@@ -1,17 +1,27 @@
 import { useState, useEffect } from 'react';
 import { API_BASE_URL } from '../config';
+import MedicalDisclaimerModal, { AI_HEALTH_CONSENT_KEY } from './MedicalDisclaimerModal';
+import DisclaimerBanner from './DisclaimerBanner';
+import AiTransparencyBadge from './AiTransparencyBadge';
 import '../style/telehealthChatbot.css';
 
 /**
  * TelehealthDoctorChatbot Component (MedTech Standard)
  * Cửa sổ Bác sĩ Trực tuyến phong cách Telemedicine:
  * - Giao diện nền trắng lâm sàng, tông Medical Blue tạo sự tin cậy và thư thái.
- * - Hạn chế tối đa 100 ký tự / câu và tối đa 3 câu hỏi / ngày.
+ * - Hạn chế tối đa 99 ký tự / câu và tối đa 3 câu hỏi / ngày.
  * - Hiển thị Card xác nhận đề xuất y khoa (Verification Proposal) trước khi lưu vào Supabase.
  * - Tự động reload lại Header khi người dùng xác nhận cập nhật thông tin sức khỏe.
  */
 const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [hasConsent, setHasConsent] = useState(() => {
+    try {
+      return localStorage.getItem(AI_HEALTH_CONSENT_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [inputMessage, setInputMessage] = useState('');
   const [messages, setMessages] = useState([
     {
@@ -25,25 +35,25 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
 
   const getQuotaStorageKey = (currentUser) => {
     const u = currentUser || user;
-    let email = u?.email;
-    if (!email) {
+    let accountId = u?.id;
+    if (!accountId) {
       try {
         const cachedUser = JSON.parse(localStorage.getItem('user') || '{}');
-        email = cachedUser?.email;
+        accountId = cachedUser?.id;
       } catch (e) {}
     }
-    return `fitbreak_telehealth_quota_${email || 'guest'}_${getTodayDateStr()}`;
+    return `fitbreak_telehealth_quota_${accountId || 'guest'}_${getTodayDateStr()}`;
   };
 
   const [loading, setLoading] = useState(false);
   const [remainingQuestions, setRemainingQuestions] = useState(() => {
     try {
-      let email = user?.email;
-      if (!email) {
+      let accountId = user?.id;
+      if (!accountId) {
         const cachedUser = JSON.parse(localStorage.getItem('user') || '{}');
-        email = cachedUser?.email;
+        accountId = cachedUser?.id;
       }
-      const key = `fitbreak_telehealth_quota_${email || 'guest'}_${new Date().toISOString().split('T')[0]}`;
+      const key = `fitbreak_telehealth_quota_${accountId || 'guest'}_${new Date().toISOString().split('T')[0]}`;
       const saved = localStorage.getItem(key);
       if (saved !== null) {
         return parseInt(saved, 10);
@@ -129,8 +139,8 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
     if (!trimmed || loading) return;
 
     const characterCount = trimmed.length;
-    if (characterCount > 100) {
-      alert(`Câu hỏi của bạn hiện có ${characterCount} ký tự. Giới hạn tối đa là 100 ký tự.`);
+    if (characterCount > 99) {
+      alert(`Câu hỏi của bạn hiện có ${characterCount} ký tự. Giới hạn tối đa là 99 ký tự.`);
       return;
     }
 
@@ -140,7 +150,7 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
     }
 
     const token = getAuthToken();
-    if (!token && !user?.email) {
+    if (!token) {
       alert('Vui lòng đăng nhập để kết nối với Bác sĩ Trợ lý.');
       return;
     }
@@ -164,7 +174,6 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
         credentials: 'include',
         body: JSON.stringify({
           message: trimmed,
-          history: newMessages.slice(-5)
         })
       });
 
@@ -178,7 +187,7 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
           localStorage.setItem(getQuotaStorageKey(), '0');
           throw new Error(data.detail || 'Bạn đã sử dụng hết 3 lượt tư vấn miễn phí hôm nay. Vui lòng quay lại vào ngày mai!');
         }
-        throw new Error(data.detail || 'Không thể kết nối đến hệ thống Bác sĩ AI.');
+        throw new Error(data.detail || 'Không thể kết nối đến Trợ lý tra cứu thông tin sức khỏe.');
       }
 
       setRemainingQuestions(data.remaining_questions_today);
@@ -224,8 +233,11 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
         headers,
         credentials: 'include',
         body: JSON.stringify({
-          food_recommendation: proposal.food_recommendation,
-          level_of_physical_activity: proposal.level_of_physical_activity
+          status_flag: proposal.level_of_physical_activity === 'light'
+            ? 'restrict_heavy_exercise'
+            : proposal.level_of_physical_activity
+              ? 'maintain_activity'
+              : 'nutrition_review'
         })
       });
 
@@ -251,7 +263,7 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
   const currentCharacters = inputMessage.length;
 
   return (
-    <div className="telehealth-widget" role="complementary" aria-label="Bác sĩ Trợ lý FitBreak">
+    <div className="telehealth-widget" role="complementary" aria-label="Trợ lý tra cứu thông tin sức khỏe FitBreak">
       {!isOpen && (
         <button 
           className="telehealth-launcher-btn" 
@@ -265,15 +277,19 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
 
       {isOpen && (
         <div className="telehealth-window" role="dialog" aria-modal="true">
+          <MedicalDisclaimerModal
+            isOpen={!hasConsent}
+            onAccept={() => setHasConsent(true)}
+          />
           {/* Header */}
           <div className="telehealth-header">
             <div className="doctor-identity-meta">
               <div className="doctor-avatar-circle" aria-hidden="true">
-                DR
+                AI
               </div>
               <div className="doctor-text-info">
-                <h4>Hội Chẩn Lâm Sàng</h4>
-                <span className="doctor-availability">Y học thể thao & Vận động phục hồi</span>
+                <h4>Trợ Lý Tra Cứu Thông Tin Sức Khỏe</h4>
+                <span className="doctor-availability">Hỗ trợ tra cứu vận động &amp; sức khỏe</span>
               </div>
             </div>
             <button 
@@ -287,9 +303,11 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
 
           {/* Message Thread */}
           <div className="telehealth-thread">
+            <DisclaimerBanner sticky={true} />
             {messages.map((m, idx) => (
               <div key={idx} className={`chat-bubble-clinical ${m.role}`}>
                 <div>{formatClinicalMessage(m.content)}</div>
+                {m.role !== 'user' && <AiTransparencyBadge />}
 
                 {/* Proposal Verification Card */}
                 {m.proposal && (m.proposal.has_update || m.proposal.has_proposed_changes) && (
@@ -343,7 +361,7 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
             ))}
             {loading && (
               <div className="doctor-thinking-indicator">
-                <span>⚕️ Bác sĩ đang kiểm tra chỉ số và chẩn đoán...</span>
+                <span>⚕️ Trợ lý AI đang tổng hợp thông tin...</span>
               </div>
             )}
           </div>
@@ -352,8 +370,8 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
           <form className="telehealth-footer" onSubmit={handleSendMessage}>
             <div className="telehealth-quota-bar">
               <span>Hạn mức: <strong>{remainingQuestions}/3</strong> câu hỏi hôm nay</span>
-              <span className={currentCharacters > 100 ? 'limit-warning' : ''}>
-                {currentCharacters}/100 ký tự
+              <span className={currentCharacters > 99 ? 'limit-warning' : ''}>
+                {currentCharacters}/99 ký tự
               </span>
             </div>
             <div className="telehealth-input-group">
@@ -363,13 +381,13 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
                 placeholder="Nhập triệu chứng, thuốc, thắc mắc y khoa..."
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                maxLength={100}
+                maxLength={99}
                 disabled={loading || remainingQuestions <= 0}
               />
               <button 
                 type="submit" 
                 className="telehealth-send-btn"
-                disabled={loading || !inputMessage.trim() || currentCharacters > 100 || remainingQuestions <= 0}
+                disabled={loading || !inputMessage.trim() || currentCharacters > 99 || remainingQuestions <= 0}
               >
                 Gửi
               </button>

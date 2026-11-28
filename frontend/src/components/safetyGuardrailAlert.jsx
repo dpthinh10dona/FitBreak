@@ -37,7 +37,7 @@ const SafetyGuardrailAlert = ({ data, onReset }) => {
   const config = isMedicalWarning
     ? {
         containerClass: 'safety-alert-medical',
-        title: 'Cảnh Báo An Toàn Y Tế (Chặn Kê Đơn Tự Động)',
+        title: 'Cảnh Báo An Toàn (Tạm Dừng Gợi Ý Tự Động)',
         subtitle: 'Hệ thống đã tạm dừng tạo thực đơn / lịch tập AI do phát hiện yếu tố nguy cơ sức khỏe.',
         badgeText: 'Medical Warning',
         badgeClass: 'badge-medical',

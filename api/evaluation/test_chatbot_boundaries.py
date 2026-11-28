@@ -250,13 +250,13 @@ class ChatbotScopeTests(unittest.TestCase):
 
 
 class ChatbotCharacterLimitTests(unittest.TestCase):
-    def test_exactly_100_characters_is_accepted(self):
-        request = ChatBotRequest(message="a" * 100)
-        self.assertEqual(len(request.message), 100)
+    def test_exactly_99_characters_is_accepted(self):
+        request = ChatBotRequest(message="a" * 99)
+        self.assertEqual(len(request.message), 99)
 
-    def test_101_characters_is_rejected(self):
+    def test_100_characters_is_rejected(self):
         with self.assertRaises(ValidationError):
-            ChatBotRequest(message="a" * 101)
+            ChatBotRequest(message="a" * 100)
 
     def test_single_spam_word_cannot_bypass_limit(self):
         with self.assertRaises(ValidationError):
