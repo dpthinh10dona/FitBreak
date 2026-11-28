@@ -10,6 +10,7 @@ import re
 import logging
 from pathlib import Path
 from app.services.knowledge_ingestor import load_source_catalog, DEFAULT_KNOWLEDGE_DIR
+from app.services.live_eval_trace import record_chunks
 
 logger = logging.getLogger("clinical_rag")
 
@@ -66,6 +67,18 @@ def _source_label(item: dict) -> str:
     decision = item.get("decision") or "không ghi số quyết định"
     effective = item.get("effective_at") or "chưa xác định thời điểm áp dụng"
     return f"{item['title']} ({decision}; hiệu lực: {effective})"
+
+
+def _chunk_location(chunk: dict) -> str:
+    """Use only a page or heading actually present in the retrieved chunk."""
+    content = chunk.get("content", "")
+    page = re.search(r"(?im)^\s*#{1,6}\s*(?:\*\*)?Trang\s+\d+", content)
+    if page:
+        return re.search(r"Trang\s+\d+", page.group(), re.IGNORECASE).group()
+    heading = re.search(r"(?m)^\s*#{1,6}\s+(.+)$", content)
+    if heading:
+        return heading.group(1).strip(" */#")[:120]
+    return str(chunk.get("heading_path") or chunk.get("title") or "").strip(" /#*")[:120]
 
 try:
     from app.services.knowledge_ingestor import default_ingestor
@@ -161,6 +174,7 @@ def retrieve_medical_docs(user_message: str, top_k: int = 3) -> str:
         for item in load_source_catalog(DEFAULT_KNOWLEDGE_DIR).values()
         if _approved_source_is_usable(item)
     }
+    approved_by_file = {item["file"]: source_id for source_id, item in approved.items()}
     query_terms = _meaningful_terms(user_message)
 
     # 0. ƯU TIÊN SỐ 1: Tìm kiếm ngữ nghĩa Cosine Similarity trên Supabase pgvector
@@ -169,6 +183,11 @@ def retrieve_medical_docs(user_message: str, top_k: int = 3) -> str:
         pg_chunks = search_medical_knowledge_pgvector(
             user_message, top_k=max(top_k * 5, 10), match_threshold=0.45
         )
+        for chunk in pg_chunks:
+            # The deployed RPC returns source_name/document_id, not source_id.
+            # Resolve only exact catalog filenames; never trust a model-generated label.
+            if not chunk.get("source_id"):
+                chunk["source_id"] = approved_by_file.get(chunk.get("source_name") or chunk.get("document_id"))
         pg_chunks = [
             c for c in pg_chunks if c.get("source_id") in approved
             and _ranked_evidence_score(c, approved[c["source_id"]], query_terms) > 0
@@ -179,6 +198,9 @@ def retrieve_medical_docs(user_message: str, top_k: int = 3) -> str:
         )
         pg_chunks = pg_chunks[:top_k]
         if pg_chunks:
+            for chunk in pg_chunks:
+                chunk["page_or_section"] = _chunk_location(chunk)
+            record_chunks("supabase_pgvector", pg_chunks, approved)
             formatted_chunks = []
             for i, chunk in enumerate(pg_chunks, 1):
                 source_record = approved[chunk["source_id"]]
@@ -192,6 +214,7 @@ def retrieve_medical_docs(user_message: str, top_k: int = 3) -> str:
                     f"Mã nguồn: {chunk['source_id']}\n"
                     f"URL nguồn: {source_record.get('source_url') or 'Chưa có'}\n"
                     f"Giới hạn: {source_record['limitations']}\n"
+                    f"Vị trí: {chunk['page_or_section']}\n"
                     f"{content}"
                 )
             return "\n\n".join(formatted_chunks)
@@ -212,6 +235,9 @@ def retrieve_medical_docs(user_message: str, top_k: int = 3) -> str:
             ranked_chunks.sort(key=lambda entry: entry[0], reverse=True)
             dynamic_chunks = [chunk for _, chunk in ranked_chunks[:top_k]]
             if dynamic_chunks:
+                for chunk in dynamic_chunks:
+                    chunk["page_or_section"] = _chunk_location(chunk)
+                record_chunks("local_knowledge_cache", dynamic_chunks, approved)
                 formatted_chunks = []
                 for i, chunk in enumerate(dynamic_chunks, 1):
                     source_record = approved[chunk["source_id"]]
@@ -224,6 +250,7 @@ def retrieve_medical_docs(user_message: str, top_k: int = 3) -> str:
                         f"Mã nguồn: {chunk['source_id']}\n"
                         f"URL nguồn: {source_record.get('source_url') or 'Chưa có'}\n"
                         f"Giới hạn: {source_record['limitations']}\n"
+                        f"Vị trí: {chunk['page_or_section']}\n"
                         f"{content}"
                     )
                 return "\n\n".join(formatted_chunks)

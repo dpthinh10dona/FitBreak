@@ -2,9 +2,10 @@ import os
 import uuid
 import tempfile
 import logging
+import secrets
 from pathlib import Path
 from datetime import date
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, Depends, Header, HTTPException, status, UploadFile, File
 from fastapi.responses import FileResponse
 from app.core.database import supabase
 from app.core.token_authorization import require_admin, token_authorization, tokenAuthorization
@@ -24,6 +25,7 @@ from app.services.medical_storage import persist_medical_document
 from app.services.runtime_store import daily_chatbot_quota
 from app.services.knowledge_ingestor import DEFAULT_KNOWLEDGE_DIR, load_source_catalog
 from app.services.pii_scrubber import scrub_symptom
+from app.services.live_eval_trace import trace as live_eval_trace, force_gemini_failure
 
 router = APIRouter(prefix="/chatbot", tags=["AI Health ChatBot"])
 logger = logging.getLogger(__name__)
@@ -85,7 +87,7 @@ async def ask_health_chatbot(
     message = scrub_symptom(message)
 
     # 2. Ràng buộc số lượng câu hỏi trong ngày: Tối đa 3 câu/ngày
-    current_count = await daily_chatbot_quota.get(user_id)
+    current_count = 0 if live_eval_trace.get() is not None else await daily_chatbot_quota.get(user_id)
     # Cấp cứu được chặn bằng quy tắc xác định để không phụ thuộc vào độ trễ của model.
     if is_emergency_message(message):
         agent_output = emergency_result()
@@ -137,14 +139,20 @@ async def ask_health_chatbot(
             allow_ai_generation=False,
         )
 
-    if current_count >= DAILY_LIMIT:
+    if current_count >= DAILY_LIMIT and live_eval_trace.get() is None:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Bạn đã sử dụng hết 3 lượt tư vấn miễn phí hôm nay. Vui lòng quay lại vào ngày mai!"
         )
 
     # 3. Lấy profile hiện tại từ Supabase (dùng auth_data.client đã xác thực JWT)
-    profile_res = auth_data.client.table("profiles").select("bmi,tdee,allergies").eq("id", user_id).execute()
+    try:
+        profile_res = auth_data.client.table("profiles").select("bmi,tdee,allergies").eq("id", user_id).execute()
+    except Exception as exc:
+        # Some deployed schemas predate the optional allergies column.
+        if str(getattr(exc, "code", "")) != "42703" or "allergies" not in str(exc):
+            raise
+        profile_res = auth_data.client.table("profiles").select("bmi,tdee").eq("id", user_id).execute()
     user_profile = profile_res.data[0] if (profile_res.data and len(profile_res.data) > 0) else {}
 
     # 4. Gửi qua AI Agent phân tích
@@ -155,7 +163,7 @@ async def ask_health_chatbot(
     )
 
     # Chỉ trừ lượt khi hệ thống thực sự tạo được câu trả lời đã kiểm chứng.
-    if agent_output.get("status", "PASS") == "PASS":
+    if agent_output.get("status", "PASS") == "PASS" and live_eval_trace.get() is None:
         current_count = await daily_chatbot_quota.increment(user_id)
     remaining = max(0, DAILY_LIMIT - current_count)
 
@@ -185,6 +193,37 @@ async def ask_health_chatbot(
         reason_code=agent_output.get("reason_code", "ANSWER_AVAILABLE"),
         allow_ai_generation=agent_output.get("allow_ai_generation", True),
     )
+
+
+@router.post("/live-eval", include_in_schema=False)
+async def live_evaluate_chatbot(
+    payload: ChatBotRequest,
+    force_primary_failure: bool = False,
+    x_live_eval_secret: str | None = Header(default=None),
+    auth_data: tokenAuthorization = Depends(token_authorization),
+):
+    """Run the real chatbot path with request-scoped evidence and no daily quota usage."""
+    expected = os.getenv("FITBREAK_LIVE_EVAL_SECRET", "")
+    if (
+        os.getenv("FITBREAK_LIVE_EVAL_ENABLED", "false").lower() != "true"
+        or not expected
+        or not x_live_eval_secret
+        or not secrets.compare_digest(x_live_eval_secret, expected)
+    ):
+        raise HTTPException(status_code=404, detail="Not found")
+    current = {"model_events": [], "retrieval_origin": None, "retrieved_rag_chunks": []}
+    trace_token = live_eval_trace.set(current)
+    failure_token = force_gemini_failure.set(force_primary_failure)
+    try:
+        response = await ask_health_chatbot(payload, auth_data)
+        return {
+            "user_query_scrubbed": scrub_symptom(payload.message),
+            "chatbot_response": response.model_dump(),
+            "trace": current,
+        }
+    finally:
+        force_gemini_failure.reset(failure_token)
+        live_eval_trace.reset(trace_token)
 
 @router.post("/confirm-update")
 async def confirm_profile_update(

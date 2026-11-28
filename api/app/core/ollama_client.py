@@ -9,6 +9,7 @@ from google import genai
 from google.genai import types
 from google.genai.errors import APIError
 import httpx
+from app.services.live_eval_trace import force_gemini_failure, record_model
 
 from app.core.exceptions import (
     AIModelOfflineException,
@@ -80,8 +81,13 @@ async def _call_gemini_once(
         response_schema=response_format if response_format is not None else None,
     )
     # Dùng asyncio.wait_for để khống chế timeout chặt chẽ
+    forced_for_ui = (
+        os.getenv("FITBREAK_LIVE_EVAL_ENABLED", "false").lower() == "true"
+        and os.getenv("FITBREAK_EVAL_FORCE_GEMINI_FAILURE", "false").lower() == "true"
+    )
+    generation_client = genai.Client(api_key="fitbreak-live-eval-invalid-key") if (force_gemini_failure.get() or forced_for_ui) else ai_client
     response = await asyncio.wait_for(
-        ai_client.aio.models.generate_content(
+        generation_client.aio.models.generate_content(
             model=GEMINI_MODEL,
             contents=prompt,
             config=config,
@@ -193,8 +199,10 @@ async def generate_chat(
                 response_format=response_format,
                 timeout_seconds=gemini_timeout,
             )
+            record_model("gemini", GEMINI_MODEL, "success")
             return content
         except Exception as exc:
+            record_model("gemini", GEMINI_MODEL, "failed", type(exc).__name__)
             logger.warning(f"Gemini gặp sự cố/nghẽn: {exc}. Đang chuyển tiếp sang Groq...")
             last_error = exc
 
@@ -214,8 +222,10 @@ async def generate_chat(
                     timeout_seconds=groq_timeout,
                     response_mime_type=response_mime_type,
                 )
+                record_model("groq", GROQ_MODEL, "success")
                 return content
             except Exception as exc:
+                record_model("groq", GROQ_MODEL, "failed", type(exc).__name__)
                 logger.warning(f"Groq gặp sự cố: {exc}. Đang chuyển ngược lại thử Gemini...")
                 last_error = exc
         else:

@@ -46,6 +46,7 @@ Thumbs.db
 # Generated evaluation reports (keep deployment repository clean)
 api/evaluation/reports/
 api/evaluation/fitbreak_report_results.zip
+evidence_live_rag_results.json
 
 # Project configs
 pyproject.toml

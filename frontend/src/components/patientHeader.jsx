@@ -133,7 +133,7 @@ const PatientHeader = ({
         </div>
       </div>
 
-      {/* 2. PATIENT SUMMARY & CLINICAL VITALS BANNER (Chỉ hiển thị tại tab Hồ Sơ Y Tế) */}
+      {/* 2. PATIENT SUMMARY & CLINICAL VITALS BANNER (Chỉ hiển thị tại tab Ghi Chú Chỉ Số Cá Nhân) */}
       {activeTab === 'profile' && (
       <div className="patient-vitals-banner">
         <div className="patient-banner-card">
