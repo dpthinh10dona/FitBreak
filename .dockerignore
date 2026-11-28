@@ -52,4 +52,11 @@ api/app/core/dataset/medical_knowledge/*.pdf
 api/app/core/dataset/medical_knowledge/*.doc
 api/app/core/dataset/medical_knowledge/*.docx
 
+# Tests, evaluation & hackathon evidence (not needed in production container)
+tests/
+api/evaluation/
+evidence/
+scripts/
+*.md
+
 
