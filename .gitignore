@@ -50,3 +50,4 @@ evidence_live_rag_results.json
 
 # Project configs
 pyproject.toml
+*.png
