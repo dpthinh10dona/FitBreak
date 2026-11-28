@@ -13,6 +13,7 @@ import TaskBoard from "./components/taskBoard";
 import Shop from './components/shop';
 import TelehealthDoctorChatbot from './components/telehealthDoctorChatbot';
 import OnboardingTour from './components/onboardingTour';
+import PrivacyCenter from './components/PrivacyCenter';
 import './App.css';
 
 const getScheduleKey = (u) => (u?.email ? `workoutSchedule_${u.email}` : null);
@@ -395,6 +396,14 @@ function App() {
               onUpdateCoins={handleUpdateCoins} 
               onAvatarUpdated={handleAvatarUpdated}
               onStatsUpdated={handleRefreshStats}
+            />
+          )}
+          {activeTab === 'privacy' && (
+            <PrivacyCenter
+              onAccountDeleted={() => {
+                setUser(null);
+                window.location.href = '/';
+              }}
             />
           )}
         </div>

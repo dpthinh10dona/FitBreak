@@ -31,8 +31,8 @@ const HealthChatbot = ({ user, onProfileUpdated }) => {
     if (!trimmed || loading) return;
 
     const characterCount = trimmed.length;
-    if (characterCount > 100) {
-      alert(`Câu hỏi của bạn có ${characterCount} ký tự. Giới hạn tối đa là 100 ký tự mỗi câu!`);
+    if (characterCount > 99) {
+      alert(`Câu hỏi của bạn có ${characterCount} ký tự. Giới hạn tối đa là 99 ký tự mỗi câu!`);
       return;
     }
 
@@ -61,7 +61,6 @@ const HealthChatbot = ({ user, onProfileUpdated }) => {
         },
         body: JSON.stringify({
           message: trimmed,
-          history: newMessages.slice(-5)
         })
       });
 
@@ -107,8 +106,11 @@ const HealthChatbot = ({ user, onProfileUpdated }) => {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          food_recommendation: proposal.food_recommendation,
-          level_of_physical_activity: proposal.level_of_physical_activity
+          status_flag: proposal.level_of_physical_activity === 'light'
+            ? 'restrict_heavy_exercise'
+            : proposal.level_of_physical_activity
+              ? 'maintain_activity'
+              : 'nutrition_review'
         })
       });
 
@@ -218,8 +220,8 @@ const HealthChatbot = ({ user, onProfileUpdated }) => {
           <form className="chatbot-footer" onSubmit={handleSendMessage}>
             <div className="chatbot-limit-info">
               <span>Còn lại: <strong>{remainingQuestions}/3</strong> câu hỏi hôm nay</span>
-              <span className={currentCharacters > 100 ? 'warning' : ''}>
-                {currentCharacters}/100 ký tự
+              <span className={currentCharacters > 99 ? 'warning' : ''}>
+                {currentCharacters}/99 ký tự
               </span>
             </div>
             <div className="chatbot-input-row">
@@ -229,13 +231,13 @@ const HealthChatbot = ({ user, onProfileUpdated }) => {
                 placeholder="Nhập triệu chứng, bệnh lý..."
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                maxLength={100}
+                maxLength={99}
                 disabled={loading || remainingQuestions <= 0}
               />
               <button 
                 type="submit" 
                 className="chatbot-send-btn"
-                disabled={loading || !inputMessage.trim() || currentCharacters > 100 || remainingQuestions <= 0}
+                disabled={loading || !inputMessage.trim() || currentCharacters > 99 || remainingQuestions <= 0}
               >
                 Gửi
               </button>

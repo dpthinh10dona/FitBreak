@@ -16,8 +16,7 @@ const PatientHeader = ({
   onLogout,
   onOpenTour
 }) => {
-  const name = user?.name || "Bệnh nhân / Người dùng";
-  const email = user?.email || "Chưa cập nhật email";
+  const name = user?.nickname || "Bệnh nhân / Người dùng";
   const height = user?.height || 0;
   const weight = user?.weight || 0;
   const bmi = height > 0 ? (weight / ((height / 100) ** 2)).toFixed(1) : user?.bmi || "--";
@@ -58,6 +57,7 @@ const PatientHeader = ({
     { id: 'schedule', label: 'Lịch Trình Vận Động' },
     { id: 'team', label: 'Nhóm Rèn Luyện' },
     { id: 'shop', label: 'Vật Phẩm Hỗ Trợ' },
+    { id: 'privacy', label: 'Quyền Riêng Tư' },
   ];
 
   return (
@@ -145,7 +145,7 @@ const PatientHeader = ({
               </div>
               <div className="patient-meta-text">
                 <h2>Hồ Sơ Sức Khỏe: {name}</h2>
-                <p>Mã tài khoản: {email} | Phân loại thể trạng: <strong>{bmiMeta.text}</strong></p>
+                <p>Phân loại thể trạng: <strong>{bmiMeta.text}</strong></p>
               </div>
             </div>
 
