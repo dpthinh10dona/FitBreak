@@ -146,16 +146,30 @@ const TaskBoard = ({ scheduleData, onUpdateCoins, onUpdateSchedule, selectedTime
     return `${m}:${s}`;
   };
 
+  const getAuthHeaders = () => {
+    let token = localStorage.getItem('access_token') || localStorage.getItem('token');
+    if (!token) {
+      try {
+        const cached = JSON.parse(localStorage.getItem('user') || '{}');
+        token = cached?.access_token || cached?.token;
+      } catch {
+        // ignore invalid JSON
+      }
+    }
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return headers;
+  };
+
   const handleMiniTaskComplete = async () => {
     setIsCompletingMini(true);
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE_URL}/exercises-log`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        credentials: 'include',
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           exercise_id: "mini_break_task",
           completed_at: new Date().toISOString(),
@@ -191,13 +205,10 @@ const TaskBoard = ({ scheduleData, onUpdateCoins, onUpdateSchedule, selectedTime
     const rewardCoins = alreadyRewardedToday ? 0 : (exerciseItem.reward_coins || 10);
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE_URL}/exercises-log`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        credentials: 'include',
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           exercise_id: safeExerciseId,
           completed_at: new Date().toISOString(),
