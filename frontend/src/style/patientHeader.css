@@ -16,11 +16,11 @@
   width: 100%;
   box-sizing: border-box;
   margin: 0 auto;
-  padding: 12px 20px;
+  padding: 10px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
 }
 
 /* Brand Identity */
@@ -85,9 +85,9 @@
 .patient-nav-item {
   display: flex;
   align-items: center;
-  padding: 6px 10px;
+  padding: 6px 11px;
   border-radius: var(--radius-sm);
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 500;
   color: var(--text-secondary);
   text-decoration: none;
