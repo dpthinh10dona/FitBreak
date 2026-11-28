@@ -8,6 +8,7 @@ from app.services.rag_service import process_rag_pipeline
 from app.services.safety_guardrail import (
     DEFAULT_DISCLAIMER,
     UserHealthInput,
+    apply_youth_safety_guardrail,
     safety_guardrail,
 )
 from app.core.exceptions import (
@@ -123,7 +124,20 @@ async def food_suggest(
                 result={"guardrail": blocked, **blocked},
                 error=guardrail.status,
             )
+        youth_check = apply_youth_safety_guardrail(
+            age=age,
+            tdee=float(user_profile.get("tdee") or req.calories_need or 2000),
+            goal=req.aim,
+            target_calories=float(req.calories_need or 2000),
+        )
+        user_info["aim"] = youth_check["safe_goal"]
+        user_info["calories_need"] = youth_check["safe_target_calories"]
+
         result = await process_rag_pipeline(user_info)
+        if isinstance(result, dict):
+            result["is_youth_mode"] = youth_check["is_youth_mode"]
+            if youth_check["adjusted_reason"]:
+                result["adjusted_reason"] = youth_check["adjusted_reason"]
         if result.get("allow_ai_generation") is False:
             return FoodSuggestResponse(
                 success=False,

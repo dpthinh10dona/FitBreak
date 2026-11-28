@@ -782,3 +782,56 @@ if __name__ == "__main__":
     print(json.dumps(res_sc3.model_dump(), indent=2, ensure_ascii=False))
 
 
+
+
+def apply_youth_safety_guardrail(
+    age: int,
+    tdee: float,
+    goal: str,
+    target_calories: float,
+) -> dict:
+    """
+    Luật cứng bảo vệ người dùng vị thành niên (< 18 tuổi) khỏi cắt giảm calo cực đoan.
+    Trả về dict gồm: is_youth_mode, safe_goal, safe_target_calories, adjusted_reason.
+    """
+    if age is None or age >= 18:
+        return {
+            "is_youth_mode": False,
+            "safe_goal": goal,
+            "safe_target_calories": target_calories,
+            "adjusted_reason": None,
+        }
+
+    goal_lower = (goal or "").strip().lower()
+    is_rapid_loss = any(
+        kw in goal_lower
+        for kw in ("rapid_weight_loss", "giảm cân cấp tốc", "giam can cap toc", "cấp tốc")
+    )
+
+    safe_goal = goal
+    reasons = []
+
+    if is_rapid_loss or "giảm cân" in goal_lower or "giảm mỡ" in goal_lower:
+        safe_goal = "Cân bằng năng lượng & hỗ trợ phát triển thể chất"
+        if is_rapid_loss:
+            reasons.append(
+                "Đã chặn mục tiêu giảm cân cấp tốc và chuyển sang cân bằng năng lượng để bảo vệ quá trình phát triển thể chất dưới 18 tuổi."
+            )
+
+    # Sàn calo an toàn cho vị thành niên: tối đa thâm hụt 10% TDEE và không thấp hơn 1600 kcal
+    base_tdee = float(tdee) if tdee and tdee > 0 else float(target_calories or 2000)
+    min_safe_calories = max(base_tdee * 0.90, 1600.0)
+
+    safe_target = float(target_calories) if target_calories and target_calories > 0 else base_tdee
+    if is_rapid_loss or safe_target < min_safe_calories:
+        safe_target = round(max(base_tdee * 0.95, min_safe_calories))
+        reasons.append(
+            f"Mức năng lượng được điều chỉnh về ngưỡng an toàn ({int(safe_target)} kcal/ngày, không thâm hụt quá 10% TDEE)."
+        )
+
+    return {
+        "is_youth_mode": True,
+        "safe_goal": safe_goal,
+        "safe_target_calories": safe_target,
+        "adjusted_reason": " ".join(reasons) if reasons else None,
+    }

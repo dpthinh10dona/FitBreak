@@ -176,6 +176,17 @@ const ClinicalNutritionModule = ({ user }) => {
         </div>
       </header>
 
+      {profile?.birth_year && new Date().getFullYear() - Number(profile.birth_year) < 18 && (
+        <div
+          className="med-disclaimer-banner"
+          style={{ marginBottom: '16px', backgroundColor: '#f0f9ff', borderColor: '#bae6fd', color: '#0369a1' }}
+        >
+          <p className="med-disclaimer-banner-text" style={{ color: '#0c4a6e' }}>
+            <strong>Gợi ý:</strong> Ở độ tuổi phát triển thể chất (12–17 tuổi), cơ thể cần đầy đủ dưỡng chất để tăng trưởng chiều cao và trí lực. Hãy chia sẻ thực đơn tham khảo này với bố mẹ hoặc người giám hộ để cùng chuẩn bị bữa ăn phù hợp nhất nhé!
+          </p>
+        </div>
+      )}
+
       {/* 2. PATIENT VITALS SYNC BAR */}
       {profile && (
         <div className="clinical-patient-sync">
@@ -254,7 +265,17 @@ const ClinicalNutritionModule = ({ user }) => {
             </div>
             <div className="clinical-cards-selector">
               {[
-                { id: 'Giảm cân', title: 'Giảm mỡ', subtitle: 'Kiểm soát tinh bột' },
+                {
+                  id: 'Giảm cân',
+                  title:
+                    profile?.birth_year && new Date().getFullYear() - Number(profile.birth_year) < 18
+                      ? 'Cân bằng năng lượng & hỗ trợ phát triển thể chất'
+                      : 'Giảm mỡ',
+                  subtitle:
+                    profile?.birth_year && new Date().getFullYear() - Number(profile.birth_year) < 18
+                      ? 'An toàn cho tuổi 12–17'
+                      : 'Kiểm soát tinh bột',
+                },
                 { id: 'Tăng cơ', title: 'Tăng cơ', subtitle: 'Ưu tiên đạm chuẩn' },
                 { id: 'Duy trì', title: 'Duy trì', subtitle: 'Cân bằng vi chất' },
               ].map((aimItem) => (
