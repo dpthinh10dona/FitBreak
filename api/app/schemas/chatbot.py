@@ -46,4 +46,6 @@ class ChatBotResponse(BaseModel):
 class ConfirmProposalRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     status_flag: Literal["restrict_heavy_exercise", "maintain_activity", "nutrition_review"]
+    food_recommendation: Optional[str] = Field(default=None, max_length=200)
+    level_of_physical_activity: Optional[Literal["light", "medium", "heavy"]] = None
     health_flags: Optional[List[Literal["high_blood_pressure", "chest_pain_or_fatigue"]]] = None

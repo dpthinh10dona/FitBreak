@@ -13,7 +13,8 @@ import {
   HelpCircle,
   Activity,
   Flame,
-  Award
+  Award,
+  ShieldCheck
 } from 'lucide-react';
 import '../style/onboardingTour.css';
 
@@ -62,7 +63,7 @@ const STEPS = [
     tab: 'profile',
     title: 'Bước 1: Thiết lập Hồ sơ Sức khỏe',
     subtitle: 'Cung cấp chỉ số sinh trắc học để cá nhân hóa',
-    badge: 'Bước 1 / 5',
+    badge: 'Bước 1 / 6',
     icon: UserCheck,
     content: (
       <div className="tour-step-content">
@@ -83,7 +84,7 @@ const STEPS = [
     tab: 'schedule',
     title: 'Bước 2: Lập Lịch Trình Vận Động',
     subtitle: 'Sắp xếp thời gian biểu tập luyện trong tuần',
-    badge: 'Bước 2 / 5',
+    badge: 'Bước 2 / 6',
     icon: Calendar,
     content: (
       <div className="tour-step-content">
@@ -104,7 +105,7 @@ const STEPS = [
     tab: 'food',
     title: 'Bước 3: Gợi Ý Thực Đơn Dinh Dưỡng',
     subtitle: 'Thực đơn chuẩn lâm sàng, vừa ngân sách & calo',
-    badge: 'Bước 3 / 5',
+    badge: 'Bước 3 / 6',
     icon: Utensils,
     content: (
       <div className="tour-step-content">
@@ -125,7 +126,7 @@ const STEPS = [
     tab: 'team',
     title: 'Bước 4: Tham Gia Nhóm Rèn Luyện',
     subtitle: 'Sát cánh cùng đồng đội đánh Boss Raid',
-    badge: 'Bước 4 / 5',
+    badge: 'Bước 4 / 6',
     icon: Users,
     content: (
       <div className="tour-step-content">
@@ -146,7 +147,7 @@ const STEPS = [
     tab: 'shop',
     title: 'Bước 5: Cửa Hàng Vật Phẩm & Phần Thưởng',
     subtitle: 'Đổi coin lấy trang bị và phụ kiện Avatar',
-    badge: 'Bước 5 / 5',
+    badge: 'Bước 5 / 6',
     icon: ShoppingBag,
     content: (
       <div className="tour-step-content">
@@ -157,6 +158,27 @@ const STEPS = [
           <li><strong>Trang bị độc quyền:</strong> Mũ, giáp, vũ khí giúp tăng chỉ số sức mạnh (STR / Damage).</li>
           <li><strong>Tùy biến Avatar:</strong> Nâng cấp ngoại hình nhân vật chiến binh của bạn.</li>
           <li><strong>Động lực duy trì:</strong> Biến việc rèn luyện sức khỏe mỗi ngày thành trò chơi nhập vai thú vị.</li>
+        </ul>
+      </div>
+    ),
+    instruction: 'Bấm "Tiếp tục" để tìm hiểu về Quyền riêng tư & Dữ liệu của bạn.'
+  },
+  {
+    step: 6,
+    tab: 'privacy',
+    title: 'Bước 6: Quyền Riêng Tư & Dữ Liệu Của Bạn',
+    subtitle: 'Toàn quyền kiểm soát, xem và xóa dữ liệu cá nhân',
+    badge: 'Bước 6 / 6',
+    icon: ShieldCheck,
+    content: (
+      <div className="tour-step-content">
+        <p className="tour-lead-text">
+          Tại tab <strong>Quyền Riêng Tư</strong>, bạn luôn nắm quyền chủ động đối với dữ liệu của mình:
+        </p>
+        <ul className="tour-checklist">
+          <li><strong>Xem &amp; Tải xuống (.JSON):</strong> Kiểm tra minh bạch toàn bộ dữ liệu hệ thống đang lưu và tải bản sao về máy.</li>
+          <li><strong>Xóa nhật ký sức khỏe:</strong> Xóa sạch lịch sử sinh hiệu &amp; trạng thái cảnh báo nhưng vẫn giữ nguyên Nickname, Avatar và điểm XP.</li>
+          <li><strong>Xóa vĩnh viễn tài khoản:</strong> Xóa đồng bộ toàn bộ dữ liệu và tài khoản khỏi hệ thống bất cứ lúc nào.</li>
         </ul>
       </div>
     ),

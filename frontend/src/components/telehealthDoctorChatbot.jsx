@@ -239,19 +239,21 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
             ? 'restrict_heavy_exercise'
             : proposal.level_of_physical_activity
               ? 'maintain_activity'
-              : 'nutrition_review'
+              : 'nutrition_review',
+          food_recommendation: proposal.food_recommendation || null,
+          level_of_physical_activity: proposal.level_of_physical_activity || null
         })
       });
 
       const data = await res.json();
-      if (data.success) {
-        alert('✅ Đã cập nhật chỉ số sức khỏe của bạn vào hồ sơ cá nhân thành công!');
+      if (res.ok && data.success) {
+        alert(data.message || 'Đã cập nhật hồ sơ sức khỏe.');
         setActiveProposal(null);
         if (onProfileUpdated) {
           onProfileUpdated();
         }
       } else {
-        alert(data.message || 'Cập nhật thất bại.');
+        alert(data.detail || data.message || 'Cập nhật thất bại.');
       }
     } catch (e) {
       alert('Lỗi cập nhật: ' + e.message);

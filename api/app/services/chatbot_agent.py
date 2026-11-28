@@ -211,8 +211,18 @@ def asthma_exercise_warning_result() -> Dict[str, Any]:
         "status": "MEDICAL_WARNING",
         "reason_code": "ASTHMA_BREATHLESSNESS_WARNING",
         "allow_ai_generation": False,
-        "has_update": False,
-        "has_proposed_changes": False,
+        "has_update": True,
+        "has_proposed_changes": True,
+        "summary_for_ui_card": "Tạm hạn chế tập nặng khi đang khó thở; chỉ cập nhật hồ sơ nếu bạn xác nhận.",
+        "suggested_food_recommendation": None,
+        "suggested_level_of_physical_activity": "light",
+        "proposed_updates": {
+            "food_recommendation": None,
+            "level_of_physical_activity": {
+                "new_value": "light",
+                "reason": "Đang khó thở khi có hen",
+            },
+        },
     }
 
 
@@ -399,6 +409,7 @@ Bạn là Động cơ Cá nhân hoá Dữ liệu Sức khoẻ (Personalization L
 3. **Cơ chế xác nhận người dùng (Human-in-the-Loop):**
    - Mọi thay đổi đều ở trạng thái đề xuất chờ duyệt (`requires_user_confirmation: true`).
    - Cung cấp dữ liệu ngắn gọn, dễ hiểu để Frontend render thành giao diện Action Card (thẻ xác nhận với 2 nút: [Đồng ý cập nhật] / [Bỏ qua]).
+   - `food_recommendation.new_value` là tóm tắt hành động dinh dưỡng tối đa 180 ký tự, không sao chép câu hỏi hoặc thông tin định danh.
 
 ---
 

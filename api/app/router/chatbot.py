@@ -26,7 +26,7 @@ from app.services.clinical_rag import get_medical_knowledge_stats, ingest_new_me
 from app.services.medical_storage import persist_medical_document
 from app.services.runtime_store import daily_chatbot_quota
 from app.services.knowledge_ingestor import DEFAULT_KNOWLEDGE_DIR, load_source_catalog
-from app.services.pii_scrubber import scrub_symptom
+from app.services.pii_scrubber import scrub_pii, scrub_symptom
 from app.services.live_eval_trace import trace as live_eval_trace, force_gemini_failure
 
 router = APIRouter(prefix="/chatbot", tags=["AI Health ChatBot"])
@@ -106,7 +106,16 @@ async def ask_health_chatbot(
         return ChatBotResponse(
             reply=agent_output["reply"],
             remaining_questions_today=max(0, DAILY_LIMIT - current_count),
-            proposal=None,
+            proposal=ProfileUpdateProposal(
+                has_update=True,
+                has_proposed_changes=True,
+                summary_for_ui_card=agent_output["summary_for_ui_card"],
+                food_recommendation=None,
+                level_of_physical_activity="light",
+                reason="Đang khó thở khi có hen",
+                proposed_updates=agent_output["proposed_updates"],
+                requires_user_confirmation=True,
+            ),
             status=agent_output["status"],
             reason_code=agent_output["reason_code"],
             allow_ai_generation=False,
@@ -256,38 +265,66 @@ async def confirm_profile_update(
         "nutrition_review": "Cần xem lại chế độ dinh dưỡng",
     }
     update_fields = {"status_flag": payload.status_flag, "status_note": notes[payload.status_flag]}
+    if payload.food_recommendation and payload.food_recommendation.strip():
+        update_fields["food_recommendation"] = scrub_pii(" ".join(payload.food_recommendation.split()))
     if payload.status_flag == "restrict_heavy_exercise":
         update_fields["level_of_physical_activity"] = "light"
+    elif payload.level_of_physical_activity is not None:
+        update_fields["level_of_physical_activity"] = payload.level_of_physical_activity
 
-    auth_data.client.table("profiles").update(update_fields).eq("id", user_id).execute()
-
-    # Lưu active_health_flags vào bảng health_states để liên thông sang Lịch tập & Thực đơn
-    active_flags = payload.health_flags
-    if active_flags is None:
-        if payload.status_flag == "restrict_heavy_exercise":
-            active_flags = ["high_blood_pressure", "chest_pain_or_fatigue"]
-        elif payload.status_flag == "maintain_activity":
-            active_flags = []
-        else:
-            active_flags = ["chest_pain_or_fatigue"]
-
+    status_saved = True
     try:
-        auth_data.client.table("health_states").upsert(
-            {
-                "user_id": user_id,
-                "active_health_flags": active_flags,
-                "status_flag": payload.status_flag,
-            },
-            on_conflict="user_id",
-        ).execute()
-    except Exception:
-        pass
+        auth_data.client.table("profiles").update(update_fields).eq("id", user_id).execute()
+    except Exception as exc:
+        # The deployed profiles schema can lack status_flag/status_note while
+        # still supporting the two confirmed, derived recommendation fields.
+        if str(getattr(exc, "code", "")) != "42703" or not any(
+            field in str(exc) for field in ("status_flag", "status_note")
+        ):
+            raise
+        supported_fields = {
+            key: value for key, value in update_fields.items()
+            if key in ("food_recommendation", "level_of_physical_activity")
+        }
+        if not supported_fields:
+            raise HTTPException(status_code=503, detail="Hồ sơ chưa hỗ trợ lưu trạng thái đề xuất.")
+        auth_data.client.table("profiles").update(supported_fields).eq("id", user_id).execute()
+        update_fields = supported_fields
+        status_saved = False
+
+    # Đồng bộ nhãn trạng thái; giữ nguyên các cờ cũ nếu thẻ không đề xuất thay đổi cờ.
+    active_flags = payload.health_flags
+    health_state_saved = False
+    try:
+        if active_flags is None:
+            existing_state = auth_data.client.table("health_states").select(
+                "active_health_flags"
+            ).eq("user_id", user_id).limit(1).execute()
+            active_flags = (
+                existing_state.data[0].get("active_health_flags") or []
+                if existing_state.data else []
+            )
+        state = {
+            "user_id": user_id,
+            "status_flag": payload.status_flag,
+            "active_health_flags": active_flags,
+        }
+        auth_data.client.table("health_states").upsert(state, on_conflict="user_id").execute()
+        health_state_saved = True
+    except Exception as exc:
+        logger.info("Optional health_states summary unavailable: %s", type(exc).__name__)
 
     return {
         "success": True,
-        "message": "Đã cập nhật hồ sơ cá nhân hóa thành công!",
+        "message": (
+            "Đã cập nhật hồ sơ cá nhân hóa thành công!"
+            if health_state_saved else
+            "Đã cập nhật hồ sơ; chưa đồng bộ được bảng trạng thái sức khỏe."
+        ),
         "updated": update_fields,
         "active_health_flags": active_flags,
+        "status_saved": status_saved or health_state_saved,
+        "health_state_saved": health_state_saved,
     }
 
 
