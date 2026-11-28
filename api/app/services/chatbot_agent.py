@@ -157,7 +157,8 @@ def is_emergency_message(message: str) -> bool:
         "nước tiểu sẫm", "khó thở kèm tụt huyết áp",
     )
     chest_and_breath = ("đau ngực" in normalized or "đau thắt ngực" in normalized) and "khó thở" in normalized
-    return chest_and_breath or any(sign in normalized for sign in strong_signs)
+    allergy_and_breath = ("dị ứng" in normalized or "phản vệ" in normalized) and "khó thở" in normalized
+    return chest_and_breath or allergy_and_breath or any(sign in normalized for sign in strong_signs)
 
 
 def emergency_result() -> Dict[str, Any]:
@@ -436,11 +437,14 @@ async def run_clinical_advisor(
         raise MedicalAnswerValidationError("Model không cung cấp nội dung có thể kiểm chứng.")
     urls = re.findall(r"^URL nguồn: (.+)$", retrieved_docs, re.MULTILINE)
     urls.extend(["Chưa có"] * (len(sources) - len(urls)))
+    locations = re.findall(r"^Vị trí: (.+)$", retrieved_docs, re.MULTILINE)
+    locations.extend([""] * (len(sources) - len(locations)))
     limitations = re.findall(r"^Giới hạn: (.+)$", retrieved_docs, re.MULTILINE)
     limitations.extend(["Cần tham khảo nhân viên y tế trước khi áp dụng."] * (len(sources) - len(limitations)))
     clinical_reply += "\n\nNguồn tài liệu tham khảo:\n" + "\n".join(
-        f"- {source}" + (f" — {url}" if url != "Chưa có" else "") + f". Giới hạn: {limit}"
-        for source, url, limit in dict.fromkeys(zip(sources, urls, limitations))
+        f"- {source}" + (f" — {url}" if url != "Chưa có" else "")
+        + (f". Vị trí: {location}" if location else "") + f". Giới hạn: {limit}"
+        for source, url, location, limit in dict.fromkeys(zip(sources, urls, locations, limitations))
     )
 
     return clinical_reply

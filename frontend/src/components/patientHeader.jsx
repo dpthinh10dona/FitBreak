@@ -51,12 +51,12 @@ const PatientHeader = ({
   const activityMeta = getActivityLevelLabel(levelOfActivity);
 
   const navItems = [
-    { id: 'tasks', label: 'Vận Động Phục Hồi' },
-    { id: 'profile', label: 'Ghi Chú Chỉ Số Cá Nhân' },
-    { id: 'food', label: 'Gợi Ý Thực Đơn Tham Khảo' },
-    { id: 'schedule', label: 'Lịch Trình Vận Động' },
-    { id: 'team', label: 'Nhóm Rèn Luyện' },
-    { id: 'shop', label: 'Vật Phẩm Hỗ Trợ' },
+    { id: 'tasks', label: 'Vận Động' },
+    { id: 'profile', label: 'Chỉ Số Cá Nhân' },
+    { id: 'food', label: 'Thực Đơn' },
+    { id: 'schedule', label: 'Lịch Tập' },
+    { id: 'team', label: 'Nhóm' },
+    { id: 'shop', label: 'Vật Phẩm' },
     { id: 'privacy', label: 'Quyền Riêng Tư' },
   ];
 
@@ -133,7 +133,7 @@ const PatientHeader = ({
         </div>
       </div>
 
-      {/* 2. PATIENT SUMMARY & CLINICAL VITALS BANNER (Chỉ hiển thị tại tab Hồ Sơ Y Tế) */}
+      {/* 2. PATIENT SUMMARY & CLINICAL VITALS BANNER (Chỉ hiển thị tại tab Ghi Chú Chỉ Số Cá Nhân) */}
       {activeTab === 'profile' && (
       <div className="patient-vitals-banner">
         <div className="patient-banner-card">

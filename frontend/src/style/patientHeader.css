@@ -13,12 +13,14 @@
 
 .patient-header-topbar {
   max-width: 1360px;
+  width: 100%;
+  box-sizing: border-box;
   margin: 0 auto;
-  padding: 12px 28px;
+  padding: 10px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 12px;
 }
 
 /* Brand Identity */
@@ -70,19 +72,28 @@
   padding: 3px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.patient-nav::-webkit-scrollbar {
+  display: none;
 }
 
 .patient-nav-item {
   display: flex;
   align-items: center;
-  padding: 6px 14px;
+  padding: 6px 11px;
   border-radius: var(--radius-sm);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 500;
   color: var(--text-secondary);
   text-decoration: none;
   transition: var(--transition-fast);
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .patient-nav-item:hover {
@@ -102,7 +113,8 @@
 .patient-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .patient-tour-pill-btn {
@@ -117,6 +129,7 @@
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
   transition: var(--transition-fast);
 }
 
