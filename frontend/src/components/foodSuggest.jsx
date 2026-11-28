@@ -259,15 +259,21 @@ const FoodSuggest = () => {
                         <span className="food-quiz-label-icon">🎯</span> Mục tiêu của bạn
                     </div>
                     <div className="food-option-list">
-                        {['Tăng cơ', 'Giảm cân', 'Cân bằng'].map(aim => (
+                        {['Tăng cơ', 'Giảm cân', 'Cân bằng'].map(aim => {
+                            const isYouth = profile?.birth_year && new Date().getFullYear() - Number(profile.birth_year) < 18;
+                            const displayLabel = isYouth && aim === 'Giảm cân'
+                                ? 'Cân bằng năng lượng & hỗ trợ phát triển thể chất'
+                                : aim;
+                            return (
                             <label className="food-option-item" key={aim}>
                                 <input type="radio" name="aim" value={aim} checked={formData.aim === aim} onChange={handleInputChange} />
                                 <span className="food-option-chip">
                                     <span className="food-option-chip-icon">{aim === 'Tăng cơ' ? '💪' : aim === 'Giảm cân' ? '🏃' : '⚖️'}</span>
-                                    {aim}
+                                    {displayLabel}
                                 </span>
                             </label>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
 

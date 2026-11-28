@@ -301,11 +301,17 @@ async def schedule_maker(user_information: dict) -> dict:
                 elif chosen_block == "pilates":
                     pilate_cnt += 1
 
+                aim_label = "Giảm cân" if aim == 0 else ("Tăng cơ" if aim == 1 else "Duy trì")
+                selection_reason = (
+                    f"Ưu tiên {chosen_block.replace('_', ' ')} ({total_time}/{budget} phút rảnh, "
+                    f"ngưỡng tối thiểu {min_req} phút) theo ràng buộc hồi phục nhóm cơ 24h và mục tiêu {aim_label}."
+                )
                 today_trained_type = chosen_block
                 generated_schedule[day].append({
                     "day_type": chosen_block,
                     "total_time": total_time,
                     "slot_budget": budget,
+                    "selection_reason": selection_reason,
                     "exercises": selected_ex
                 })
             else:

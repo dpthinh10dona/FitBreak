@@ -3,6 +3,7 @@ import { API_BASE_URL } from '../config';
 import MedicalDisclaimerModal, { AI_HEALTH_CONSENT_KEY } from './MedicalDisclaimerModal';
 import DisclaimerBanner from './DisclaimerBanner';
 import AiTransparencyBadge from './AiTransparencyBadge';
+import RagProvenanceDrawer from './RagProvenanceDrawer';
 import '../style/telehealthChatbot.css';
 
 /**
@@ -197,6 +198,7 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
         role: 'assistant',
         content: data.reply,
         proposal: data.proposal,
+        retrieved_chunks: data.retrieved_chunks || [],
         status: data.status,
         reasonCode: data.reason_code
       };
@@ -308,6 +310,7 @@ const TelehealthDoctorChatbot = ({ user, onProfileUpdated }) => {
               <div key={idx} className={`chat-bubble-clinical ${m.role}`}>
                 <div>{formatClinicalMessage(m.content)}</div>
                 {m.role !== 'user' && <AiTransparencyBadge />}
+                {m.role !== 'user' && <RagProvenanceDrawer chunks={m.retrieved_chunks} />}
 
                 {/* Proposal Verification Card */}
                 {m.proposal && (m.proposal.has_update || m.proposal.has_proposed_changes) && (

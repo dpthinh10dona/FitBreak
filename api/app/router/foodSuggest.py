@@ -8,6 +8,7 @@ from app.services.rag_service import process_rag_pipeline
 from app.services.safety_guardrail import (
     DEFAULT_DISCLAIMER,
     UserHealthInput,
+    apply_youth_safety_guardrail,
     safety_guardrail,
 )
 from app.core.exceptions import (
@@ -123,7 +124,55 @@ async def food_suggest(
                 result={"guardrail": blocked, **blocked},
                 error=guardrail.status,
             )
+        youth_check = apply_youth_safety_guardrail(
+            age=age,
+            tdee=float(user_profile.get("tdee") or req.calories_need or 2000),
+            goal=req.aim,
+            target_calories=float(req.calories_need or 2000),
+        )
+        user_info["aim"] = youth_check["safe_goal"]
+        user_info["calories_need"] = youth_check["safe_target_calories"]
+
+        # Đọc active_health_flags từ health_states (fallback sang status_flag trên profiles)
+        active_flags = []
+        try:
+            hs_res = (
+                auth_data.client.table("health_states")
+                .select("active_health_flags, status_flag")
+                .eq("user_id", user_id)
+                .limit(1)
+                .execute()
+            )
+            if hs_res.data:
+                active_flags = hs_res.data[0].get("active_health_flags") or []
+        except Exception:
+            active_flags = []
+
+        if not active_flags and user_profile.get("status_flag") == "restrict_heavy_exercise":
+            active_flags = ["high_blood_pressure"]
+
+        has_light_diet_flag = any(
+            f in active_flags for f in ("high_blood_pressure", "chest_pain_or_fatigue")
+        )
+        if has_light_diet_flag:
+            user_info["dietary_constraint"] = (
+                "Active dietary constraint: low-sodium, light and easily digestible meals due to user-confirmed health alert"
+            )
+
         result = await process_rag_pipeline(user_info)
+        if isinstance(result, dict):
+            result["is_youth_mode"] = youth_check["is_youth_mode"]
+            if youth_check["adjusted_reason"]:
+                result["adjusted_reason"] = youth_check["adjusted_reason"]
+            result["applied_health_mode"] = (
+                {
+                    "active": True,
+                    "label": "Đang bật chế độ ưu tiên món thanh đạm / ít natri",
+                    "trigger_flag": active_flags[0],
+                }
+                if has_light_diet_flag
+                else {"active": False, "label": None, "trigger_flag": None}
+            )
         if result.get("allow_ai_generation") is False:
             return FoodSuggestResponse(
                 success=False,

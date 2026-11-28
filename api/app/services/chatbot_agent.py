@@ -5,7 +5,8 @@ import unicodedata
 from typing import Dict, Any, Optional
 
 from app.core.ollama_client import generate_chat
-from app.services.clinical_rag import InsufficientMedicalEvidenceError, retrieve_medical_docs
+from app.services.clinical_rag import InsufficientMedicalEvidenceError, retrieve_medical_docs, _approved_source_is_usable
+from app.services.knowledge_ingestor import DEFAULT_KNOWLEDGE_DIR, default_ingestor, load_source_catalog
 from app.services.pii_scrubber import anonymous_health_json, scrub_symptom
 
 logger = logging.getLogger(__name__)
@@ -159,6 +160,60 @@ def is_emergency_message(message: str) -> bool:
     chest_and_breath = ("đau ngực" in normalized or "đau thắt ngực" in normalized) and "khó thở" in normalized
     allergy_and_breath = ("dị ứng" in normalized or "phản vệ" in normalized) and "khó thở" in normalized
     return chest_and_breath or allergy_and_breath or any(sign in normalized for sign in strong_signs)
+
+
+def is_active_asthma_exercise_question(message: str) -> bool:
+    normalized = _normalize_scope_text(message)
+    return (
+        re.search(r"\bhen\b", normalized) is not None
+        and "khó thở" in normalized
+        and "không khó thở" not in normalized
+        and any(term in normalized for term in ("tập", "vận động", "gắng sức"))
+    )
+
+
+def asthma_exercise_warning_result() -> Dict[str, Any]:
+    """Give a conservative answer without relying on a mismatched COPD chunk or LLM citation."""
+    reply = (
+        "**Không nên tập cường độ nặng khi đang khó thở.** Hãy dừng vận động và nghỉ "
+        "ở tư thế dễ thở. Nếu bạn có kế hoạch xử trí hen do bác sĩ hướng dẫn, hãy làm theo "
+        "kế hoạch đó. Nếu khó thở tăng, nói không thành câu, tím môi hoặc không cải thiện, "
+        "hãy gọi 115 hoặc đến cơ sở cấp cứu. Khi triệu chứng ổn định, trao đổi với nhân viên "
+        "y tế về mức tập phù hợp. FitBreak không xác định nguyên nhân khó thở qua chat."
+    )
+    try:
+        source = next(
+            item for item in load_source_catalog(DEFAULT_KNOWLEDGE_DIR).values()
+            if item.get("source_id") == "BYT-5850-2021" and _approved_source_is_usable(item)
+        )
+        evidence = [
+            chunk for chunk in default_ingestor.load_chunks()
+            if chunk.get("source_id") == source["source_id"]
+            and "co thắt phế quản do gắng sức" in chunk.get("content", "").lower()
+        ] if default_ingestor is not None else []
+        if evidence:
+            evidence.sort(key=lambda chunk: chunk.get("title") != "Trang 26")
+            page = evidence[0].get("title") or "mục gắng sức"
+            reply = reply.replace(
+                "**Không nên tập cường độ nặng khi đang khó thở.**",
+                f"**Không nên tập cường độ nặng khi đang khó thở.** [SOURCE:{source['source_id']}]",
+                1,
+            )
+            reply += (
+                "\n\nNguồn tài liệu tham khảo: "
+                f"{source['title']} — {source['source_url']}. Vị trí: {page}. "
+                f"Giới hạn: {source['limitations']}"
+            )
+    except (StopIteration, OSError, ValueError, TypeError):
+        logger.warning("Approved asthma activity source unavailable for safety warning")
+    return {
+        "reply": reply,
+        "status": "MEDICAL_WARNING",
+        "reason_code": "ASTHMA_BREATHLESSNESS_WARNING",
+        "allow_ai_generation": False,
+        "has_update": False,
+        "has_proposed_changes": False,
+    }
 
 
 def emergency_result() -> Dict[str, Any]:
@@ -504,6 +559,8 @@ async def analyze_and_chat(
     """
     if is_emergency_message(user_message):
         return emergency_result()
+    if is_active_asthma_exercise_question(user_message):
+        return asthma_exercise_warning_result()
     try:
         resolved_scope = scope_status or await classify_message_scope(user_message)
     except OutOfMedicalScopeError:
