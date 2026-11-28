@@ -60,12 +60,28 @@ const ClinicalVitalCheckup = ({ user, onCheckupSuccess }) => {
     if (medicalData.spo2_index !== '') payload.spo2_index = Number(medicalData.spo2_index);
 
     try {
+      let token = localStorage.getItem('access_token') || localStorage.getItem('token');
+      if (!token && user) {
+        token = user.access_token || user.token;
+      }
+      if (!token) {
+        try {
+          const cached = JSON.parse(localStorage.getItem('user') || '{}');
+          token = cached?.access_token || cached?.token;
+        } catch {
+          // ignore invalid JSON
+        }
+      }
+
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${API_BASE_URL}/profiles/medical-checkup`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
+        credentials: 'include',
+        headers,
         body: JSON.stringify(payload),
       });
 
@@ -75,9 +91,10 @@ const ClinicalVitalCheckup = ({ user, onCheckupSuccess }) => {
         throw new Error(data.detail || data.message || 'Phân tích y tế thất bại!');
       }
 
-      setMedicalResult(data);
+      const normalizedResult = data.result || data;
+      setMedicalResult(normalizedResult);
       if (onCheckupSuccess) {
-        onCheckupSuccess(data);
+        onCheckupSuccess(normalizedResult);
       }
     } catch (err) {
       setError(err.message);
