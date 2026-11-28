@@ -126,7 +126,7 @@ async def food_suggest(
             )
         youth_check = apply_youth_safety_guardrail(
             age=age,
-            tdee=float(user_profile.get("tdee") or req.calories_need or 2000),
+            tdee=float(profile.get("tdee") or req.calories_need or 2000),
             goal=req.aim,
             target_calories=float(req.calories_need or 2000),
         )
@@ -137,9 +137,9 @@ async def food_suggest(
         active_flags = []
         try:
             hs_res = (
-                auth_data.client.table("health_states")
+                token.client.table("health_states")
                 .select("active_health_flags, status_flag")
-                .eq("user_id", user_id)
+                .eq("user_id", token.user_id)
                 .limit(1)
                 .execute()
             )
@@ -148,7 +148,7 @@ async def food_suggest(
         except Exception:
             active_flags = []
 
-        if not active_flags and user_profile.get("status_flag") == "restrict_heavy_exercise":
+        if not active_flags and profile.get("status_flag") == "restrict_heavy_exercise":
             active_flags = ["high_blood_pressure"]
 
         has_light_diet_flag = any(
