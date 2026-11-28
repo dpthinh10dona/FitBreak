@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Request, Response, Form, Depends, HTTPException, status
 from app.schemas.createProfile import createProfile
 from app.schemas.updateProfile import updateProfile
@@ -76,10 +77,34 @@ def _generate_diet_recommendation_from_bmi(weight: float, height: float) -> str:
     return "Thể trạng cân đối: Duy trì chế độ ăn đa dạng dưỡng chất, phân bổ đều đặn Protein, Carb phức hợp và chất béo lành mạnh."
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+
+
+def _profile_write_error(exc: Exception, operation: str, stage: str) -> HTTPException:
+    """Report a safe, actionable error without exposing record contents."""
+    code = str(getattr(exc, "code", "") or "")
+    logger.error("Profile %s failed at %s (Supabase code=%s)", operation, stage, code or "unknown")
+    if code in {"42703", "PGRST204", "PGRST205"} or (
+        code == "23502" and stage in {"profiles.upsert", "stats.upsert"}
+    ):
+        return HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Cơ sở dữ liệu chưa cập nhật cấu trúc hồ sơ (nickname, birth_year). Cần áp dụng migration dữ liệu trước khi tạo hồ sơ.",
+        )
+    if code == "42501":
+        return HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Máy chủ chưa có quyền ghi hồ sơ trên Supabase. Cần kiểm tra chính sách RLS cho tài khoản đã đăng nhập.",
+        )
+    return HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail="Không thể lưu hồ sơ ở bước xử lý dữ liệu. Vui lòng thử lại sau.",
+    )
 
 @router.post("/profiles/create-profile")
 async def createProfile(request: Request, data: createProfile,
                         token: tokenAuthorization = Depends(token_authorization)):
+    stage = "calculate"
     try:
         bmi = calculateBMI(data.weight, data.height)
         bmr = calculateBMR(data.weight, data.height, date.today().year - data.birth_year, data.gender)
@@ -104,14 +129,17 @@ async def createProfile(request: Request, data: createProfile,
             "food_recommendation": food_rec,
             "level_of_physical_activity": phys_level
         }
+        stage = "profiles.upsert"
         token.client.table("profiles").upsert(
             profile_payload, on_conflict="id"
         ).execute()
 
+        stage = "stats.select"
         current_stats = token.client.table("stats").select("team").eq("user_id", token.user_id).execute()
         if current_stats.data:
             max_new_team = current_stats.data[0]["team"]
         else:
+            stage = "stats.next_team"
             team_response = token.client.table("stats").select("team").order("team", desc=True).limit(1).execute()
             if team_response.data is None:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Khong tim thay data")
@@ -119,6 +147,7 @@ async def createProfile(request: Request, data: createProfile,
             max_new_team = max_current_team + 1
 
         if not current_stats.data:
+            stage = "stats.upsert"
             token.client.table("stats").upsert({
                 "user_id": token.user_id,
                 "team": max_new_team,
@@ -127,11 +156,13 @@ async def createProfile(request: Request, data: createProfile,
             }, on_conflict="user_id").execute()
 
         # dang su dung mock data
+        stage = "boss.select"
         boss_response = token.client.table("boss").select("*").eq("id", 1).single().execute()
         boss_stat = boss_response.data
         if not boss_stat:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Boss not exist")
 
+        stage = "raid.upsert"
         token.client.table("raid").upsert({
             "team": max_new_team,
             "boss_id": boss_stat["id"],
@@ -140,6 +171,7 @@ async def createProfile(request: Request, data: createProfile,
             "reward_coins": boss_stat["reward_coins"]
         }, on_conflict="team").execute()
 
+        stage = "avatar.upsert"
         token.client.table("user").upsert({
             "user_id": token.user_id,
             "skin": "Orange Skin",
@@ -152,12 +184,13 @@ async def createProfile(request: Request, data: createProfile,
         return {"message": "Tạo profile thành công"}
     except HTTPException:
         raise
-    except Exception:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Không thể tạo hồ sơ")
+    except Exception as exc:
+        raise _profile_write_error(exc, "create", stage) from exc
 
 @router.post("/profiles/update-profile")
 async def updateProfile(request: Request, data: updateProfile,
                         token: tokenAuthorization = Depends(token_authorization)):
+    stage = "calculate"
     try:
         bmi = calculateBMI(data.weight, data.height)
         bmr = calculateBMR(data.weight, data.height, date.today().year - data.birth_year, data.gender)
@@ -184,6 +217,7 @@ async def updateProfile(request: Request, data: updateProfile,
 
         # Giữ khuyến nghị chuyên môn từ lần khám nếu đã có; chỉ tạo khuyến nghị
         # BMI cơ bản cho hồ sơ chưa từng được đánh giá y tế.
+        stage = "profiles.select"
         current_prof = token.client.table("profiles").select("food_recommendation").eq("id", token.user_id).execute()
         has_existing_rec = current_prof.data and current_prof.data[0].get("food_recommendation")
         if not has_existing_rec:
@@ -191,6 +225,7 @@ async def updateProfile(request: Request, data: updateProfile,
                 data.weight, data.height
             )
 
+        stage = "profiles.update"
         response = token.client.table("profiles").update(update_payload).eq("id", token.user_id).execute()
         saved_profile = {key: value for key, value in (response.data[0] if response.data else update_payload).items()
                          if key in PROFILE_COLUMNS.split(",")}
@@ -200,8 +235,8 @@ async def updateProfile(request: Request, data: updateProfile,
         }
     except HTTPException:
         raise
-    except Exception:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Không thể cập nhật hồ sơ")
+    except Exception as exc:
+        raise _profile_write_error(exc, "update", stage) from exc
 
 @router.get("/profiles/me")
 async def getMyProfile(token: tokenAuthorization = Depends(token_authorization)):
