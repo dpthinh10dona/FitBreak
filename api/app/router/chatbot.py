@@ -186,9 +186,10 @@ async def ask_health_chatbot(
         )
 
     return ChatBotResponse(
-        reply=agent_output.get("reply", "Bác sĩ FitBreak đã ghi nhận thông tin của bạn."),
+        reply=agent_output.get("reply", "Trợ lý FitBreak đã ghi nhận thông tin của bạn."),
         remaining_questions_today=remaining,
         proposal=proposal,
+        retrieved_chunks=agent_output.get("retrieved_chunks", []),
         status=agent_output.get("status", "PASS"),
         reason_code=agent_output.get("reason_code", "ANSWER_AVAILABLE"),
         allow_ai_generation=agent_output.get("allow_ai_generation", True),

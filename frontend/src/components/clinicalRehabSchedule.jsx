@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '../config';
 import SafetyGuardrailAlert from './safetyGuardrailAlert';
+import KnapsackExplainPopover from './KnapsackExplainPopover';
 import { useState, useEffect, Fragment } from 'react';
 import '../style/clinicalSchedule.css';
 
@@ -392,10 +393,11 @@ const ClinicalRehabSchedule = ({ scheduleData, onScheduleGenerated, initialSelec
                       Theo lịch rảnh
                     </div>
                   )}
-                  <div>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
                     <span className={`clinical-category-badge ${categoryInfo.className}`}>
                       {categoryInfo.label}
                     </span>
+                    <KnapsackExplainPopover reason={activeSlot?.selection_reason} />
                   </div>
                 </div>
 

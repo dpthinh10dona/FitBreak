@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Optional, Literal
+from typing import Optional, Literal, List
 
 class ChatBotRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -28,10 +28,17 @@ class ProfileUpdateProposal(BaseModel):
     proposed_updates: Optional[ProposedUpdates] = None
     requires_user_confirmation: bool = True
 
+class RetrievedChunk(BaseModel):
+    doc_title: str
+    section_or_page: Optional[str] = None
+    raw_text: str
+    similarity_score: float = 0.0
+
 class ChatBotResponse(BaseModel):
     reply: str
     remaining_questions_today: int
     proposal: Optional[ProfileUpdateProposal] = None
+    retrieved_chunks: List[RetrievedChunk] = Field(default_factory=list)
     status: str = "PASS"
     reason_code: Optional[str] = None
     allow_ai_generation: bool = True
